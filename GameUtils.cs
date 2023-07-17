@@ -43,7 +43,7 @@ namespace BetterContinents
         {
             // Stop and reset the heightmap generator first
             HeightmapBuilder.instance.Dispose();
-            var _ = new HeightmapBuilder();
+            new HeightmapBuilder();
         }
 
         public static void EndTerrainChanges()
@@ -56,7 +56,6 @@ namespace BetterContinents
             DespawnAll();
             
             ClutterSystem.instance.ClearAll();
-            DeleteAllTaggedZDOs();
             ResetLocationInstances();
             RegenerateDistantLod();
             
@@ -68,7 +67,6 @@ namespace BetterContinents
             DespawnAll();
             
             ClutterSystem.instance.ClearAll();
-            DeleteLocationZDOs();
             ResetLocationInstances();
 
             ZoneSystem.instance.GenerateLocations();
@@ -265,20 +263,6 @@ namespace BetterContinents
         {
             Minimap.instance.UpdateLocationPins(1000);
         }
-        
-        private static void DeleteTaggedZDOs(params string[] tags)
-        {
-            foreach (var zdo in GetObjectsByID().Values
-                .Where(z => tags.Any(t => z.GetInt(t) == 1))
-                .ToList()
-            )
-            {
-                ZDOMan.instance.HandleDestroyedZDO(zdo.m_uid);
-            }
-        }
-
-        private static void DeleteAllTaggedZDOs() => DeleteTaggedZDOs("bc_loc", "bc_veg", "bc_spawn");
-        private static void DeleteLocationZDOs() => DeleteTaggedZDOs("bc_loc", "bc_spawn");
 
         private static void ResetLocationInstances()
         {
@@ -335,26 +319,7 @@ namespace BetterContinents
                 BetterContinents.LogError($"Failed to unpack resource directory {resourceDirectory} to {targetDirectory}: {ex.Message}");
             }
         }
-        
-        // public static void UnpackFromResources(string partialResourceName, string targetFileName)
-        // {
-        //     var execAssembly = Assembly.GetExecutingAssembly();
-        //
-        //     try
-        //     {
-        //         string fullResourceName = execAssembly.GetManifestResourceNames()
-        //             .Single(str => str.EndsWith(partialResourceName));
-        //
-        //         using var stream = execAssembly.GetManifestResourceStream(fullResourceName);
-        //         Directory.CreateDirectory(Path.GetDirectoryName(targetFileName));
-        //         stream?.CopyTo(File.OpenWrite(targetFileName));
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         BetterContinents.LogError($"Failed to unpack resource {partialResourceName} to {targetFileName}: {ex.Message}");
-        //     }
-        // }
-        
+
         public static AssetBundle GetAssetBundleFromResources(string partialResourceName)
         {
             var execAssembly = Assembly.GetExecutingAssembly();
@@ -374,57 +339,6 @@ namespace BetterContinents
             }
         }
 
-        // [HarmonyPatch(typeof(Player))]
-        // private class PlayerPatch
-        // {
-        //     [HarmonyPrefix, HarmonyPatch(nameof(Player.OnDestroy))]
-        //     private static void PlayerOnDestroyPrefix(Player __instance)
-        //     {
-        //         BetterContinents.Log($"Butwhhhy?");
-        //     }
-        // }
-
-        // [HarmonyPatch(typeof(Object))]
-        // private class ObjectPatch
-        // {
-        //     private static IEnumerable<GameObject> All(GameObject obj)
-        //     {
-        //         yield return obj;
-        //         var parent = obj.transform.parent;
-        //         while (parent != null)
-        //         {
-        //             yield return parent.gameObject;
-        //             parent = parent.parent;
-        //         }
-        //     }
-        //     
-        //     [HarmonyPrefix, HarmonyPatch(nameof(Object.Destroy), typeof(Object))]
-        //     private static void DestroyPrefix(Object obj)
-        //     {
-        //         if (obj != null)
-        //         {
-        //             BetterContinents.Log($"Destroying {obj.name}");
-        //             if(Player.m_localPlayer != null && All(Player.m_localPlayer.gameObject).Contains(obj))
-        //             {
-        //                 BetterContinents.Log($"Butwhhhy?");
-        //             }
-        //         }
-        //     }
-        //     
-        //     [HarmonyPrefix, HarmonyPatch(nameof(Object.Destroy), typeof(Object), typeof(float))]
-        //     private static void Destroy2Prefix(Object obj)
-        //     {
-        //         if (obj != null)
-        //         {
-        //             BetterContinents.Log($"Destroying {obj.name}");
-        //             if (Player.m_localPlayer != null && All(Player.m_localPlayer.gameObject).Contains(obj))
-        //             {
-        //                 BetterContinents.Log($"Butwhhhy?");
-        //             }
-        //         }
-        //     }
-        // }
-        
         public static void DespawnAll()
         {
             ZNetScene.instance.RemoveObjects(new List<ZDO>
@@ -463,122 +377,6 @@ namespace BetterContinents
             
             ResetLocationInstances();
         }
-        
-        /*
-         * How to update locations:
-         * Prefix and postfix SpawnLocation, capture all created ZDOs in-between, add location tag to them all (ZDO.Set("location_tag", 0)).
-         * To properly fix-up all locations:
-         *  1. de-spawn all active zones
-         *  2. delete all ZDOs with location tags (can delete all creatures as well)
-         *  3. fixup heights of all LocationInstances
-         *  4. allow spawning again
-         */
-        
-        // This isn't correct yet, we don't want to fall ALL ZNetViews, only very specific ones (check above)
-        // private static void UpdateZNetViewHeights()
-        // {
-        //     var GetFallHeight = AccessTools.Method(typeof(StaticPhysics), "GetFallHeight");
-        //     var PushUp = AccessTools.Method(typeof(StaticPhysics), "CheckFall");
-        //     var m_nview_FI = AccessTools.Field(typeof(StaticPhysics), "m_nview");
-        //     foreach (var obj in Resources.FindObjectsOfTypeAll<ZNetView>()
-        //         .Where(z => z.transform != null))
-        //     {
-        //         // Prefer to use static physics
-        //         var staticPhysics = obj.GetComponent<StaticPhysics>();
-        //         if (staticPhysics != null && (staticPhysics.m_fall || staticPhysics.m_pushUp))
-        //         {
-        //             if (staticPhysics.m_fall)
-        //             {
-        //                 // Instant fall
-        //                 //CheckFall.Invoke(obj, new object[]{});
-        //                 float fallHeight = (float) GetFallHeight.Invoke(staticPhysics, new object[] { });
-        //                 Vector3 position = staticPhysics.transform.position;
-        //                 position.y = fallHeight;
-        //                 staticPhysics.transform.position = position;
-        //                 var m_nview = (ZNetView) m_nview_FI.GetValue(staticPhysics);
-        //                 if (m_nview && m_nview.IsValid() && m_nview.IsOwner())
-        //                 {
-        //                     m_nview.GetZDO().SetPosition(staticPhysics.transform.position);
-        //                 }
-        //             }
-        //
-        //             if (staticPhysics.m_pushUp)
-        //             {
-        //                 PushUp.Invoke(staticPhysics, new object[] { });
-        //             }
-        //
-        //             // var pos = obj.transform.position;
-        //             // pos.y = WorldGenerator.instance.GetHeight(pos.x, pos.z);
-        //             // obj.transform.position = pos;
-        //         }
-        //         else if (staticPhysics == null && obj.GetZDO() != null)
-        //         {
-        //             obj.transform.position = obj.GetZDO().GetPosition();
-        //         }
-        //     }
-        // }
-
-        // public static void FallAllObjects()
-        // {
-        //     foreach (var zdo in GetObjectsByID().Values)
-        //     {
-        //         var pos = zdo.GetPosition();
-        //         pos.y = WorldGenerator.instance.GetHeight(pos.x, pos.z);
-        //         
-        //         zdo.SetPosition(pos);
-        //     }
-        //     
-        //     UpdateZNetViewHeights();
-        //     
-        //     // //var m_nview_FI = AccessTools.Field(typeof(ZNetView), "m_nview");
-        //     // foreach (var obj in Resources.FindObjectsOfTypeAll<ZNetView>())
-        //     // {
-        //     //     //var m_nview = (ZNetView)m_nview_FI.GetValue(obj);
-        //     //     //if (m_nview && m_nview.IsValid() && m_nview.IsOwner())
-        //     //     //{
-        //     //     if (obj.GetZDO() != null)
-        //     //     {
-        //     //         obj.transform.position = obj.GetZDO().GetPosition();
-        //     //     }
-        //     //     else
-        //     //     {
-        //     //         var staticPhysics = obj.GetComponent<StaticPhysics>();
-        //     //         if (staticPhysics != null && (staticPhysics.m_fall || staticPhysics.m_pushUp))
-        //     //         {
-        //     //             var pos = obj.transform.position;
-        //     //             pos.y = WorldGenerator.instance.GetHeight(pos.x, pos.z);
-        //     //             obj.transform.position = pos;
-        //     //         }
-        //     //     }
-        //     //     //}
-        //     // }
-        // }
-        
-        //     var CheckFall = AccessTools.Method(typeof(StaticPhysics), "CheckFall");
-        //     var GetFallHeight = AccessTools.Method(typeof(StaticPhysics), "GetFallHeight");
-        //     var PushUp = AccessTools.Method(typeof(StaticPhysics), "CheckFall");
-        //     var m_nview_FI = AccessTools.Field(typeof(StaticPhysics), "m_nview");
-        //     foreach (var obj in Resources.FindObjectsOfTypeAll<StaticPhysics>())
-        //     {
-        //         if (obj.m_fall)
-        //         {
-        //             // Instant fall
-        //             //CheckFall.Invoke(obj, new object[]{});
-        //             float fallHeight = (float)GetFallHeight.Invoke(obj, new object[]{});
-        //             Vector3 position = obj.transform.position;
-        //             position.y = fallHeight;
-        //             obj.transform.position = position;
-        //             var m_nview = (ZNetView)m_nview_FI.GetValue(obj);
-        //             if (m_nview && m_nview.IsValid() && m_nview.IsOwner())
-        //             {
-        //                 m_nview.GetZDO().SetPosition(obj.transform.position);
-        //             }
-        //         }
-        //         if (obj.m_pushUp) PushUp.Invoke(obj, new object[]{});
-        //     }
-        //     
-        //     ZDOMan.instance.
-        // }
         
         public static Dictionary<Vector2i, ZoneSystem.LocationInstance> GetLocationInstances() =>
             (Dictionary<Vector2i, ZoneSystem.LocationInstance>) AccessTools.Field(typeof(ZoneSystem), "m_locationInstances").GetValue(ZoneSystem.instance);

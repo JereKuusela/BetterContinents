@@ -169,15 +169,6 @@ namespace BetterContinents
                 bc.AddGroup("g", "Global", "global settings, get more info with 'bc g help'",
                     group =>
                     {
-                        // AddHeightmapValue(subcmd, "cs", "continent size", 0, new AcceptableValueRange<float>(0, 1), 
-                        //     value => BetterContinents.Settings.ContinentSize = value,
-                        //     () => BetterContinents.Settings.ContinentSize);
-                        // AddHeightmapValue(subcmd, "ma", "mountains amount", 0.5f, new AcceptableValueRange<float>(0, 1),
-                        //     value => BetterContinents.Settings.MountainsAmount = value,
-                        //     () => BetterContinents.Settings.MountainsAmount);
-                        // AddHeightmapValue(subcmd, "oc", "ocean channels", false, 
-                        //     args => BetterContinents.Settings.OceanChannelsEnabled = int.Parse(args) != 0,
-                        //     () => BetterContinents.Settings.OceanChannelsEnabled);
                         group.AddValue<float>("sl", "Sea level adjustment", "sea level adjustment", 
                             defaultValue: 0.5f, minValue: 0, maxValue: 1,
                             setter: SetHeightmapValue<float>(value => BetterContinents.Settings.SeaLevel = value),
