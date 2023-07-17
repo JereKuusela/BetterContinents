@@ -33,8 +33,7 @@ namespace BetterContinents
         {
             foreach (var lod in Object.FindObjectsOfType<TerrainLod>())
             {
-                lod.m_needRebuild = true;
-                lod.m_hmap.m_buildData = null;
+                lod.m_heightmapState = TerrainLod.HeightmapState.NeedsRebuild;
             }
         }
 
@@ -174,8 +173,8 @@ namespace BetterContinents
             return gameObject;
         }
 
-        private static Texture CloudTexture;
-        private static Texture TransparentTexture;
+        private static Texture? CloudTexture;
+        private static Texture? TransparentTexture;
 
         private static bool MinimapCloudsEnabled =>
             Minimap.instance.m_mapImageLarge.material.GetTexture("_CloudTex") != TransparentTexture;
@@ -371,7 +370,7 @@ namespace BetterContinents
             catch(Exception ex)
             {
                 BetterContinents.LogError($"Failed to get asset bundle {partialResourceName}: {ex.Message}");
-                return null;
+                return null!;
             }
         }
 
@@ -460,7 +459,7 @@ namespace BetterContinents
             
             ZDOMan.instance.ResetSectorArray();
             
-            ZDOMan.instance.AddToSector(playerZDO, playerZDO.m_sector);
+            ZDOMan.instance.AddToSector(playerZDO, playerZDO.GetSector());
             
             ResetLocationInstances();
         }

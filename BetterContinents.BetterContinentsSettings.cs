@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using SixLabors.ImageSharp.PixelFormats;
 using UnityEngine;
 
 namespace BetterContinents
@@ -69,15 +70,15 @@ namespace BetterContinents
             public float HeightmapMask;
             
             // Version 7
-            public NoiseStackSettings BaseHeightNoise;
+            public NoiseStackSettings? BaseHeightNoise;
 
             // Non-serialized
-            private ImageMapFloat Heightmap;
-            private ImageMapBiome Biomemap;
-            private ImageMapSpawn Spawnmap;
-            private ImageMapFloat Roughmap;
-            private ImageMapFloat Flatmap;
-            private ImageMapFloat Forestmap;
+            private ImageMapFloat? Heightmap;
+            private ImageMapBiome? Biomemap;
+            private ImageMapSpawn? Spawnmap;
+            private ImageMapFloat? Roughmap;
+            private ImageMapFloat? Flatmap;
+            private ImageMapFloat? Forestmap;
 
             public bool HasHeightmap => Heightmap != null;
             public bool HasBiomemap => Biomemap != null;
@@ -122,19 +123,13 @@ namespace BetterContinents
 
             private static string GetPath(string projectDir, string projectDirFileName, string defaultFileName)
             {
-                if (!string.IsNullOrEmpty(projectDir))
-                {
-                    if (File.Exists(Path.Combine(projectDir, CleanPath(projectDirFileName))))
-                    {
-                        return Path.Combine(projectDir, CleanPath(projectDirFileName));
-                    }
-                    else
-                    {
-                        return string.Empty;
-                    }
-                }
-
-                return CleanPath(defaultFileName);
+                if (string.IsNullOrEmpty(projectDir))
+                    return CleanPath(defaultFileName);
+                var path = Path.Combine(projectDir, CleanPath(projectDirFileName));
+                if (File.Exists(path))
+                    return path;
+                else
+                    return "";
             }
 
             private static readonly string HeightmapFilename = "Heightmap.png";
@@ -274,7 +269,7 @@ namespace BetterContinents
                 get => Mathf.InverseLerp(1, -1, ForestAmountOffset);
             }
 
-            public void SetHeightmapPath(string path, string projectDir = null)
+            public void SetHeightmapPath(string path, string projectDir = "")
             {
                 string finalPath = HeightmapPath(path, projectDir);
                 if (!string.IsNullOrEmpty(finalPath))
@@ -295,7 +290,7 @@ namespace BetterContinents
             
             public void DisableHeightmap() => Heightmap = null;
 
-            public void SetBiomemapPath(string path, string projectDir = null)
+            public void SetBiomemapPath(string path, string projectDir = "")
             {
                 string finalPath = BiomemapPath(path, projectDir);
                 if (!string.IsNullOrEmpty(finalPath))
@@ -314,7 +309,7 @@ namespace BetterContinents
             public string GetBiomemapPath() => Biomemap?.FilePath ?? string.Empty;
             public void DisableBiomemap() => Biomemap = null;
             
-            public void SetSpawnmapPath(string path, string projectDir = null)
+            public void SetSpawnmapPath(string path, string projectDir = "")
             {
                 string finalPath = SpawnmapPath(path, projectDir);
                 if (!string.IsNullOrEmpty(finalPath))
@@ -333,7 +328,7 @@ namespace BetterContinents
             public string GetSpawnmapPath() => Spawnmap?.FilePath ?? string.Empty;
             public void DisableSpawnmap() => Spawnmap = null;
             
-            public void SetRoughmapPath(string path, string projectDir = null)
+            public void SetRoughmapPath(string path, string projectDir = "")
             {
                 string finalPath = RoughmapPath(path, projectDir);
                 if (!string.IsNullOrEmpty(finalPath))
@@ -352,7 +347,7 @@ namespace BetterContinents
             public string GetRoughmapPath() => Roughmap?.FilePath ?? string.Empty;
             public void DisableRoughmap() => Roughmap = null;
 
-            public void SetForestmapPath(string path, string projectDir = null)
+            public void SetForestmapPath(string path, string projectDir = "")
             {
                 string finalPath = ForestmapPath(path, projectDir);
                 if (!string.IsNullOrEmpty(finalPath))
@@ -382,7 +377,7 @@ namespace BetterContinents
             private static float InvScaleRange(float y, float a, float b) => 1f - (y - a) / (b - a);
             
 
-            public void Dump(Action<string> output = null)
+            public void Dump(Action<string>? output = null)
             {
                 output = output ?? Log;
                 output($"Version {Version}");
@@ -435,7 +430,7 @@ namespace BetterContinents
                     else
                     {
                         output($"Base height noise stack:");
-                        BaseHeightNoise.Dump(str => output($"    {str}"));
+                        BaseHeightNoise?.Dump(str => output($"    {str}"));
                     }
 
                     if (Roughmap != null)
@@ -614,7 +609,7 @@ namespace BetterContinents
                     // Version 7
                     if (Version >= 7)
                     {
-                        BaseHeightNoise.Serialize(pkg);
+                        BaseHeightNoise?.Serialize(pkg);
                     }
                 }
             }
@@ -704,8 +699,8 @@ namespace BetterContinents
                     if (!string.IsNullOrEmpty(heightmapFilePath))
                     {
                         Heightmap = new ImageMapFloat(heightmapFilePath, pkg.ReadByteArray());
-                        if (Version <= 4 && !Heightmap.CreateMapLegacy() 
-                            || Version > 4 && !Heightmap.CreateMap())
+                        if (Version <= 4 && !Heightmap.CreateMap() 
+                            || Version > 4 && !Heightmap.CreateMap<L16>())
                         {
                             Heightmap = null;
                         }
@@ -861,15 +856,13 @@ namespace BetterContinents
                 {
                     return flatHeight;
                 }
-                
-                if (UseRoughInvertedAsFlat && Roughmap == null 
-                    || !UseRoughInvertedAsFlat && Flatmap == null 
-                    || RoughmapBlend == 0)
+                var image = UseRoughInvertedAsFlat ? Roughmap : Flatmap;
+                if (image == null || RoughmapBlend == 0)
                 {
                     return height;
                 }
 
-                float f = UseRoughInvertedAsFlat ? 1 - Roughmap.GetValue(x, y) : Flatmap.GetValue(x, y);
+                float f = UseRoughInvertedAsFlat ? 1 - image.GetValue(x, y) : image.GetValue(x, y);
                 return Mathf.Lerp(height, flatHeight, f * FlatmapBlend);
             }
             
@@ -891,10 +884,10 @@ namespace BetterContinents
                 return finalValue;
             }
             
-            public Heightmap.Biome GetBiomeOverride(float mapX, float mapY) => Biomemap.GetValue(mapX, mapY);
+            public Heightmap.Biome GetBiomeOverride(float mapX, float mapY) => Biomemap?.GetValue(mapX, mapY) ?? (Heightmap.Biome)0;
 
-            public Vector2? FindSpawn(string spawn) => Spawnmap.FindSpawn(spawn);
-            public IEnumerable<Vector2> GetAllSpawns(string spawn) => Spawnmap.GetAllSpawns(spawn);
+            public Vector2? FindSpawn(string spawn) => Spawnmap?.FindSpawn(spawn);
+            public IEnumerable<Vector2> GetAllSpawns(string spawn) => Spawnmap?.GetAllSpawns(spawn) ?? new List<Vector2>();
             
             public void ReloadHeightmap()
             {

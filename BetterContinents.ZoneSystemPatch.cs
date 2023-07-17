@@ -181,7 +181,7 @@ namespace BetterContinents
         [HarmonyPatch(typeof(ZDOMan))]
         private class ZDOManPatch
         {
-            [HarmonyPostfix, HarmonyPatch(nameof(ZDOMan.CreateNewZDO), typeof(ZDOID), typeof(Vector3))]
+            [HarmonyPostfix, HarmonyPatch(nameof(ZDOMan.CreateNewZDO), typeof(ZDOID), typeof(Vector3), typeof(int))]
             private static void CreateNewZDOPostfix(ref ZDO __result)
             {
 	            if (BetterContinents.Settings.EnabledForThisWorld && ZoneSystemPatch.TagLocationZDOs > 0)

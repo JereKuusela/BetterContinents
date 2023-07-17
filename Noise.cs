@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using UnityEngine;
-using Random = System.Random;
 
 namespace BetterContinents
 {
-    public class NoiseStackSettings
+  public class NoiseStackSettings
     {
         public class NoiseSettings
         {
@@ -300,9 +298,9 @@ namespace BetterContinents
 
             public int Version = LatestVersion;
             public NoiseSettings noiseSettings = NoiseSettings.Default();
-            public NoiseSettings noiseWarpSettings;
-            public NoiseSettings maskSettings;
-            public NoiseSettings maskWarpSettings;
+            public NoiseSettings? noiseWarpSettings;
+            public NoiseSettings? maskSettings;
+            public NoiseSettings? maskWarpSettings;
 
             public void Serialize(ZPackage pkg)
             {
@@ -436,12 +434,12 @@ namespace BetterContinents
         
         public bool IsValid => noise != null;
         
-        public WarpedNoise(int seed, NoiseStackSettings.NoiseSettings settings, NoiseStackSettings.NoiseSettings warpSettings = null)
+        public WarpedNoise(int seed, NoiseStackSettings.NoiseSettings settings, NoiseStackSettings.NoiseSettings? warpSettings = null)
         {
             this.settings = settings;
     
             noise = settings.CreateNoise(seed);
-            warp = warpSettings?.CreateNoise(seed + 127);
+            warp = warpSettings?.CreateNoise(seed + 127) ?? new();
     
             min = float.MaxValue;
             max = float.MinValue;

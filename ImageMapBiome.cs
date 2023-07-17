@@ -9,7 +9,7 @@ namespace BetterContinents
 {
     internal class ImageMapBiome : ImageMapBase
     {
-        private Heightmap.Biome[] Map;
+        private Heightmap.Biome[] Map = new Heightmap.Biome[0];
 
         public ImageMapBiome(string filePath) : base(filePath) { }
 
@@ -53,33 +53,25 @@ namespace BetterContinents
         };
 
 
-        protected override bool LoadTextureToMap(Image image)
+        protected override bool LoadTextureToMap<T>(Image<T> image)
         {
             int ColorDistance(Color32 a, Color32 b) =>
                 (a.r - b.r) * (a.r - b.r) + (a.g - b.g) * (a.g - b.g) + (a.b - b.b) * (a.b - b.b);
 
-            var typedImage = (Image<Rgba32>) image;
-
-            Map = new Heightmap.Biome[typedImage.Width * typedImage.Height];
-            
             var st = new Stopwatch();
             st.Start();
 
             var colorMapping = new Dictionary<Color32, Heightmap.Biome>(new Color32Comparer());
-            for (int y = 0; y < typedImage.Height; y++)
-            {
-                var pixelRowSpan = typedImage.GetPixelRowSpan(y);
-                for (int x = 0; x < typedImage.Width; x++)
+            var img = (Image<Rgba32>)(Image)image;
+            Map = LoadPixels(img, pixel => {
+                var color = Convert(pixel);
+                if (!colorMapping.TryGetValue(color, out var biome))
                 {
-                    var color = Convert(pixelRowSpan[x]);
-                    if (!colorMapping.TryGetValue(color, out var biome))
-                    {
-                        biome = BiomeColorMapping.OrderBy(d => ColorDistance(color, d.color)).First().biome;
-                        colorMapping.Add(color, biome);
-                    }
-                    Map[y * typedImage.Width + x] = biome;
+                    biome = BiomeColorMapping.OrderBy(d => ColorDistance(color, d.color)).First().biome;
+                    colorMapping.Add(color, biome);
                 }
-            }
+                return biome;
+            });
             
             BetterContinents.Log($"Time to calculate biomes from {FilePath}: {st.ElapsedMilliseconds} ms");
             return true;

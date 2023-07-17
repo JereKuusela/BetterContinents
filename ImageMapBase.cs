@@ -22,6 +22,7 @@ namespace BetterContinents
         public ImageMapBase(string filePath)
         {
             this.FilePath = filePath;
+            this.SourceData = new byte[0];
         }
 
         public ImageMapBase(string filePath, byte[] sourceData) : this(filePath)
@@ -43,13 +44,28 @@ namespace BetterContinents
             }
         }
 
-        protected static Color32 Convert(Rgba32 rgba) => new Color32(rgba.R, rgba.G, rgba.B, rgba.A);
+        protected static Color32 Convert(Rgba32 pixel) => new (pixel.R, pixel.G, pixel.B, pixel.A);
         
-        protected virtual Image LoadImage(byte[] data) => Image.Load<Rgba32>(Configuration.Default, SourceData);
+        protected Image<T> LoadImage<T>(byte[] data)  where T : unmanaged, IPixel<T> => Image.Load<T>(Configuration.Default, SourceData);
 
-        protected abstract bool LoadTextureToMap(Image image);
+        protected abstract bool LoadTextureToMap<T>(Image<T> image) where T : unmanaged, IPixel<T>;
 
-        public bool CreateMap()
+        public R[] LoadPixels<T, R>(Image<T> image, Func<T, R> converter) where T : unmanaged, IPixel<T> {
+            var pixels = new R[image.Width * image.Height];
+            image.ProcessPixelRows(acc => {
+                for (int y = 0; y < acc.Height; y++)
+                {
+                    var row = acc.GetRowSpan(y);
+                    for (int x = 0; x < row.Length; x++)
+                    {
+                        pixels[y * row.Length + x] = converter(row[x]);
+                    }
+                }
+            });
+            return pixels;
+        }
+        public bool CreateMap() => CreateMap<Rgba32>();
+        public bool CreateMap<T>() where T : unmanaged, IPixel<T>
         {
             try
             {
@@ -57,7 +73,7 @@ namespace BetterContinents
                 sw.Start();
                 
                 // Cast disambiguates to the correct return type for some reason
-                using(var image = LoadImage(SourceData))
+                using(var image = LoadImage<T>(SourceData))
                 {
                     if (!ValidateDimensions(image.Width, image.Height))
                     {

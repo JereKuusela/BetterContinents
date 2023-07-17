@@ -1,4 +1,6 @@
-﻿namespace BetterContinents
+﻿
+#nullable disable
+namespace BetterContinents
 {
     /// <summary>
     /// Class that specifies how a setting should be displayed inside the ConfigurationManager settings window.
@@ -104,3 +106,4 @@
         public System.Func<string, object> StrToObj;
     }
 }
+#nullable enable

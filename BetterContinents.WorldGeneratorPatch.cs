@@ -63,7 +63,7 @@ namespace BetterContinents
                 }
             }
 
-            public static NoiseStack BaseHeightNoise;
+            public static NoiseStack? BaseHeightNoise;
 
             public static void ApplyNoiseSettings()
             {
@@ -329,7 +329,7 @@ namespace BetterContinents
                 float mapY = NormalizedY(wy);
 
                 float baseHeight = Settings.ApplyHeightmap(mapX, mapY, 0f);
-                float finalHeight = BaseHeightNoise.Apply(wx, wy, baseHeight);
+                float finalHeight = BaseHeightNoise?.Apply(wx, wy, baseHeight) ?? 0;
                 finalHeight -= 0.15f; // Resulting in about 30% water coverage by default
                 finalHeight += Settings.SeaLevelAdjustment;
 

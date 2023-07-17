@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using UnityEngine;
 
+#nullable disable
 // Contains heavily modified code from https://github.com/BepInEx/BepInEx.ConfigurationManager
 namespace BetterContinents
 {
@@ -723,3 +724,4 @@ namespace BetterContinents
         }
     }
 }
+#nullable enable

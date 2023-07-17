@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
+#nullable disable
 // The following is adapted from Valheim lib
 
 // MIT License
@@ -378,3 +378,4 @@ namespace BetterContinents
         }
     }
 }
+#nullable enable

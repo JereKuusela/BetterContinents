@@ -9,66 +9,17 @@ namespace BetterContinents
 {
     internal class ImageMapFloat : ImageMapBase
     {
-        private float[] Map;
+        private float[] Map = new float[0];
 
         public ImageMapFloat(string filePath) : base(filePath) { }
 
         public ImageMapFloat(string filePath, byte[] sourceData) : base(filePath, sourceData) { }
 
-        protected override Image LoadImage(byte[] data) => Image.Load<L16>(Configuration.Default, SourceData);
-
-        public bool CreateMapLegacy()
-        {
-            try
-            {
-                var img = Image.Load<Rgba32>(Configuration.Default, SourceData);
-                img.Mutate(i => i.Flip(FlipMode.Vertical));
-
-                var sw = new Stopwatch();
-                sw.Start();
-
-                // Cast disambiguates to the correct return type for some reason
-                if (!ValidateDimensions(img.Width, img.Height))
-                {
-                    return false;
-                }
-                Size = img.Width;
-
-                BetterContinents.Log($"Time to load {FilePath}: {sw.ElapsedMilliseconds} ms");
-
-                Map = new float[img.Width * img.Height];
-                for (int y = 0; y < img.Height; y++)
-                {
-                    var pixelRowSpan = img.GetPixelRowSpan(y);
-                    for (int x = 0; x < img.Width; x++)
-                    {
-                        Map[y * img.Width + x] = pixelRowSpan[x].ToVector4().X; // / (float)ushort.MaxValue;
-                    }
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                BetterContinents.LogError($"Cannot load texture {FilePath}: {ex.Message}");
-                return false;
-            }
-        }
-        
-        protected override bool LoadTextureToMap(Image image)
+        protected override bool LoadTextureToMap<T>(Image<T> image)
         {
             var sw = new Stopwatch();
             sw.Start();
-            var typedImage = (Image<L16>) image;
-            Map = new float[typedImage.Width * typedImage.Height];
-            for (int y = 0; y < typedImage.Height; y++)
-            {
-                var pixelRowSpan = typedImage.GetPixelRowSpan(y);
-                for (int x = 0; x < typedImage.Width; x++)
-                {
-                    Map[y * typedImage.Width + x] = pixelRowSpan[x].ToVector4().X; // / (float)ushort.MaxValue;
-                }
-            }
+            Map = LoadPixels(image, pixel => pixel.ToVector4().X);
             
             BetterContinents.Log($"Time to process {FilePath}: {sw.ElapsedMilliseconds} ms");
             

@@ -2,6 +2,7 @@
 using BepInEx.Configuration;
 using UnityEngine.Assertions;
 
+#nullable disable
 namespace BetterContinents
 {
     public static class ConfigFileExtensions
@@ -121,7 +122,7 @@ namespace BetterContinents
         public void Bind<T>(out ConfigEntry<T> bindTarget)
         {
             Assert.IsFalse(bound, "Already bound this Key");
-            bindTarget = groupBuilder.configBuilder.configFile.Bind<T>(groupBuilder.groupName, key, defaultValue == null? default(T) : (T)defaultValue,
+            bindTarget = groupBuilder.configBuilder.configFile.Bind<T>(groupBuilder.groupName, key, defaultValue == null ? default(T) : (T)defaultValue,
                 new ConfigDescription(description, range, new ConfigurationManagerAttributes
                 {
                     Order = --groupBuilder.valueIdx,
@@ -134,3 +135,4 @@ namespace BetterContinents
         }
     }
 }
+#nullable enable

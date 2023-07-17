@@ -12,11 +12,13 @@ namespace BetterContinents
         private static Dictionary<string, Action> UICallbacks = new Dictionary<string, Action>();
 
         private static readonly Color ValheimColor = new Color(1, 0.714f, 0.361f, 1);
+#nullable disable
         private static Texture BorderTexture;
         private static Texture FrontTexture;
         private static Texture BackTexture;
         private static GUIStyle BigTextStyle;
         private static GUIStyle NormalTextStyle;
+#nullable enable
 
         private static bool WindowVisible;
         

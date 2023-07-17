@@ -2,12 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml.Schema;
-using BepInEx.Configuration;
 using HarmonyLib;
-using JetBrains.Annotations;
 using UnityEngine;
-
+#nullable disable
 namespace BetterContinents
 {
     public partial class DebugUtils
@@ -849,3 +846,4 @@ namespace BetterContinents
         }
     }
 }
+#nullable enable

@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using BepInEx;
@@ -11,9 +9,10 @@ using Debug = UnityEngine.Debug;
 
 namespace BetterContinents
 {
-    [BepInPlugin("BetterContinents", ModInfo.Name, ModInfo.Version)]
+  [BepInPlugin("BetterContinents", ModInfo.Name, ModInfo.Version)]
     public partial class BetterContinents : BaseUnityPlugin
     {
+        #nullable disable
         // See the Awake function for the config descriptions
         public static ConfigEntry<int> NexusID;
         public static ConfigEntry<string> ConfigSelectedPreset;
@@ -59,7 +58,8 @@ namespace BetterContinents
         
         public static ConfigEntry<bool> ConfigExperimentalMultithreadedHeightmapBuild;
         public static ConfigEntry<bool> ConfigExperimentalParallelChunksBuild;
-
+        public static BetterContinents instance;
+#nullable enable
         public const float WorldSize = 10500f;
         public const string ConfigFileExtension = ".BetterContinents";
         private static readonly Vector2 Half = Vector2.one * 0.5f;
@@ -82,7 +82,6 @@ namespace BetterContinents
 
         public static BetterContinentsSettings Settings;
 
-        public static BetterContinents instance;
 
         //public static Assembly asm;
         //public static AppDomain domain;
@@ -220,7 +219,6 @@ namespace BetterContinents
 
             new Harmony("BetterContinents.Harmony").PatchAll();
             Log("Awake");
-            
             UI.Init();
         }
 

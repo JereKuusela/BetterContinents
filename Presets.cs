@@ -11,22 +11,23 @@ namespace BetterContinents
     public class Presets
     {
         private static readonly string PresetsDir = Path.Combine(Utils.GetSaveDataPath(FileHelpers.FileSource.Local), "BetterContinents", "presets");
-        private static AssetBundle assetBundle;
+        private static AssetBundle? assetBundle;
 
         private static bool DisabledPreset => BetterContinents.ConfigSelectedPreset.Value == Disabled;
         private static bool ConfigPreset => BetterContinents.ConfigSelectedPreset.Value == FromConfig;
 
-        private List<string> presets;
+        private List<string> presets = new();
         private const string Disabled = "Disabled";
         private const string FromConfig = "From Config";
 
+#nullable disable
         private Dropdown dropdown;
         private GameObject previewPanel;
         private RawImage previewImage;
 
         private Texture2D logoIcon;
         private Texture2D settingsIcon;
-                
+#nullable enable            
         public Presets() { Refresh(); }
 
         public void InitUI(FejdStartup __instance)

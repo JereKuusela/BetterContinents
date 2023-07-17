@@ -7,14 +7,13 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using HarmonyLib;
-using JetBrains.Annotations;
 using UnityEngine;
 
 namespace BetterContinents
 {
     public partial class BetterContinents
     {
-        private static string LastConnectionError = null;
+        private static string? LastConnectionError = null;
         
         // Dealing with settings, synchronization of them in multiplayer
         [HarmonyPatch]
@@ -86,11 +85,11 @@ namespace BetterContinents
                 }
             }
 
-            private static byte[] SettingsReceiveBuffer;
+            private static byte[] SettingsReceiveBuffer = new byte[0];
             private static int SettingsReceiveBufferBytesReceived;
             private static int SettingsReceiveHash;
             
-            private static int GetHashCode<T>(T[] array)
+            private static int GetHashCode<T>(T[] array) where T : struct
             {
                 unchecked
                 {
@@ -107,7 +106,7 @@ namespace BetterContinents
                 }
             }
 
-            private static string ServerVersion;
+            private static string ServerVersion = "";
 
             private static class WorldCache
             {
@@ -183,11 +182,13 @@ namespace BetterContinents
 
             private class BCClientInfo
             {
+#nullable disable
                 public long id;
                 public string player;
                 public ZNetPeer peer;
                 public string version;
                 public ZPackage worldCache;
+#nullable enable
                 public bool readyForPeerInfo;
 
                 public override string ToString() => $"{id} ({player})";
@@ -540,23 +541,8 @@ namespace BetterContinents
                     call_RPC_PeerInfo();
                 }
             }
-
-            [HarmonyPrefix, HarmonyPatch(nameof(ZNet.SaveWorldThread))]
-            private static void SaveWorldThreadPrefix()
-            {
-                // If the save is being upgraded from Legacy then we need to backup the BC config file, in the same
-                // manner the other files are backed up. Any time later than this is too late, as the fileSource will
-                // have already been updated and we won't know it is legacy any more.
-                if (ZNet.m_world.m_fileSource == FileHelpers.FileSource.Legacy)
-                {
-                    Log($"[Saving][{ZNet.m_world.m_name}] Updating from legacy save");
-                    string bcConfigFile = ZNet.m_world.GetMetaPath() + BetterContinents.ConfigFileExtension;
-                    Log($"[Saving][{ZNet.m_world.m_name}] Backing up {bcConfigFile}");
-                    FileHelpers.MoveToBackup(ZNet.m_world.GetMetaPath() + BetterContinents.ConfigFileExtension, DateTime.Now);
-                }
-            }
         }
 
-        public static string CleanPath(string path) => path?.Replace("\\\"", "").Replace("\"", "").Trim();
+        public static string CleanPath(string? path) => path?.Replace("\\\"", "").Replace("\"", "").Trim() ?? "";
     }
 }

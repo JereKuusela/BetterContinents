@@ -11,7 +11,7 @@ namespace BetterContinents
 {
     internal class ImageMapSpawn : ImageMapBase
     {
-        public Dictionary<string, List<Vector2>> RemainingSpawnAreas;
+        public Dictionary<string, List<Vector2>> RemainingSpawnAreas = new();
 
         public ImageMapSpawn(string filePath) : base(filePath) { }
 
@@ -156,24 +156,14 @@ namespace BetterContinents
             new ColorSpawn(new Color32(0x78, 0x3F, 0x04, 0xFF), "WoodVillage1"),
         };
 
-        protected override bool LoadTextureToMap(Image image)
+        protected override bool LoadTextureToMap<T>(Image<T> image)
         {
             var sw = new Stopwatch();
             sw.Start();
-            
+            var img = (Image<Rgba32>)(Image)image;
+            var pixels = LoadPixels(img, Convert);
             int Index(int x, int y) => y * Size + x;
                 
-            var typedImage = (Image<Rgba32>) image;
-            var pixels = new Color32[image.Width * image.Height];
-            for (int y = 0; y < typedImage.Height; y++)
-            {
-                var pixelRowSpan = typedImage.GetPixelRowSpan(y);
-                for (int x = 0; x < typedImage.Width; x++)
-                {
-                    pixels[y * typedImage.Width + x] = Convert(pixelRowSpan[x]);
-                }
-            }
-            
             bool Compare(Color32 a, Color32 b) => a.r == b.r && a.g == b.g && a.b == b.b;
 
             void FloodFill(int x, int y, Action<int, int> fillfn)
