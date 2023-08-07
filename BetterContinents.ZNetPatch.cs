@@ -14,13 +14,13 @@ namespace BetterContinents
     public partial class BetterContinents
     {
         private static string? LastConnectionError = null;
-        
+
         // Dealing with settings, synchronization of them in multiplayer
         [HarmonyPatch]
         private class ZRpcPatch
         {
             // When the world is set on the server (applies to single player as well), we should select the correct loaded settings
-            private static void Prefix(ZRpc __instance, string name, ref Action<ZRpc, ZPackage> f)
+            private static void Prefix(string name, ref Action<ZRpc, ZPackage> f)
             {
                 if (ZNet.instance.IsServer() && name == "PeerInfo")
                 {
@@ -38,12 +38,12 @@ namespace BetterContinents
                     .First(m => m.GetParameters().Length == 2
                                          && m.GetGenericArguments().Length == 1
                                          && m.GetParameters()[0].ParameterType == typeof(string)
-                                         && m.GetParameters()[1].ParameterType == 
+                                         && m.GetParameters()[1].ParameterType ==
                                          typeof(Action<,>).MakeGenericType(typeof(ZRpc), m.GetGenericArguments()[0]))
-                    .MakeGenericMethod(typeof(ZPackage)); 
+                    .MakeGenericMethod(typeof(ZPackage));
             }
         }
-        
+
         // Dealing with settings, synchronization of them in multiplayer
         [HarmonyPatch(typeof(ZNet))]
         public class ZNetPatch
@@ -74,7 +74,7 @@ namespace BetterContinents
                         Log($"Couldn't find loaded settings for world {world.m_name} at {settingsPath}, mod is disabled for this World");
                         Settings = BetterContinentsSettings.Disabled(world.m_uid);
                     }
-            
+
                     Settings.Dump();
                 }
                 else
@@ -88,7 +88,7 @@ namespace BetterContinents
             private static byte[] SettingsReceiveBuffer = new byte[0];
             private static int SettingsReceiveBufferBytesReceived;
             private static int SettingsReceiveHash;
-            
+
             private static int GetHashCode<T>(T[] array) where T : struct
             {
                 unchecked
@@ -112,7 +112,7 @@ namespace BetterContinents
             {
                 private static readonly string WorldCachePath = Path.Combine(Utils.GetSaveDataPath(FileHelpers.FileSource.Local), "BetterContinents", "cache");
                 private static string GetCachePath(string id) => Path.Combine(WorldCachePath, id + ".bc");
-                
+
                 public static void Add(ZPackage package)
                 {
                     var filePath = GetCachePath(PackageID(package));
@@ -161,14 +161,14 @@ namespace BetterContinents
 
                     return false;
                 }
-                
-                public static ZPackage LoadCacheItem(string id) => new ZPackage(File.ReadAllBytes(GetCachePath(id)));
+
+                public static ZPackage LoadCacheItem(string id) => new(File.ReadAllBytes(GetCachePath(id)));
 
                 public static void DeleteCacheItem(string id) => File.Delete(GetCachePath(id));
 
                 public static BetterContinentsSettings LoadCacheSettings(string id) =>
                     BetterContinentsSettings.Load(LoadCacheItem(id));
-                
+
                 private static string ByteArrayToString(byte[] ba)
                 {
                     var hex = new StringBuilder(ba.Length * 2);
@@ -217,7 +217,7 @@ namespace BetterContinents
                         bcClientInfo.version = clientVersion;
                         bcClientInfo.worldCache = worldCache;
                     });
-                    
+
                     peer.m_rpc.Register("BetterContinentsReady", (ZRpc rpc, int stage) =>
                     {
                         Log($"Client is ready for PeerInfo");
@@ -241,7 +241,7 @@ namespace BetterContinents
 
                         __instance.StartCoroutine(LoadFromCache(peer, id));
                     });
-                    
+
                     peer.m_rpc.Register("BetterContinentsConfigStart", (ZRpc rpc, int totalBytes, int hash) =>
                     {
                         SettingsReceiveBuffer = new byte[totalBytes];
@@ -260,14 +260,14 @@ namespace BetterContinents
                         {
                             LastConnectionError = $"Better Continents: settings from server were corrupted during transfer, please reconnect!";
                             LogError($"{LastConnectionError}: packet hash mismatch, got {hash}, expected {packetHash}");
-                            
+
                             m_connectionStatus.SetValue(null, ZNet.ConnectionStatus.ErrorConnectFailed);
                             ZNet.instance.Disconnect(peer);
                             return;
                         }
 
                         Buffer.BlockCopy(packetData, 0, SettingsReceiveBuffer, offset, packetData.Length);
-                        
+
                         SettingsReceiveBufferBytesReceived += packetData.Length;
 
                         Log($"Received settings packet {packetData.Length} bytes at {offset}, {SettingsReceiveBufferBytesReceived} / {SettingsReceiveBuffer.Length} received");
@@ -303,13 +303,13 @@ namespace BetterContinents
                 {
                     UI.Remove("LoadingFromCache");
                 }
-                
+
                 if (loadTask.IsFaulted || loadTask.Result == null)
                 {
                     LastConnectionError = loadTask.Exception != null
                         ? $"Better Continents: cached world settings failed to load ({loadTask.Exception.Message}), please reconnect to download them again!"
                         : $"Better Continents: cached world settings are corrupted, please reconnect to download them again!";
-                    
+
                     LogError(LastConnectionError);
                     m_connectionStatus.SetValue(null, ZNet.ConnectionStatus.ErrorConnectFailed);
                     ZNet.instance.Disconnect(peer);
@@ -317,7 +317,7 @@ namespace BetterContinents
                     yield break;
                 }
 
-                Settings = loadTask.Result.Value;
+                Settings = loadTask.Result;
                 Settings.Dump();
 
                 // We only care about server/client version match when the server sends a world that actually uses the mod
@@ -332,7 +332,7 @@ namespace BetterContinents
                 {
                     Log($"Server world does not have Better Continents enabled, skipping version check");
                 }
-                
+
                 peer.m_rpc.Invoke("BetterContinentsReady", 0);
             }
 
@@ -342,8 +342,9 @@ namespace BetterContinents
                 if (finalHash == SettingsReceiveHash)
                 {
                     Log($"Settings transfer complete, unpacking them now");
-                    
-                    var loadingTask = Task.Run(() => {
+
+                    var loadingTask = Task.Run(() =>
+                    {
                         var settingsPkg = new ZPackage(SettingsReceiveBuffer);
                         var settings = BetterContinentsSettings.Load(settingsPkg);
                         WorldCache.Add(settingsPkg);
@@ -465,7 +466,7 @@ namespace BetterContinents
                     {
                         Log($"Client {bcClientInfo} version {bcClientInfo.version} matches server version {ModInfo.Version}");
                     }
-                    
+
                     // This was the initial way that versioning was implemented, before the client->server way, so may
                     // as well leave it in
                     Log($"Sending server version {ModInfo.Version} to client for bi-lateral version agreement");
@@ -486,7 +487,7 @@ namespace BetterContinents
                     {
                         Log($"Client {bcClientInfo} doesn't have cached settings, sending them now");
                         cleanSettings.Dump();
-                        
+
                         var settingsData = settingsPackage.GetArray();
                         Log($"Sending settings package header for {settingsData.Length} byte stream");
                         rpc.Invoke("BetterContinentsConfigStart", settingsData.Length, GetHashCode(settingsData));

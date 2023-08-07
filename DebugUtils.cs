@@ -9,21 +9,14 @@ namespace BetterContinents
 {
     public partial class DebugUtils
     {
-        private static Texture CloudTexture;
-        private static Texture TransparentTexture;
-
         private static readonly string[] Bosses =
         {
             "StartTemple", "Eikthyrnir", "GDKing", "GoblinKing", "Bonemass", "Dragonqueen",
-            "Vendor_BlackForest"
+            "Vendor_BlackForest", "Mistlands_DvergrBossEntrance1", "Mistlands_DvergrTownEntrance2"
         };
-        
-        //private delegate void AddCmdActionDelegate(Type type, string name, string desc, object defaultValue, AcceptableValueBase range, Action<object> setValue, Func<object> getValue);
-        //private delegate NoiseStackSettings.NoiseSettings GetSettingsFromArgsDelegate();
 
         static DebugUtils()
         {
-            // ReSharper disable once ObjectCreationAsStatement
             new Terminal.ConsoleCommand("bc", "Root Better Continents command", args => RunConsoleCommand(args.FullLine.Trim()), true, false, true);
             rootCommand = new Command("bc", "Better Continents", "Better Continents command").Subcommands(bc =>
             {
@@ -108,18 +101,18 @@ namespace BetterContinents
                         .Select(f => f.Trim())
                         .ToArray());
                 });
-                bc.AddValue<bool>("clouds", "Clouds", "if the map clouds are enabled",
-                    defaultValue: true,
-                    getter: () =>
-                        Minimap.instance.m_mapImageLarge.material.GetTexture("_CloudTex") != TransparentTexture,
-                    setter: enable =>
-                    {
-                        var mat = Minimap.instance.m_mapImageLarge.material;
-                        CloudTexture ??= mat.GetTexture("_CloudTex");
-                        TransparentTexture ??= UI.CreateFillTexture(new Color32(0, 0, 0, 0));
-                        mat.SetTexture("_CloudTex", enable ? TransparentTexture : CloudTexture);
-                    });
-                bc.AddValue<int>("mapds", "Minimap downscaling", "set minimap downscaling factor (for faster updates)",
+                bc.AddCommand("clouds", "Clouds", "toggles minimap clouds", args =>
+                {
+                    if (GameUtils.MinimapCloudsEnabled)
+                        GameUtils.DisableMinimapClouds();
+                    else
+                        GameUtils.EnableMinimapClouds();
+                    GameUtils.HideOnMap((args ?? "")
+                        .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(f => f.Trim())
+                        .ToArray());
+                });
+                bc.AddValue("mapds", "Minimap downscaling", "set minimap downscaling factor (for faster updates)",
                     defaultValue: 2,
                     list: new[] { 0, 1, 2, 3 },
                     getter: () => GameUtils.MinimapDownscalingPower,
@@ -169,7 +162,7 @@ namespace BetterContinents
                 bc.AddGroup("g", "Global", "global settings, get more info with 'bc g help'",
                     group =>
                     {
-                        group.AddValue<float>("sl", "Sea level adjustment", "sea level adjustment", 
+                        group.AddValue<float>("sl", "Sea level adjustment", "sea level adjustment",
                             defaultValue: 0.5f, minValue: 0, maxValue: 1,
                             setter: SetHeightmapValue<float>(value => BetterContinents.Settings.SeaLevel = value),
                             getter: () => BetterContinents.Settings.SeaLevel);
@@ -471,7 +464,7 @@ namespace BetterContinents
                     group.AddValue("in", "Invert", "invert",
                         setter: SetHeightmapValue<bool>(value => settings.Invert = value),
                         getter: () => settings.Invert);
-                    
+
                     group.AddValue("ust", "Use Smooth Threshold", "use smooth threshold",
                         setter: SetHeightmapValue<bool>(value => settings.UseSmoothThreshold = value),
                         getter: () => settings.UseSmoothThreshold);
@@ -483,7 +476,7 @@ namespace BetterContinents
                         defaultValue: 1, minValue: -1, maxValue: 1,
                         getter: () => settings.SmoothThresholdEnd,
                         setter: SetHeightmapValue<float>(value => settings.SmoothThresholdEnd = value));
-                    
+
                     group.AddValue("uth", "Use Threshold", "use threshold",
                         setter: SetHeightmapValue<bool>(value => settings.UseThreshold = value),
                         getter: () => settings.UseThreshold);
@@ -491,7 +484,7 @@ namespace BetterContinents
                         defaultValue: 0, minValue: 0, maxValue: 1,
                         getter: () => settings.Threshold,
                         setter: SetHeightmapValue<float>(value => settings.Threshold = value));
-                    
+
                     group.AddValue("ura", "Use Range", "use range",
                         setter: SetHeightmapValue<bool>(value => settings.UseRange = value),
                         getter: () => settings.UseRange);
@@ -503,7 +496,7 @@ namespace BetterContinents
                         defaultValue: 1, minValue: -1, maxValue: 1,
                         getter: () => settings.RangeEnd,
                         setter: SetHeightmapValue<float>(value => settings.RangeEnd = value));
-                    
+
                     group.AddValue("uop", "Use Opacity", "use opacity",
                         setter: SetHeightmapValue<bool>(value => settings.UseOpacity = value),
                         getter: () => settings.UseOpacity);
@@ -511,7 +504,7 @@ namespace BetterContinents
                         defaultValue: 1, minValue: 0, maxValue: 1,
                         getter: () => settings.Threshold,
                         setter: SetHeightmapValue<float>(value => settings.Threshold = value));
-                    
+
                     group.AddValue("blm", "Blend Mode", "how to apply this layer to the previous one",
                         defaultValue: BlendOperations.BlendModeType.Overlay,
                         setter: SetHeightmapValue<BlendOperations.BlendModeType>(value =>
@@ -733,15 +726,15 @@ namespace BetterContinents
                 // }
             });
         }
-        
+
         public static void RunConsoleCommand(string text)
         {
             rootCommand.Run(text);
         }
 
-        public static T GetDelegate<T>(Type type, string method) where T : Delegate 
+        public static T GetDelegate<T>(Type type, string method) where T : Delegate
             => AccessTools.MethodDelegate<T>(AccessTools.Method(type, method));
-        
+
         private static Action<string> HeightmapCommand(Action<string> command) =>
             value =>
             {
@@ -752,7 +745,7 @@ namespace BetterContinents
                 maskPreviewTextures = null;
                 GameUtils.EndTerrainChanges();
             };
-        
+
         private static Action<T> SetHeightmapValue<T>(Action<T> setValue) =>
             value =>
             {
@@ -763,11 +756,11 @@ namespace BetterContinents
                 maskPreviewTextures = null;
                 GameUtils.EndTerrainChanges();
             };
-        
+
         private static readonly Command rootCommand;
         private static List<Texture> noisePreviewTextures = null;
         private static List<Texture> maskPreviewTextures = null;
-        private static readonly List<bool> noisePreviewExpanded = new List<bool>();
+        private static readonly List<bool> noisePreviewExpanded = new();
 
         private const int NoisePreviewSize = 512;
         private static (Texture noise, Texture mask) GetPreviewTextures(int layerIndex)
@@ -799,11 +792,11 @@ namespace BetterContinents
             var pixels = new Color32[size * size];
             GameUtils.SimpleParallelFor(4, 0, size, y =>
             {
-                float yp = 2f * (y / (float) size - 0.5f) * BetterContinents.WorldSize;
+                float yp = 2f * (y / (float)size - 0.5f) * BetterContinents.WorldSize;
                 for (int x = 0; x < size; ++x)
                 {
-                    float xp = 2f * (x / (float) size - 0.5f) * BetterContinents.WorldSize;
-                    byte val = (byte) Mathf.Clamp((int) (noiseFn(xp, yp) * 255f), 0, 255);
+                    float xp = 2f * (x / (float)size - 0.5f) * BetterContinents.WorldSize;
+                    byte val = (byte)Mathf.Clamp((int)(noiseFn(xp, yp) * 255f), 0, 255);
                     pixels[y * size + x] = new Color32(val, val, val, byte.MaxValue);
                 }
             });
@@ -812,10 +805,10 @@ namespace BetterContinents
             tex.Apply(false);
             return tex;
         }
-        
+
         private static void DrawNoisePreview(int i)
         {
-            var (noiseTexture, maskTexture) = GetPreviewTextures(i);
+            var (noiseTexture, _) = GetPreviewTextures(i);
 
             noisePreviewExpanded.Resize(Mathf.Max(noisePreviewExpanded.Count, noisePreviewTextures.Count));
             noisePreviewExpanded[i] = GUILayout.Toggle(noisePreviewExpanded[i], i == noisePreviewTextures.Count - 1 ? "Preview Final" : $"Preview Layer {i} Noise");
@@ -824,10 +817,10 @@ namespace BetterContinents
                 GUILayout.Box(noiseTexture);
             }
         }
-        
+
         private static void DrawMaskPreview(int i)
         {
-            var (noiseTexture, maskTexture) = GetPreviewTextures(i);
+            var (_, maskTexture) = GetPreviewTextures(i);
             noisePreviewExpanded.Resize(Mathf.Max(noisePreviewExpanded.Count, maskPreviewTextures.Count));
             noisePreviewExpanded[i] = GUILayout.Toggle(noisePreviewExpanded[i], i == maskPreviewTextures.Count - 1 ? "Preview Final Mask" : $"Preview Layer {i} Mask");
             if (noisePreviewExpanded[i])

@@ -14,21 +14,6 @@ namespace BetterContinents
 {
     public static class GameUtils
     {
-        private static void RegenerateHeightmaps()
-        {
-            var sw = new Stopwatch();
-            sw.Start();
-            
-            // Regenerate all heightmaps            
-            foreach (var heightmap in Resources.FindObjectsOfTypeAll<Heightmap>())
-            {
-                heightmap.CancelInvoke();
-                heightmap.Clear();
-                heightmap.Regenerate();
-            }
-            BetterContinents.Log($"Regenerating heightmaps took {sw.ElapsedMilliseconds} ms");
-        }
-
         private static void RegenerateDistantLod()
         {
             foreach (var lod in Object.FindObjectsOfType<TerrainLod>())
@@ -38,7 +23,7 @@ namespace BetterContinents
         }
 
         private static Dictionary<ZDOID, ZDO> GetObjectsByID() => ZDOMan.instance.m_objectsByID;
-        
+
         public static void BeginTerrainChanges()
         {
             // Stop and reset the heightmap generator first
@@ -47,25 +32,25 @@ namespace BetterContinents
         }
 
         public static void EndTerrainChanges()
-        { 
+        {
             Refresh();
         }
 
         public static void Refresh()
         {
             DespawnAll();
-            
+
             ClutterSystem.instance.ClearAll();
             ResetLocationInstances();
             RegenerateDistantLod();
-            
+
             FastMinimapRegen();
         }
 
         public static void RegenerateLocations()
         {
             DespawnAll();
-            
+
             ClutterSystem.instance.ClearAll();
             ResetLocationInstances();
 
@@ -80,41 +65,50 @@ namespace BetterContinents
 
         public static void FastMinimapRegen()
         {
-            int MinimapDownscaling = (int) Mathf.Pow(2, Mathf.Clamp(MinimapDownscalingPower, 0, 3));
-            if (MinimapOrigTextureSize == 0 
-                || Minimap.instance.m_textureSize != MinimapOrigTextureSize / MinimapDownscaling)
+            var map = Minimap.instance;
+            int MinimapDownscaling = (int)Mathf.Pow(2, Mathf.Clamp(MinimapDownscalingPower, 0, 3));
+            if (MinimapOrigTextureSize == 0
+                || map.m_textureSize != MinimapOrigTextureSize / MinimapDownscaling)
             {
-                if(MinimapOrigTextureSize == 0)
+                if (MinimapOrigTextureSize == 0)
                 {
-                    MinimapOrigTextureSize = Minimap.instance.m_textureSize;
-                    MinimapOrigPixelSize = Minimap.instance.m_pixelSize;
+                    MinimapOrigTextureSize = map.m_textureSize;
+                    MinimapOrigPixelSize = map.m_pixelSize;
                 }
-                Minimap.instance.m_textureSize = MinimapOrigTextureSize / MinimapDownscaling;
-                Minimap.instance.m_pixelSize = MinimapOrigPixelSize * MinimapDownscaling;
-                Minimap.instance.m_mapTexture = new Texture2D(Minimap.instance.m_textureSize, Minimap.instance.m_textureSize, TextureFormat.RGBA32, false);
-                Minimap.instance.m_mapTexture.wrapMode = TextureWrapMode.Clamp;
-                Minimap.instance.m_forestMaskTexture = new Texture2D(Minimap.instance.m_textureSize, Minimap.instance.m_textureSize, TextureFormat.RGBA32, false);
-                Minimap.instance.m_forestMaskTexture.wrapMode = TextureWrapMode.Clamp;
-                Minimap.instance.m_heightTexture = new Texture2D(Minimap.instance.m_textureSize, Minimap.instance.m_textureSize, TextureFormat.RFloat, false);
-                Minimap.instance.m_heightTexture.wrapMode = TextureWrapMode.Clamp;
-                Minimap.instance.m_fogTexture = new Texture2D(Minimap.instance.m_textureSize, Minimap.instance.m_textureSize, TextureFormat.RGBA32, false);
-                Minimap.instance.m_fogTexture.wrapMode = TextureWrapMode.Clamp;
-                Minimap.instance.m_explored = new bool[Minimap.instance.m_textureSize * Minimap.instance.m_textureSize];
-                Minimap.instance.m_mapImageLarge.material = Object.Instantiate<Material>(Minimap.instance.m_mapImageLarge.material);
-                Minimap.instance.m_mapImageSmall.material = Object.Instantiate<Material>(Minimap.instance.m_mapImageSmall.material);
-                Minimap.instance.m_mapImageLarge.material.SetTexture("_MainTex", Minimap.instance.m_mapTexture);
-                Minimap.instance.m_mapImageLarge.material.SetTexture("_MaskTex", Minimap.instance.m_forestMaskTexture);
-                Minimap.instance.m_mapImageLarge.material.SetTexture("_HeightTex", Minimap.instance.m_heightTexture);
-                Minimap.instance.m_mapImageLarge.material.SetTexture("_FogTex", Minimap.instance.m_fogTexture);
-                Minimap.instance.m_mapImageSmall.material.SetTexture("_MainTex", Minimap.instance.m_mapTexture);
-                Minimap.instance.m_mapImageSmall.material.SetTexture("_MaskTex", Minimap.instance.m_forestMaskTexture);
-                Minimap.instance.m_mapImageSmall.material.SetTexture("_HeightTex", Minimap.instance.m_heightTexture);
-                Minimap.instance.m_mapImageSmall.material.SetTexture("_FogTex", Minimap.instance.m_fogTexture);
+                var size = MinimapOrigTextureSize / MinimapDownscaling;
+                map.m_textureSize = size;
+                map.m_pixelSize = MinimapOrigPixelSize * MinimapDownscaling;
+                map.m_mapTexture = new(size, size, TextureFormat.RGBA32, false)
+                {
+                    wrapMode = TextureWrapMode.Clamp
+                };
+                map.m_forestMaskTexture = new(size, size, TextureFormat.RGBA32, false)
+                {
+                    wrapMode = TextureWrapMode.Clamp
+                };
+                map.m_heightTexture = new(size, size, TextureFormat.RFloat, false)
+                {
+                    wrapMode = TextureWrapMode.Clamp
+                };
+                map.m_fogTexture = new(size, size, TextureFormat.RGBA32, false)
+                {
+                    wrapMode = TextureWrapMode.Clamp
+                };
+                map.m_explored = new bool[size * size];
+                map.m_mapImageLarge.material.SetTexture("_MainTex", map.m_mapTexture);
+                map.m_mapImageLarge.material.SetTexture("_MaskTex", map.m_forestMaskTexture);
+                map.m_mapImageLarge.material.SetTexture("_HeightTex", map.m_heightTexture);
+                map.m_mapImageLarge.material.SetTexture("_FogTex", map.m_fogTexture);
+                map.m_mapImageSmall.material.SetTexture("_MainTex", map.m_mapTexture);
+                map.m_mapImageSmall.material.SetTexture("_MaskTex", map.m_forestMaskTexture);
+                map.m_mapImageSmall.material.SetTexture("_HeightTex", map.m_heightTexture);
+                map.m_mapImageSmall.material.SetTexture("_FogTex", map.m_fogTexture);
+                map.Reset();
             }
-            Minimap.instance.ForceRegen();
-            Minimap.instance.ExploreAll();
+            map.ForceRegen();
+            map.ExploreAll();
         }
-        
+
         public static void SaveMinimap(string path, int size)
         {
             BetterContinents.instance.StartCoroutine(SaveMinimapImpl(path, size));
@@ -128,7 +122,7 @@ namespace BetterContinents
 
             MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
 
-            Mesh mesh = new Mesh();
+            Mesh mesh = new();
 
             Vector3[] vertices = new Vector3[4]
             {
@@ -174,20 +168,20 @@ namespace BetterContinents
         private static Texture? CloudTexture;
         private static Texture? TransparentTexture;
 
-        private static bool MinimapCloudsEnabled =>
+        public static bool MinimapCloudsEnabled =>
             Minimap.instance.m_mapImageLarge.material.GetTexture("_CloudTex") != TransparentTexture;
 
-        private static void EnableMinimapClouds()
+        public static void EnableMinimapClouds()
         {
             if (!MinimapCloudsEnabled)
             {
                 Minimap.instance.m_mapImageLarge.material.SetTexture("_CloudTex", CloudTexture);
             }
         }
-        
-        private static void DisableMinimapClouds()
+
+        public static void DisableMinimapClouds()
         {
-            if(MinimapCloudsEnabled)
+            if (MinimapCloudsEnabled)
             {
                 var mat = Minimap.instance.m_mapImageLarge.material;
 
@@ -200,7 +194,7 @@ namespace BetterContinents
                 mat.SetTexture("_CloudTex", TransparentTexture);
             }
         }
-        
+
         private static IEnumerator SaveMinimapImpl(string path, int size)
         {
             bool wasLarge = Minimap.instance.m_largeRoot.activeSelf;
@@ -212,24 +206,26 @@ namespace BetterContinents
 
             bool wasClouds = MinimapCloudsEnabled;
             DisableMinimapClouds();
-            
+
             var mapPanelObject = CreateQuad(100, 100, 10, Minimap.instance.m_mapImageLarge.material);
 
             mapPanelObject.layer = 19;
 
             var renderTexture = new RenderTexture(size, size, 24);
-            var cameraObject = new GameObject();
-            cameraObject.layer = 19;
+            GameObject cameraObject = new()
+            {
+                layer = 19
+            };
             var camera = cameraObject.AddComponent<Camera>();
             camera.targetTexture = renderTexture;
             camera.orthographic = true;
-            camera.rect = new Rect(0, 0, renderTexture.width, renderTexture.height); 
+            camera.rect = new Rect(0, 0, renderTexture.width, renderTexture.height);
             camera.nearClipPlane = 0;
             camera.farClipPlane = 100;
             camera.orthographicSize = 50;
             camera.cullingMask = 1 << 19;
             camera.Render();
-            
+
             yield return new WaitForEndOfFrame();
 
             RenderTexture.active = renderTexture;
@@ -237,17 +233,17 @@ namespace BetterContinents
             tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
             tex.Apply();
             RenderTexture.active = null;
-            
+
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             Console.instance.Print($"Screenshot of minimap saved to {path}");
-            
+
             File.WriteAllBytes(path, ImageConversion.EncodeToPNG(tex));
 
             Object.Destroy(mapPanelObject);
             Object.Destroy(cameraObject);
             Object.Destroy(renderTexture);
             Object.Destroy(tex);
-            
+
             if (!wasLarge)
             {
                 Minimap.instance.SetMapMode(Minimap.MapMode.Small);
@@ -290,7 +286,7 @@ namespace BetterContinents
             try
             {
                 Directory.CreateDirectory(targetDirectory);
-                
+
                 BetterContinents.Log($"Extracting all files from {resourceDirectory} to {targetDirectory}");
 
                 if (!resourceDirectory.EndsWith("."))
@@ -332,7 +328,7 @@ namespace BetterContinents
                 using var stream = execAssembly.GetManifestResourceStream(fullResourceName);
                 return AssetBundle.LoadFromStream(stream);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 BetterContinents.LogError($"Failed to get asset bundle {partialResourceName}: {ex.Message}");
                 return null!;
@@ -370,16 +366,16 @@ namespace BetterContinents
             {
                 ZDOMan.instance.HandleDestroyedZDO(zdo.m_uid);
             }
-            
+
             ZDOMan.instance.ResetSectorArray();
-            
+
             ZDOMan.instance.AddToSector(playerZDO, playerZDO.GetSector());
-            
+
             ResetLocationInstances();
         }
-        
+
         public static Dictionary<Vector2i, ZoneSystem.LocationInstance> GetLocationInstances() =>
-            (Dictionary<Vector2i, ZoneSystem.LocationInstance>) AccessTools.Field(typeof(ZoneSystem), "m_locationInstances").GetValue(ZoneSystem.instance);
+            (Dictionary<Vector2i, ZoneSystem.LocationInstance>)AccessTools.Field(typeof(ZoneSystem), "m_locationInstances").GetValue(ZoneSystem.instance);
 
         public static void ShowOnMap(params string[] list)
         {

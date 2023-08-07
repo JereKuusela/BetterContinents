@@ -9,16 +9,16 @@ using Debug = UnityEngine.Debug;
 
 namespace BetterContinents
 {
-  [BepInPlugin("BetterContinents", ModInfo.Name, ModInfo.Version)]
+    [BepInPlugin("BetterContinents", ModInfo.Name, ModInfo.Version)]
     public partial class BetterContinents : BaseUnityPlugin
     {
-        #nullable disable
+#nullable disable
         // See the Awake function for the config descriptions
         public static ConfigEntry<int> NexusID;
         public static ConfigEntry<string> ConfigSelectedPreset;
-        
+
         public static ConfigEntry<bool> ConfigEnabled;
-        
+
         public static ConfigEntry<float> ConfigContinentSize;
         public static ConfigEntry<float> ConfigSeaLevelAdjustment;
         public static ConfigEntry<bool> ConfigOceanChannelsEnabled;
@@ -27,7 +27,7 @@ namespace BetterContinents
         public static ConfigEntry<bool> ConfigMountainsAllowedAtCenter;
 
         public static ConfigEntry<string> ConfigMapSourceDir;
-        
+
         public static ConfigEntry<string> ConfigHeightmapFile;
         public static ConfigEntry<float> ConfigHeightmapAmount;
         public static ConfigEntry<float> ConfigHeightmapBlend;
@@ -38,10 +38,10 @@ namespace BetterContinents
         public static ConfigEntry<string> ConfigBiomemapFile;
 
         public static ConfigEntry<string> ConfigSpawnmapFile;
-        
+
         public static ConfigEntry<string> ConfigRoughmapFile;
         public static ConfigEntry<float> ConfigRoughmapBlend;
-        
+
         public static ConfigEntry<float> ConfigForestScale;
         public static ConfigEntry<float> ConfigForestAmount;
         public static ConfigEntry<bool> ConfigForestFactorOverrideAllTrees;
@@ -52,54 +52,38 @@ namespace BetterContinents
         public static ConfigEntry<bool> ConfigOverrideStartPosition;
         public static ConfigEntry<float> ConfigStartPositionX;
         public static ConfigEntry<float> ConfigStartPositionY;
-        
+
         public static ConfigEntry<bool> ConfigDebugModeEnabled;
         public static ConfigEntry<bool> ConfigDebugSkipDefaultLocationPlacement;
-        
+
         public static ConfigEntry<bool> ConfigExperimentalMultithreadedHeightmapBuild;
         public static ConfigEntry<bool> ConfigExperimentalParallelChunksBuild;
         public static BetterContinents instance;
 #nullable enable
-        public const float WorldSize = 10500f;
+        public static float WorldSize = 10500f;
         public const string ConfigFileExtension = ".BetterContinents";
         private static readonly Vector2 Half = Vector2.one * 0.5f;
         private static float NormalizedX(float x) => x / (WorldSize * 2f) + 0.5f;
         private static float NormalizedY(float y) => y / (WorldSize * 2f) + 0.5f;
-        private static float WorldX(float x) => (x - 0.5f) * WorldSize * 2f;
-        private static float WorldY(float y) => (y - 0.5f) * WorldSize * 2f;
         private static Vector2 NormalizedToWorld(Vector2 p) => (p - Half) * WorldSize * 2f;
-        private static Vector2 NormalizedToWorld(float x, float y) => new Vector2(WorldX(x), WorldY(y));
-        private static Vector2 WorldToNormalized(Vector2 p) => p / (WorldSize * 2f) + Half;
-        private static Vector2 WorldToNormalized(float x, float y) => new Vector2(NormalizedX(x), NormalizedY(y));
+        private static Vector2 WorldToNormalized(float x, float y) => new(NormalizedX(x), NormalizedY(y));
 
         public static void Log(string msg) => Debug.Log($"[BetterContinents] {msg}");
         public static void LogError(string msg) => Debug.LogError($"[BetterContinents] {msg}");
+        public static void LogWarning(string msg) => Debug.LogWarning($"[BetterContinents] {msg}");
 
-        public static bool AllowDebugActions => ZNet.instance 
-                                                && ZNet.instance.IsServer() 
-                                                && Settings.EnabledForThisWorld 
+        public static bool AllowDebugActions => ZNet.instance
+                                                && ZNet.instance.IsServer()
+                                                && Settings.EnabledForThisWorld
                                                 && ConfigDebugModeEnabled.Value;
 
-        public static BetterContinentsSettings Settings;
+        public static BetterContinentsSettings Settings = new();
 
 
-        //public static Assembly asm;
-        //public static AppDomain domain;
-        private void Awake()
+        public void Awake()
         {
             instance = this;
-            
-            // //var asm = Assembly.Load("UnityEngine.CoreModule");
-            // asm = Assembly.LoadFile(
-            //     @"C:\Program Files (x86)\Steam\steamapps\common\Valheim-debug\unstripped_corlib\UnityEngine.CoreModule.dll");
-            // domain = AppDomain.CreateDomain("CoreModule");
-            // domain.Load(asm.GetName());
-            //
-            // //var entryAsm = Assembly.GetEntryAssembly();
-            //
-            // var mbType = typeof(MonoBehaviour);
-            
-            
+
             // Cos why...
             Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
             // Application.SetStackTraceLogType(LogType.Warning, StackTraceLogType.None);
@@ -107,7 +91,8 @@ namespace BetterContinents
             Console.SetConsoleEnabled(true);
 
             Config.Declare()
-                .AddGroup("BetterContinents.Global", groupBuilder => {
+                .AddGroup("BetterContinents.Global", groupBuilder =>
+                {
                     groupBuilder.AddValue("Enabled")
                         .Description("Whether this mod is enabled")
                         .Default(true).Bind(out ConfigEnabled);
@@ -130,11 +115,13 @@ namespace BetterContinents
                         .Description("Whether the map should allow mountains to occur at the map center (if you have default spawn then you should keep this unchecked)")
                         .Default(false).Bind(out ConfigMountainsAllowedAtCenter);
                 })
-                .AddGroup("BetterContinents.Project", groupBuilder => {
+                .AddGroup("BetterContinents.Project", groupBuilder =>
+                {
                     groupBuilder.AddValue("Directory")
                         .Description("This directory will load automatically any existing map files matching the correct names, overriding specific files specified below. Filenames must match: heightmap.png, biomemap.png, spawnmap.png, roughmap.png, forestmap.png.").Bind(out ConfigMapSourceDir);
                 })
-                .AddGroup("BetterContinents.Heightmap", groupBuilder => {
+                .AddGroup("BetterContinents.Heightmap", groupBuilder =>
+                {
                     groupBuilder.AddValue("Heightmap File")
                         .Description("Path to a heightmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigHeightmapFile);
                     groupBuilder.AddValue("Heightmap Amount")
@@ -153,18 +140,21 @@ namespace BetterContinents
                         .Description("All other aspects of the height calculation will be disabled, so the world will perfectly conform to your heightmap")
                         .Default(true).Bind(out ConfigHeightmapOverrideAll);
                 })
-                .AddGroup("BetterContinents.Roughmap", groupBuilder => {
+                .AddGroup("BetterContinents.Roughmap", groupBuilder =>
+                {
                     groupBuilder.AddValue("Roughmap File")
                         .Description("Path to a roughmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigRoughmapFile);
                     groupBuilder.AddValue("Roughmap Blend")
                         .Description("How strongly to apply the roughmap file")
                         .Default(1f).Range(0f, 1f).Bind(out ConfigRoughmapBlend);
                 })
-                .AddGroup("BetterContinents.Biomemap", groupBuilder => {
+                .AddGroup("BetterContinents.Biomemap", groupBuilder =>
+                {
                     groupBuilder.AddValue("Biomemap File")
                         .Description("Path to a biomemap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigBiomemapFile);
                 })
-                .AddGroup("BetterContinents.Forest", groupBuilder => {
+                .AddGroup("BetterContinents.Forest", groupBuilder =>
+                {
                     groupBuilder.AddValue("Forest Scale")
                         .Description("Scales forested/cleared area size")
                         .Default(0.5f).Range(0f, 1f).Bind(out ConfigForestScale);
@@ -183,11 +173,13 @@ namespace BetterContinents
                         .Description("How strongly to add the forestmap directly to the vanilla forest factor")
                         .Default(1f).Range(0f, 1f).Bind(out ConfigForestmapAdd);
                 })
-                .AddGroup("BetterContinents.Spawnmap", groupBuilder => {
+                .AddGroup("BetterContinents.Spawnmap", groupBuilder =>
+                {
                     groupBuilder.AddValue("Spawnmap File")
                         .Description("Path to a spawnmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigSpawnmapFile);
                 })
-                .AddGroup("BetterContinents.StartPosition", groupBuilder => {
+                .AddGroup("BetterContinents.StartPosition", groupBuilder =>
+                {
                     groupBuilder.AddValue("Override Start Position")
                         .Description("Whether to override the start position using the values provided (warning: will disable all validation of the position)")
                         .Default(false).Bind(out ConfigOverrideStartPosition);
@@ -198,19 +190,22 @@ namespace BetterContinents
                         .Description("Start position override Y value, in ranges -10500 to 10500")
                         .Default(0f).Range(-10500f, 10500f).Bind(out ConfigStartPositionY);
                 })
-                .AddGroup("BetterContinents.Debug", groupBuilder => {
+                .AddGroup("BetterContinents.Debug", groupBuilder =>
+                {
                     groupBuilder.AddValue("Debug Mode")
                         .Description("Automatically reveals the full map on respawn, enables cheat mode, and debug mode, for debugging purposes").Bind(out ConfigDebugModeEnabled);
                     groupBuilder.AddValue("Skip Default Location Placement")
                         .Description("Skips default location placement during world gen (spawn temple and spawnmap are still placed), for quickly testing the heightmap itself").Bind(out ConfigDebugSkipDefaultLocationPlacement);
                 })
-                .AddGroup("BetterContinents.Experimental", groupBuilder => {
+                .AddGroup("BetterContinents.Experimental", groupBuilder =>
+                {
                     groupBuilder.AddValue("Multithreaded Heightmap Build")
                         .Advanced().Description("").Bind(out ConfigExperimentalMultithreadedHeightmapBuild);
                     groupBuilder.AddValue("Parallel Chunks Build")
                         .Advanced().Description("").Bind(out ConfigExperimentalParallelChunksBuild);
                 })
-                .AddGroup("BetterContinents.Misc", groupBuilder => {
+                .AddGroup("BetterContinents.Misc", groupBuilder =>
+                {
                     groupBuilder.AddValue("NexusID")
                         .Hidden().Default(446).Bind(out NexusID);
                     groupBuilder.AddValue("SelectedPreset")
@@ -222,95 +217,20 @@ namespace BetterContinents
             UI.Init();
         }
 
-        private void OnGUI()
+        public void OnGUI()
         {
             UI.OnGUI();
         }
-        
-        // Debug mode helpers
-        [HarmonyPatch(typeof(Player))]
-        private class PlayerPatch
-        {
-            [HarmonyPrefix, HarmonyPatch(nameof(Player.OnSpawned))]
-            private static void OnSpawnedPrefix(Player __instance)
-            {
-                if (AllowDebugActions)
-                {
-                    AccessTools.Field(typeof(Player), "m_firstSpawn").SetValue(__instance, false);
-                }
-            }
-            
-            [HarmonyPostfix, HarmonyPatch(nameof(Player.OnSpawned))]
-            private static void OnSpawnedPostfix()
-            { 
-                if (AllowDebugActions)
-                {
-                    AccessTools.Field(typeof(Console), "m_cheat").SetValue(Console.instance, true);
-                    Minimap.instance.ExploreAll();
-                    Player.m_debugMode = true;
-                    EnvMan.instance.m_debugEnv = "clear";
-                    EnvMan.instance.m_debugTimeOfDay = true;
-                    EnvMan.instance.m_debugTime = 0.5f;
-                    Player.m_localPlayer.SetGodMode(true);
-                    GameCamera.instance.m_minWaterDistance = -1000f;
-                }
-            }
-        }
-        
-        // Debug mode helpers
-        [HarmonyPatch(typeof(Character))]
-        private class CharacterPatch
-        {
-            private delegate bool TakeInputDelegate(Character instance);
-            private static readonly TakeInputDelegate TakeInput = DebugUtils.GetDelegate<TakeInputDelegate>(typeof(Character), "TakeInput");
-                
-            [HarmonyPrefix, HarmonyPatch("UpdateDebugFly")]
-            private static void UpdateDebugFlyPrefix(Character __instance, Vector3 ___m_moveDir, ref Vector3 ___m_currentVel)
-            {
-                if (AllowDebugActions)
-                {
-                    // Add some extra velocity
-                    Vector3 newVel = ___m_moveDir * 200f;
-                    
-                    if (TakeInput(__instance))
-                    {
-                        if (ZInput.GetButton("Jump"))
-                        {
-                            newVel.y = 200;
-                        }
-                        else if (Input.GetKey(KeyCode.LeftControl))
-                        {
-                            newVel.y = -200;
-                        }
-                    }
-                    ___m_currentVel = Vector3.Lerp(___m_currentVel, newVel, 0.5f);
-                }
-            }
-        }
-        
+
         // Debug mode helpers
         [HarmonyPatch(typeof(Minimap))]
         private class MinimapPatch
         {
             private delegate Vector3 ScreenToWorldPointDelegate(Minimap instance, Vector3 mousePos);
             private static readonly ScreenToWorldPointDelegate ScreenToWorldPoint = DebugUtils.GetDelegate<ScreenToWorldPointDelegate>(typeof(Minimap), "ScreenToWorldPoint");
-            
-            [HarmonyPostfix, HarmonyPatch(nameof(Minimap.OnMapMiddleClick))]
-            private static void OnMapMiddleClickPostfix(Minimap __instance)
-            {
-                if (AllowDebugActions && Input.GetKey(KeyCode.LeftShift) && Input.GetKey(KeyCode.LeftControl))
-                {
-                    var player = Player.m_localPlayer;
-                    if (player)
-                    {
-                        var position = ScreenToWorldPoint(__instance, Input.mousePosition);
-                        var pos = new Vector3(position.x, player.transform.position.y, position.z);
-                        player.TeleportTo(pos, player.transform.rotation, true);
-                    }
-                }
-            }
 
-            private static Heightmap.Biome ForestableBiomes =
+
+            private static readonly Heightmap.Biome ForestableBiomes =
                  Heightmap.Biome.Meadows |
                  Heightmap.Biome.Mistlands |
                  Heightmap.Biome.Mountain |
@@ -320,7 +240,7 @@ namespace BetterContinents
              ;
 
             [HarmonyPrefix, HarmonyPatch(nameof(Minimap.GetMaskColor))]
-            private static bool GetMaskColorPrefix(Minimap __instance, float wx, float wy, float height, Heightmap.Biome biome, ref Color __result, Color ___noForest, Color ___forest)
+            private static bool GetMaskColorPrefix(float wx, float wy, Heightmap.Biome biome, ref Color __result, Color ___noForest, Color ___forest)
             {
                 if (Settings.EnabledForThisWorld && Settings.ForestFactorOverrideAllTrees && (biome & ForestableBiomes) != 0)
                 {
@@ -387,11 +307,11 @@ namespace BetterContinents
                 __instance.m_mapTexture.Apply();
                 __instance.m_heightTexture.SetPixels(heightPixels);
                 __instance.m_heightTexture.Apply();
-                
+
                 Log($"Finished generating minimap textures multi-threaded ...");
             }
         }
-        
+
         // Show the connection error message
     }
 }

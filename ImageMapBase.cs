@@ -21,17 +21,22 @@ namespace BetterContinents
 
         public ImageMapBase(string filePath)
         {
-            this.FilePath = filePath;
-            this.SourceData = new byte[0];
+            FilePath = filePath;
+            SourceData = new byte[0];
         }
 
         public ImageMapBase(string filePath, byte[] sourceData) : this(filePath)
         {
-            this.SourceData = sourceData;
+            SourceData = sourceData;
         }
 
         public bool LoadSourceImage()
         {
+            if (!File.Exists(FilePath))
+            {
+                BetterContinents.LogWarning($"Cannot find image {FilePath}: Image was not reloaded.");
+                return false;
+            }
             try
             {
                 SourceData = File.ReadAllBytes(FilePath);
@@ -44,15 +49,17 @@ namespace BetterContinents
             }
         }
 
-        protected static Color32 Convert(Rgba32 pixel) => new (pixel.R, pixel.G, pixel.B, pixel.A);
-        
-        protected Image<T> LoadImage<T>(byte[] data)  where T : unmanaged, IPixel<T> => Image.Load<T>(Configuration.Default, SourceData);
+        protected static Color32 Convert(Rgba32 pixel) => new(pixel.R, pixel.G, pixel.B, pixel.A);
+
+        protected Image<T> LoadImage<T>() where T : unmanaged, IPixel<T> => Image.Load<T>(Configuration.Default, SourceData);
 
         protected abstract bool LoadTextureToMap<T>(Image<T> image) where T : unmanaged, IPixel<T>;
 
-        public R[] LoadPixels<T, R>(Image<T> image, Func<T, R> converter) where T : unmanaged, IPixel<T> {
+        public R[] LoadPixels<T, R>(Image<T> image, Func<T, R> converter) where T : unmanaged, IPixel<T>
+        {
             var pixels = new R[image.Width * image.Height];
-            image.ProcessPixelRows(acc => {
+            image.ProcessPixelRows(acc =>
+            {
                 for (int y = 0; y < acc.Height; y++)
                 {
                     var row = acc.GetRowSpan(y);
@@ -71,22 +78,20 @@ namespace BetterContinents
             {
                 var sw = new Stopwatch();
                 sw.Start();
-                
+
                 // Cast disambiguates to the correct return type for some reason
-                using(var image = LoadImage<T>(SourceData))
+                using var image = LoadImage<T>();
+                if (!ValidateDimensions(image.Width, image.Height))
                 {
-                    if (!ValidateDimensions(image.Width, image.Height))
-                    {
-                        return false;
-                    }
-                    Size = image.Width;
-
-                    image.Mutate(x => x.Flip(FlipMode.Vertical));
-
-                    BetterContinents.Log($"Time to load {FilePath}: {sw.ElapsedMilliseconds} ms");
-                    
-                    return this.LoadTextureToMap(image);
+                    return false;
                 }
+                Size = image.Width;
+
+                image.Mutate(x => x.Flip(FlipMode.Vertical));
+
+                BetterContinents.Log($"Time to load {FilePath}: {sw.ElapsedMilliseconds} ms");
+
+                return LoadTextureToMap(image);
             }
             catch (Exception ex)
             {
@@ -104,7 +109,7 @@ namespace BetterContinents
                 return false;
             }
 
-            bool IsPowerOfTwo(int x) => (x & (x - 1)) == 0;
+            static bool IsPowerOfTwo(int x) => (x & (x - 1)) == 0;
             if (!IsPowerOfTwo(width))
             {
                 BetterContinents.LogError(

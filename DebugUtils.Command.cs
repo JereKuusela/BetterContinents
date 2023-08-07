@@ -28,7 +28,6 @@ namespace BetterContinents
             private readonly Command parent;
 
             private Color backgroundColor;
-            private object defaultValue;
             private KeyValuePair<object, object>? range;
             private List<object> validValues;
             private Action<object> setValue;
@@ -46,17 +45,7 @@ namespace BetterContinents
                 { typeof(float?), s => float.TryParse(s, out var value) ? (object)value : null },
                 { typeof(int?), s => int.TryParse(s, out var value) ? (object)value : null },
                 { typeof(bool?), s => bool.TryParse(s, out var value) ? (object)value : null },
-                // { typeof(Vector2), s =>
-                //     {
-                //         var parts = s.Split(new [] {' '}, StringSplitOptions.RemoveEmptyEntries);
-                //         return new Vector2(float.Parse(parts[0]), float.Parse(parts[1]));
-                //     }},
             };
-
-            // public static Dictionary<Type, Func<object, string>> TypeToStringConverters = new Dictionary<Type, Func<object, string>>
-            // {
-            //     { typeof(float?), o => $"{o ?? }" }
-            // };
 
             private Command(CommandType commandType, Command parent, string cmd, string uiName, string desc, Type valueType = null)
             {
@@ -79,13 +68,13 @@ namespace BetterContinents
             {
                 private readonly Command parent;
                 private readonly List<Command> subcommands;
-                
+
                 public SubcommandBuilder(Command parent, List<Command> subcommands)
                 {
                     this.parent = parent;
                     this.subcommands = subcommands;
                 }
-                
+
                 public Command AddGroup(string cmd, string uiName, string desc, Action<SubcommandBuilder> group = null)
                 {
                     var newCommand = new Command(CommandType.Group, parent, cmd, uiName, desc);
@@ -105,15 +94,15 @@ namespace BetterContinents
                 {
                     var newCommand = new Command(CommandType.Value, parent, name, uiName, desc, type);
                     subcommands.Add(newCommand);
-                    return newCommand;                
+                    return newCommand;
                 }
-                
+
                 public Command AddValue<T>(string name, string uiName, string desc, T defaultValue = default, Action<T> setter = null, Func<T> getter = null) where T : IComparable =>
                     AddValue(name, uiName, desc, typeof(T))
                         .Default(defaultValue)
                         .Setter(setter)
                         .Getter(getter);
-                
+
                 public Command AddValue<T>(string name, string uiName, string desc, T defaultValue, T minValue, T maxValue, Action<T> setter = null, Func<T> getter = null) where T : IComparable =>
                     AddValue(name, uiName, desc, defaultValue, setter, getter)
                         .Range(minValue, maxValue);
@@ -121,22 +110,22 @@ namespace BetterContinents
                 public Command AddValue<T>(string name, string uiName, string desc, T defaultValue, T[] list, Action<T> setter = null, Func<T> getter = null) where T : IComparable =>
                     AddValue(name, uiName, desc, defaultValue, setter, getter)
                         .List(list);
-                 
+
                 public Command AddValueNullable<T>(string name, string uiName, string desc, T? defaultValue = default, Action<T?> setter = null, Func<T?> getter = null) where T : struct, IComparable =>
                     AddValue(name, uiName, desc, typeof(T?))
                         .Default(defaultValue)
                         .Setter(setter)
                         .Getter(getter);
-                
+
                 public Command AddValueNullable<T>(string name, string uiName, string desc, T? defaultValue, T minValue, T maxValue, Action<T?> setter = null, Func<T?> getter = null) where T : struct, IComparable =>
                     AddValueNullable<T>(name, uiName, desc, defaultValue, setter, getter)
                         .Range(minValue, maxValue);
-               
+
                 public Command AddValueNullable<T>(string name, string uiName, string desc, T? defaultValue, T[] list, Action<T?> setter = null, Func<T?> getter = null) where T : struct, IComparable, IEquatable<T> =>
                     AddValueNullable<T>(name, uiName, desc, defaultValue, setter, getter)
                         .List(list);
             }
-            
+
             public bool Run(string text)
             {
                 bool hasArgs = text.StartsWith(cmd + " ");
@@ -217,7 +206,6 @@ namespace BetterContinents
                 {
                     throw new Exception($"Type of default value must match type of the subcommand {valueType}");
                 }
-                this.defaultValue = defaultValue;
                 return this;
             }
 
@@ -231,7 +219,7 @@ namespace BetterContinents
                 range = new KeyValuePair<object, object>(from, to);
                 return this;
             }
-            
+
             public Command List<T>(params T[] values)
             {
                 if (typeof(T) != valueType && typeof(T) != Nullable.GetUnderlyingType(valueType))
@@ -242,7 +230,7 @@ namespace BetterContinents
                 validValues = values.Cast<object>().ToList();
                 return this;
             }
-            
+
             public Command Setter<T>(Action<T> setValue)
             {
                 if (setValue != null)
@@ -252,7 +240,7 @@ namespace BetterContinents
                         throw new Exception($"Type of setter parameter must match type of the subcommand {valueType}");
                     }
 
-                    this.setValue = value => setValue((T) value);
+                    this.setValue = value => setValue((T)value);
                 }
 
                 return this;
@@ -292,12 +280,12 @@ namespace BetterContinents
             }
 
             private const string NullValueStr = "(disabled)";
-            
+
             private string GetValueString()
                 => getValue == null
                     ? "(not a value)"
                     : $"<size=18><b><color=#55ff55ff>{getValue() ?? NullValueStr}</color></b></size>";
-            
+
             public void ShowHelp()
             {
                 var helpString = $"<size=18><b><color=cyan>{GetFullCmdName()}</color></b></size>";
@@ -323,11 +311,6 @@ namespace BetterContinents
                 helpString += $" -- <size=15>{desc}</size>";
 
                 Console.instance.Print($"    " + helpString);
-
-                // if (getValue != null)
-                // {
-                //     Console.instance.Print($"        <size=15><b><color=#55ff55ff>{getValue()}</color></b></size>");
-                // }
             }
 
             private string GetFullCmdName()
@@ -354,19 +337,14 @@ namespace BetterContinents
             }
 
             public override string ToString() => $"{nameof(cmd)}: {cmd}, {nameof(desc)}: {desc}, {nameof(valueType)}: {valueType}";
-            
+
             public static class CmdUI
             {
                 private static Rect settingWindowRect;
                 private static Vector2 settingWindowScrollPos;
-                
+
                 private static readonly Dictionary<Type, Action<Command>> DefaultDrawers = new() {
-                    {typeof(bool), DrawBoolField},
-                    // {typeof(Color), DrawColor },
-                    // {typeof(Vector2), DrawVector2 },
-                    // {typeof(Vector3), DrawVector3 },
-                    // {typeof(Vector4), DrawVector4 },
-                    // {typeof(Quaternion), DrawQuaternion },
+                    {typeof(bool), DrawBoolField}
                 };
 
                 public static void DrawSettingsWindow()
@@ -392,7 +370,7 @@ namespace BetterContinents
                         cmd.customDrawer(cmd);
                         return;
                     }
-                    
+
                     var allSubcommands = cmd.GetSubcommands();
                     var label = new GUIContent(cmd.uiName, cmd.desc);
                     var state = GetUIState(cmd);
@@ -405,12 +383,12 @@ namespace BetterContinents
                             {
                                 groupStyle = new GUIStyle(GUI.skin.box)
                                 {
-                                    normal = {background = UI.CreateFillTexture(cmd.backgroundColor)}
+                                    normal = { background = UI.CreateFillTexture(cmd.backgroundColor) }
                                 };
                             }
 
                             GUILayout.BeginVertical(groupStyle);
-                            
+
                             // We have no parent then we are the root command and should skip the header and just show subcommands always
                             if (cmd.parent != null && DrawGroupHeader(label, state.uiExpanded)) state.uiExpanded = !state.uiExpanded;
                             if (cmd.parent == null || state.uiExpanded)
@@ -423,7 +401,7 @@ namespace BetterContinents
                             }
 
                             GUILayout.EndVertical();
-                            
+
                             break;
                         case CommandType.Command:
                             var buttonStyle = GUI.skin.button;
@@ -431,11 +409,12 @@ namespace BetterContinents
                             {
                                 buttonStyle = new GUIStyle(GUI.skin.button)
                                 {
-                                    normal = {background = UI.CreateFillTexture(cmd.backgroundColor)}
+                                    normal = { background = UI.CreateFillTexture(cmd.backgroundColor) }
                                 };
                             }
-                            
-                            if (GUILayout.Button(label, buttonStyle)) {
+
+                            if (GUILayout.Button(label, buttonStyle))
+                            {
                                 cmd.setValue(null);
                             }
                             break;
@@ -445,7 +424,7 @@ namespace BetterContinents
                             {
                                 valueStyle = new GUIStyle(GUIStyle.none)
                                 {
-                                    normal = {background = UI.CreateFillTexture(cmd.backgroundColor)}
+                                    normal = { background = UI.CreateFillTexture(cmd.backgroundColor) }
                                 };
                             }
 
@@ -481,7 +460,7 @@ namespace BetterContinents
 
                         var style = new GUIStyle
                         {
-                            normal = new GUIStyleState {textColor = Color.black, background = Texture2D.whiteTexture},
+                            normal = new GUIStyleState { textColor = Color.black, background = Texture2D.whiteTexture },
                             wordWrap = true,
                             alignment = TextAnchor.MiddleCenter
                         };
@@ -504,14 +483,14 @@ namespace BetterContinents
                 private static void Window(int _)
                 {
                     GUILayout.BeginVertical(new GUIStyle
-                        {normal = new GUIStyleState {background = Texture2D.grayTexture}});
+                    { normal = new GUIStyleState { background = Texture2D.grayTexture } });
 
                     GUILayout.BeginHorizontal(GUI.skin.box);
                     {
                         GUILayout.Label("Better Continents World Settings", GUILayout.ExpandWidth(true));
                         if (GUILayout.Button("Close", GUILayout.ExpandWidth(false)))
                         {
-
+                            UI.CloseDebugMenu();
                         }
                     }
                     GUILayout.EndHorizontal();
@@ -541,8 +520,8 @@ namespace BetterContinents
                     public string stringValue;
                 }
 
-                private static Dictionary<string, CommandUIState> commandUIState =
-                    new Dictionary<string, CommandUIState>();
+                private static readonly Dictionary<string, CommandUIState> commandUIState =
+                    new();
 
                 private static CommandUIState GetUIState(Command cmd)
                 {
@@ -574,7 +553,7 @@ namespace BetterContinents
                     if (!isExpanded) title.text += "...";
                     return GUILayout.Button(title, groupHeaderSkin, GUILayout.ExpandWidth(true));
                 }
-                
+
                 private static void DrawSettingValue(Command cmd, CommandUIState state)
                 {
                     if (cmd.customDrawer != null)
@@ -588,14 +567,14 @@ namespace BetterContinents
                         if (cmd.valueType.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
                             DrawFlagsField(cmd, Enum.GetValues(cmd.valueType), RightColumnWidth);
                         else
-                            DrawComboboxField(cmd, state, Enum.GetValues(cmd.valueType), settingWindowRect.yMax);
+                            DrawComboboxField(cmd, state, Enum.GetValues(cmd.valueType));
                     }
                     else
                     {
                         DrawFieldBasedOnValueType(cmd, state);
                     }
                 }
-                
+
                 private static void DrawListField(Command cmd, CommandUIState state)
                 {
                     if (cmd.validValues.Count == 0)
@@ -604,7 +583,7 @@ namespace BetterContinents
                     if (!cmd.valueType.IsInstanceOfType(cmd.validValues.FirstOrDefault(x => x != null)))
                         throw new ArgumentException($"Valid values for {cmd.cmd} contains a value of the wrong type");
 
-                    DrawComboboxField(cmd, state, cmd.validValues, settingWindowRect.yMax);
+                    DrawComboboxField(cmd, state, cmd.validValues);
                 }
 
                 private static void DrawFieldBasedOnValueType(Command cmd, CommandUIState state)
@@ -614,10 +593,10 @@ namespace BetterContinents
                     else
                         DrawUnknownField(cmd, state);
                 }
-                
+
                 private static void DrawUnknownField(Command cmd, CommandUIState state)
                 {
-                    if(state.stringValue == null)
+                    if (state.stringValue == null)
                     {
                         var rawValue = cmd.getValue();
                         state.stringValue = rawValue == null ? "" : rawValue.ToString();
@@ -639,7 +618,7 @@ namespace BetterContinents
                     {
                         state.stringValue = null;
                     }
-                    
+
                     GUILayout.FlexibleSpace();
                 }
 
@@ -699,7 +678,7 @@ namespace BetterContinents
                     GUILayout.FlexibleSpace();
                 }
 
-                private static void DrawComboboxField(Command cmd, CommandUIState state, IList list, float windowYmax)
+                private static void DrawComboboxField(Command cmd, CommandUIState state, IList list)
                 {
                     var buttonText = new GUIContent(cmd.getValue().ToString());
                     var dispRect = GUILayoutUtility.GetRect(buttonText, GUI.skin.button, GUILayout.ExpandWidth(true));
