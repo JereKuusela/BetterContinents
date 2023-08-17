@@ -14,14 +14,6 @@ namespace BetterContinents
 {
     public static class GameUtils
     {
-        private static void RegenerateDistantLod()
-        {
-            foreach (var lod in Object.FindObjectsOfType<TerrainLod>())
-            {
-                lod.m_heightmapState = TerrainLod.HeightmapState.NeedsRebuild;
-            }
-        }
-
         private static Dictionary<ZDOID, ZDO> GetObjectsByID() => ZDOMan.instance.m_objectsByID;
 
         public static void BeginTerrainChanges()
@@ -38,26 +30,9 @@ namespace BetterContinents
 
         public static void Refresh()
         {
-            DespawnAll();
-
-            ClutterSystem.instance.ClearAll();
-            ResetLocationInstances();
-            RegenerateDistantLod();
-
+            Console.instance.TryRunCommand("zones_reset start force");
             FastMinimapRegen();
         }
-
-        public static void RegenerateLocations()
-        {
-            DespawnAll();
-
-            ClutterSystem.instance.ClearAll();
-            ResetLocationInstances();
-
-            ZoneSystem.instance.GenerateLocations();
-            ResetLocPins();
-        }
-
         private static int MinimapOrigTextureSize = 0;
         private static float MinimapOrigPixelSize = 0;
 
@@ -124,40 +99,44 @@ namespace BetterContinents
 
             Mesh mesh = new();
 
-            Vector3[] vertices = new Vector3[4]
-            {
+            Vector3[] vertices =
+            [
                 new Vector3(-width / 2, -height / 2, z),
                 new Vector3(width / 2, -height / 2, z),
                 new Vector3(-width / 2, height / 2, z),
                 new Vector3(width / 2, height / 2, z)
-            };
+            ];
             mesh.vertices = vertices;
 
-            int[] tris = new int[6]
-            {
+            int[] tris =
+            [
                 // lower left triangle
-                0, 2, 1,
+                0,
+                2,
+                1,
                 // upper right triangle
-                2, 3, 1
-            };
+                2,
+                3,
+                1
+            ];
             mesh.triangles = tris;
 
-            Vector3[] normals = new Vector3[4]
-            {
+            Vector3[] normals =
+            [
                 -Vector3.forward,
                 -Vector3.forward,
                 -Vector3.forward,
                 -Vector3.forward
-            };
+            ];
             mesh.normals = normals;
 
-            Vector2[] uv = new Vector2[4]
-            {
+            Vector2[] uv =
+            [
                 new Vector2(0, 0),
                 new Vector2(1, 0),
                 new Vector2(0, 1),
                 new Vector2(1, 1)
-            };
+            ];
             mesh.uv = uv;
 
             meshFilter.mesh = mesh;
@@ -255,29 +234,6 @@ namespace BetterContinents
             }
         }
 
-        private static void ResetLocPins()
-        {
-            Minimap.instance.UpdateLocationPins(1000);
-        }
-
-        private static void ResetLocationInstances()
-        {
-            // For each location recreate its instance with the correct height, marking it as unplaced (as we deleted it above we hope!)
-            ZoneSystem.instance.m_locationInstances =
-                ZoneSystem.instance.m_locationInstances.ToDictionary(kv => kv.Key,
-                    kv => new ZoneSystem.LocationInstance
-                    {
-                        m_location = kv.Value.m_location,
-                        m_placed = false,
-                        m_position = new Vector3(
-                            kv.Value.m_position.x,
-                            WorldGenerator.instance.GetHeight(kv.Value.m_position.x, kv.Value.m_position.z),
-                            kv.Value.m_position.z
-                        )
-                    });
-            ResetLocPins();
-        }
-
         // Does NOT support sub directories in the resources...
         public static void UnpackDirectoryFromResources(string resourceDirectory, string targetDirectory)
         {
@@ -335,44 +291,6 @@ namespace BetterContinents
             }
         }
 
-        public static void DespawnAll()
-        {
-            ZNetScene.instance.RemoveObjects(new List<ZDO>
-            {
-                Player.m_localPlayer.m_nview.m_zdo
-            }, new List<ZDO>());
-
-            foreach (var kv in ZoneSystem.instance.m_zones)
-            {
-                Object.Destroy(kv.Value.m_root);
-            }
-
-            ZoneSystem.instance.m_zones.Clear();
-            ZoneSystem.instance.m_generatedZones.Clear();
-        }
-
-        public static void ResetAll()
-        {
-            DespawnAll();
-
-            var playerZDO = Player.m_localPlayer.m_nview.m_zdo;
-
-            // Clear all the ZDOs except the player
-            var zdoToDestroy = GetObjectsByID().Values
-                .Where(z => z != playerZDO)
-                .ToList();
-
-            foreach (var zdo in zdoToDestroy)
-            {
-                ZDOMan.instance.HandleDestroyedZDO(zdo.m_uid);
-            }
-
-            ZDOMan.instance.ResetSectorArray();
-
-            ZDOMan.instance.AddToSector(playerZDO, playerZDO.GetSector());
-
-            ResetLocationInstances();
-        }
 
         public static Dictionary<Vector2i, ZoneSystem.LocationInstance> GetLocationInstances() =>
             (Dictionary<Vector2i, ZoneSystem.LocationInstance>)AccessTools.Field(typeof(ZoneSystem), "m_locationInstances").GetValue(ZoneSystem.instance);

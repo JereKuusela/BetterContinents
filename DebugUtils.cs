@@ -7,12 +7,24 @@ using UnityEngine;
 #nullable disable
 namespace BetterContinents
 {
+    [HarmonyPatch(typeof(Player), nameof(Player.OnSpawned))]
+    public class PlayerPatch
+    {
+        private static void Postfix()
+        {
+            if (BetterContinents.AllowDebugActions)
+            {
+                if (!Terminal.m_cheat)
+                    Console.instance.TryRunCommand("devcommands");
+            }
+        }
+    }
     public partial class DebugUtils
     {
         private static readonly string[] Bosses =
         {
             "StartTemple", "Eikthyrnir", "GDKing", "GoblinKing", "Bonemass", "Dragonqueen",
-            "Vendor_BlackForest", "Mistlands_DvergrBossEntrance1", "Mistlands_DvergrTownEntrance2"
+            "Vendor_BlackForest", "Mistlands_DvergrBossEntrance1"
         };
 
         static DebugUtils()
@@ -124,22 +136,6 @@ namespace BetterContinents
                 bc.AddCommand("refresh", "Refresh",
                     "resets all vegetation and locations (done automatically on every change)",
                     _ => GameUtils.Refresh());
-                bc.AddCommand("despawnall", "Despawn all", "despawn everything",
-                    _ => GameUtils.DespawnAll());
-                bc.AddCommand("resetall", "Reset all",
-                    "reset everything (WARNING: this deletes everything that has been build in the map!)", _ =>
-                    {
-                        GameUtils.ResetAll();
-                        Console.instance.Print($"<color=orange>All constructions removed!</color>");
-                    });
-                bc.AddCommand("regenloc", "Regenerate locs", "regenerate all locations", _ =>
-                {
-                    bool prevLocSetting = BetterContinents.ConfigDebugSkipDefaultLocationPlacement.Value;
-                    BetterContinents.ConfigDebugSkipDefaultLocationPlacement.Value = false;
-                    GameUtils.RegenerateLocations();
-                    BetterContinents.ConfigDebugSkipDefaultLocationPlacement.Value = prevLocSetting;
-                    Console.instance.Print($"<color=orange>All locations regenerated!</color>");
-                });
                 bc.AddCommand("scr", "Save map screenshot",
                     "save the minimap to a png, optionally pass resolution, default is 2048", arg =>
                     {
