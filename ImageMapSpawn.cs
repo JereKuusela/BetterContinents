@@ -7,67 +7,67 @@ using SixLabors.ImageSharp.PixelFormats;
 using UnityEngine;
 using Color = UnityEngine.Color;
 
-namespace BetterContinents
+namespace BetterContinents;
+
+internal class ImageMapSpawn : ImageMapBase
 {
-    internal class ImageMapSpawn : ImageMapBase
+    public Dictionary<string, List<Vector2>> RemainingSpawnAreas = new();
+
+    public ImageMapSpawn(string filePath) : base(filePath) { }
+
+    public ImageMapSpawn(string filePath, ZPackage from) : base(filePath)
     {
-        public Dictionary<string, List<Vector2>> RemainingSpawnAreas = new();
+        Deserialize(@from);
+    }
 
-        public ImageMapSpawn(string filePath) : base(filePath) { }
-
-        public ImageMapSpawn(string filePath, ZPackage from) : base(filePath)
+    public void Serialize(ZPackage to)
+    {
+        to.Write(RemainingSpawnAreas.Count);
+        foreach (var kv in RemainingSpawnAreas)
         {
-            Deserialize(@from);
-        }
-
-        public void Serialize(ZPackage to)
-        {
-            to.Write(RemainingSpawnAreas.Count);
-            foreach (var kv in RemainingSpawnAreas)
+            to.Write(kv.Key);
+            to.Write(kv.Value.Count);
+            foreach (var v in kv.Value)
             {
-                to.Write(kv.Key);
-                to.Write(kv.Value.Count);
-                foreach (var v in kv.Value)
-                {
-                    to.Write(v.x);
-                    to.Write(v.y);
-                }
+                to.Write(v.x);
+                to.Write(v.y);
             }
         }
+    }
 
-        private void Deserialize(ZPackage from)
+    private void Deserialize(ZPackage from)
+    {
+        int count = @from.ReadInt();
+        RemainingSpawnAreas = new Dictionary<string, List<Vector2>>();
+        for (int i = 0; i < count; i++)
         {
-            int count = @from.ReadInt();
-            RemainingSpawnAreas = new Dictionary<string, List<Vector2>>();
-            for (int i = 0; i < count; i++)
+            var spawn = @from.ReadString();
+            var positionsCount = @from.ReadInt();
+            var positions = new List<Vector2>();
+            for (int k = 0; k < positionsCount; k++)
             {
-                var spawn = @from.ReadString();
-                var positionsCount = @from.ReadInt();
-                var positions = new List<Vector2>();
-                for (int k = 0; k < positionsCount; k++)
-                {
-                    float x = @from.ReadSingle();
-                    float y = @from.ReadSingle();
-                    positions.Add(new Vector2(x, y));
-                }
-                RemainingSpawnAreas.Add(spawn, positions);
+                float x = @from.ReadSingle();
+                float y = @from.ReadSingle();
+                positions.Add(new Vector2(x, y));
             }
+            RemainingSpawnAreas.Add(spawn, positions);
         }
-            
-        private struct ColorSpawn
+    }
+
+    private struct ColorSpawn
+    {
+        public Color32 color;
+        public string spawn;
+
+        public ColorSpawn(Color32 color, string spawn)
         {
-            public Color32 color;
-            public string spawn;
-                
-            public ColorSpawn(Color32 color, string spawn)
-            {
-                this.color = color;
-                this.spawn = spawn;
-            }
+            this.color = color;
+            this.spawn = spawn;
         }
-            
-        private static readonly ColorSpawn[] SpawnColorMapping = new ColorSpawn[]
-        {
+    }
+
+    private static readonly ColorSpawn[] SpawnColorMapping = new ColorSpawn[]
+    {
             new ColorSpawn(new Color32(0xFF, 0x00, 0x00, 0xFF), "StartTemple"),
             new ColorSpawn(new Color32(0xFF, 0x99, 0x00, 0xFF), "Eikthyrnir"),
             new ColorSpawn(new Color32(0x00, 0xFF, 0x00, 0xFF), "GDKing"),
@@ -154,132 +154,133 @@ namespace BetterContinents
             new ColorSpawn(new Color32(0x0C, 0x34, 0x3D, 0xFF), "SwampWell1"),
             new ColorSpawn(new Color32(0xB4, 0x5F, 0x06, 0xFF), "WoodFarm1"),
             new ColorSpawn(new Color32(0x78, 0x3F, 0x04, 0xFF), "WoodVillage1"),
-        };
+    };
 
-        protected override bool LoadTextureToMap<T>(Image<T> image)
+    protected override bool LoadTextureToMap<T>(Image<T> image)
+    {
+        var sw = new Stopwatch();
+        sw.Start();
+        var img = (Image<Rgba32>)(Image)image;
+        var pixels = LoadPixels(img, Convert);
+        int Index(int x, int y) => y * Size + x;
+
+        bool Compare(Color32 a, Color32 b) => a.r == b.r && a.g == b.g && a.b == b.b;
+
+        void FloodFill(int x, int y, Action<int, int> fillfn)
         {
-            var sw = new Stopwatch();
-            sw.Start();
-            var img = (Image<Rgba32>)(Image)image;
-            var pixels = LoadPixels(img, Convert);
-            int Index(int x, int y) => y * Size + x;
-                
-            bool Compare(Color32 a, Color32 b) => a.r == b.r && a.g == b.g && a.b == b.b;
+            var sourceColor = pixels[Index(x, y)];
+            bool CheckValidity(int xc, int yc) => xc >= 0 && xc < Size && yc >= 0 && yc < Size && Compare(pixels[Index(xc, yc)], sourceColor);
 
-            void FloodFill(int x, int y, Action<int, int> fillfn)
+            var q = new Queue<Vector2i>(Size * Size);
+
+            void Enqueue(int xa, int ya)
             {
-                var sourceColor = pixels[Index(x, y)];
-                bool CheckValidity(int xc, int yc) => xc >= 0 && xc < Size && yc >= 0 && yc < Size && Compare(pixels[Index(xc, yc)], sourceColor);
-
-                var q = new Queue<Vector2i> (Size * Size);
-
-                void Enqueue(int xa, int ya)
-                {
-                    pixels[Index(xa, ya)] = Color.black;
-                    q.Enqueue (new Vector2i (xa, ya));
-                }
-                
-                void EnqueueIfValid(int xa, int ya)
-                {
-                    if (CheckValidity (xa, ya))
-                        Enqueue(xa, ya);
-                }
-                
-                Enqueue(x, y);
-                
-                while (q.Count > 0) {
-                    var point = q.Dequeue ();
-                    var x1 = point.x;
-                    var y1 = point.y;
-                    if (q.Count > Size * Size) {
-                        throw new Exception ($"Flood fill on spawn location failed: started at pixel {x}, {Size-y}, color #{ColorUtility.ToHtmlStringRGB(sourceColor)}");
-                    }
-
-                    fillfn(x1, y1);
-                    
-                    EnqueueIfValid(x1 + 1, y1 + 0);
-                    EnqueueIfValid(x1 - 1, y1 + 0);
-                    EnqueueIfValid(x1 + 0, y1 + 1);
-                    EnqueueIfValid(x1 + 0, y1 - 1);
-                }
+                pixels[Index(xa, ya)] = Color.black;
+                q.Enqueue(new Vector2i(xa, ya));
             }
 
-            // Determine the spawn positions by color first
-            var colorSpawns = new Dictionary<Color32, List<Vector2>>(new Color32Comparer());
-            for (int y = 0; y < Size; y++)
+            void EnqueueIfValid(int xa, int ya)
             {
-                for (int x = 0; x < Size; ++x)
-                {
-                    int i = Index(x, y);
-                    var color = pixels[i];
-                    if (color != Color.black)
-                    {
-                        var area = new List<Vector2>();
-
-                        // Do this AFTER determining the SpawnColorMapping, as it changes the color in pixels to black
-                        FloodFill(x, y, (fx, fy) => area.Add(new Vector2(fx / (float) Size, fy / (float) Size)));
-
-                        if (!colorSpawns.TryGetValue(color, out var areas))
-                        {
-                            areas = new List<Vector2>();
-                            colorSpawns.Add(color, areas);
-                        }
-
-                        // Just select the actual position from the area now, there is no point delaying this until later
-                        var position = area[UnityEngine.Random.Range(0, area.Count)];
-                        areas.Add(position);
-                        BetterContinents.Log((string) $"Found #{ColorUtility.ToHtmlStringRGB(color)} area of {area.Count} size at {x}, {Size - y}, selected position {position.x}, {position.y}");
-                    }
-                }
-            }
-                
-            // Now we need to divvy up the color spawn areas between the associated spawn types 
-            RemainingSpawnAreas = new Dictionary<string, List<Vector2>>();
-            foreach (var colorPositions in colorSpawns)
-            {
-                var spawns = SpawnColorMapping.Where(d => Compare(d.color, colorPositions.Key)).ToList();
-                if (spawns.Count > 0)
-                {
-                    foreach (var position in colorPositions.Value)
-                    {
-                        var spawn = spawns[UnityEngine.Random.Range(0, spawns.Count)].spawn;
-                        if (!RemainingSpawnAreas.TryGetValue(spawn, out var positions))
-                        {
-                            positions = new List<Vector2>();
-                            RemainingSpawnAreas.Add(spawn, positions);
-                        }
-
-                        positions.Add(position);
-                        BetterContinents.Log((string) $"Selected {spawn} for spawn position {position.x}, {position.y}");
-                    }
-                }
-                else
-                {
-                    BetterContinents.Log((string) $"No spawns are mapped to color #{ColorUtility.ToHtmlStringRGB(colorPositions.Key)} (which has {colorPositions.Value.Count} spawn positions defined)");
-                }
+                if (CheckValidity(xa, ya))
+                    Enqueue(xa, ya);
             }
 
-            BetterContinents.Log($"Time to calculate spawns from {FilePath}: {sw.ElapsedMilliseconds} ms");
+            Enqueue(x, y);
 
-            return true;
+            while (q.Count > 0)
+            {
+                var point = q.Dequeue();
+                var x1 = point.x;
+                var y1 = point.y;
+                if (q.Count > Size * Size)
+                {
+                    throw new Exception($"Flood fill on spawn location failed: started at pixel {x}, {Size - y}, color #{ColorUtility.ToHtmlStringRGB(sourceColor)}");
+                }
+
+                fillfn(x1, y1);
+
+                EnqueueIfValid(x1 + 1, y1 + 0);
+                EnqueueIfValid(x1 - 1, y1 + 0);
+                EnqueueIfValid(x1 + 0, y1 + 1);
+                EnqueueIfValid(x1 + 0, y1 - 1);
+            }
         }
 
-        public Vector2? FindSpawn(string spawn)
+        // Determine the spawn positions by color first
+        var colorSpawns = new Dictionary<Color32, List<Vector2>>(new Color32Comparer());
+        for (int y = 0; y < Size; y++)
         {
-            if (RemainingSpawnAreas.TryGetValue(spawn, out var positions))
+            for (int x = 0; x < Size; ++x)
             {
-                int idx = UnityEngine.Random.Range(0, positions.Count);
-                var position = positions[idx];
-                positions.RemoveAt(idx);
-                if (positions.Count == 0)
+                int i = Index(x, y);
+                var color = pixels[i];
+                if (color != Color.black)
                 {
-                    RemainingSpawnAreas.Remove(spawn);
+                    var area = new List<Vector2>();
+
+                    // Do this AFTER determining the SpawnColorMapping, as it changes the color in pixels to black
+                    FloodFill(x, y, (fx, fy) => area.Add(new Vector2(fx / (float)Size, fy / (float)Size)));
+
+                    if (!colorSpawns.TryGetValue(color, out var areas))
+                    {
+                        areas = new List<Vector2>();
+                        colorSpawns.Add(color, areas);
+                    }
+
+                    // Just select the actual position from the area now, there is no point delaying this until later
+                    var position = area[UnityEngine.Random.Range(0, area.Count)];
+                    areas.Add(position);
+                    BetterContinents.Log((string)$"Found #{ColorUtility.ToHtmlStringRGB(color)} area of {area.Count} size at {x}, {Size - y}, selected position {position.x}, {position.y}");
                 }
-                return position;
             }
-            return null;
         }
 
-        public IEnumerable<Vector2> GetAllSpawns(string spawn) => RemainingSpawnAreas.TryGetValue(spawn, out var positions) ? positions : Enumerable.Empty<Vector2>();
+        // Now we need to divvy up the color spawn areas between the associated spawn types 
+        RemainingSpawnAreas = new Dictionary<string, List<Vector2>>();
+        foreach (var colorPositions in colorSpawns)
+        {
+            var spawns = SpawnColorMapping.Where(d => Compare(d.color, colorPositions.Key)).ToList();
+            if (spawns.Count > 0)
+            {
+                foreach (var position in colorPositions.Value)
+                {
+                    var spawn = spawns[UnityEngine.Random.Range(0, spawns.Count)].spawn;
+                    if (!RemainingSpawnAreas.TryGetValue(spawn, out var positions))
+                    {
+                        positions = new List<Vector2>();
+                        RemainingSpawnAreas.Add(spawn, positions);
+                    }
+
+                    positions.Add(position);
+                    BetterContinents.Log((string)$"Selected {spawn} for spawn position {position.x}, {position.y}");
+                }
+            }
+            else
+            {
+                BetterContinents.Log((string)$"No spawns are mapped to color #{ColorUtility.ToHtmlStringRGB(colorPositions.Key)} (which has {colorPositions.Value.Count} spawn positions defined)");
+            }
+        }
+
+        BetterContinents.Log($"Time to calculate spawns from {FilePath}: {sw.ElapsedMilliseconds} ms");
+
+        return true;
     }
+
+    public Vector2? FindSpawn(string spawn)
+    {
+        if (RemainingSpawnAreas.TryGetValue(spawn, out var positions))
+        {
+            int idx = UnityEngine.Random.Range(0, positions.Count);
+            var position = positions[idx];
+            positions.RemoveAt(idx);
+            if (positions.Count == 0)
+            {
+                RemainingSpawnAreas.Remove(spawn);
+            }
+            return position;
+        }
+        return null;
+    }
+
+    public IEnumerable<Vector2> GetAllSpawns(string spawn) => RemainingSpawnAreas.TryGetValue(spawn, out var positions) ? positions : Enumerable.Empty<Vector2>();
 }

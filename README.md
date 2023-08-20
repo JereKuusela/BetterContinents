@@ -3,15 +3,17 @@
 ## **[Download on Nexusmods](https://www.nexusmods.com/valheim/mods/446) | [Full Documentation](https://billw2012.github.io/BetterContinents-Docs/introduction.html) | [Installation Guide](https://billw2012.github.io/BetterContinents-Docs/setup-guide.html) | [Discord](https://discord.gg/3XW8ZntYzN)**
 
 ## **Introduction**
+
 This mod provides the tools to both improve the standard terrain generation of the game, and override aspects of it with image maps, allowing precise control over height, biomes, location placement, and forest coverage.  
 These generated worlds can be shared with others (who have this mod installed) by simply copying the usual world files, along with the extra `.BetterContinents` file.
 
 > See maps people have shared [here](https://www.nexusmods.com/valheim/mods/categories/13/).
-
 > Check the links above for documentation and installation instructions.
 
 ---
+
 ## **Features**
+
 * Use image files as [base heightmap](https://billw2012.github.io/BetterContinents-Docs/settings/heightmap.html#heightmap-file) layer, [detail heightmap](https://billw2012.github.io/BetterContinents-Docs/settings/flatmap.html#flatmap-file) layer, and [biome specific heightmap](https://billw2012.github.io/BetterContinents-Docs/settings/roughmap.html#roughmap-file) layer, with blending options for each
 * A comprehensive layer based noise system based on [FastNoiseLite](https://github.com/Auburn/FastNoise), including support for any number of layers of noise with separate settings, each with its own distortion and mask
 * A preset system with a few inbuilt defaults, allowing easy selection and sharing of world configs (anyone can make and share their own presets)
