@@ -1,6 +1,10 @@
 # Better Continents: a Valheim Modification
 
-## **[Download on Nexusmods](https://www.nexusmods.com/valheim/mods/446) | [Full Documentation](https://billw2012.github.io/BetterContinents-Docs/introduction.html) | [Installation Guide](https://billw2012.github.io/BetterContinents-Docs/setup-guide.html) | [Discord](https://discord.gg/3XW8ZntYzN)**
+Mod originally created by billw2012.
+
+* [Full Documentation](https://billw2012.github.io/BetterContinents-Docs/introduction.html)
+* [Installation Guide](https://billw2012.github.io/BetterContinents-Docs/setup-guide.html)
+* [Discord](https://discord.gg/3XW8ZntYzN)
 
 ## **Introduction**
 
@@ -9,8 +13,6 @@ These generated worlds can be shared with others (who have this mod installed) b
 
 > See maps people have shared [here](https://www.nexusmods.com/valheim/mods/categories/13/).
 > Check the links above for documentation and installation instructions.
-
----
 
 ## **Features**
 
@@ -27,7 +29,4 @@ These generated worlds can be shared with others (who have this mod installed) b
 * Adjust [forest scaling](https://billw2012.github.io/BetterContinents-Docs/settings/forest.html#forest-scale) (how big the contiguous areas of forest/clearings are), and amount
 * Specify [starting position](https://billw2012.github.io/BetterContinents-Docs/settings/start-position.html) explicitly
 * Still allows loading vanilla maps, without needing to adjust any settings or disable the mod
-* Backwards compatible (since version 0.2) – worlds created with older versions
-  will still look the same when loaded with newer ones[*]Includes a debug mode to automatically enable cheats, reveal the full map, toggle
-  on vanilla debugmode, and various other things, for quicker testing[*]Allows skipping of default location placement for quick world generation
 * Export full map to png at any resolution

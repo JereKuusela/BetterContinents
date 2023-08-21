@@ -19,8 +19,6 @@ This mod provides the tools to both improve the standard heightmap generation of
 [*]Specify starting position explicitly
 [*]Additional customizable ridged heightmap layer gives more varied geography
 [*]Still allows worlds that were created before this mod was installed to be loaded
-[*]Includes a debug mode to automatically enable cheats, reveal the full map, toggle on vanilla debugmode, and various other things, for quicker testing
-[*]Allows skipping of default location placement for quicker testing (should not be done in final version of the world)
 [/list]
 
 [b][size=5]Usage[/size][/b]
@@ -209,27 +207,3 @@ They are clustered together between the line:
 and
 [code]Done generating locations, duration:50580.087 ms[/code]
 The vanilla map generator can also fail to place all objects, it is not something specific to this mod, but of course with changes in the generation comes the chance for changes in placement success rate.
-
-[b][size=4]Difficulty[/size][/b]
-I'm not sure if this makes the game more difficult or not. Certainly oceans can be a lot wider in some places, and just your starting continent might stretch over most of the map. But that means it likely contains all biomes and bosses.
-
-[b][size=4]Reveal the whole map[/size][/b]
-Once you generate a new map you can view the whole result like so (you might want to confirm it meets your requirements):
-
-[list=1][*]Open the console with F5
-[*]Enter: 
-[code]imacheater
-exploremap[/code][*]The whole map will be revealed, however it takes a while for it to fully generate, about 2 minutes on my PC.
-[*]To rehide the map you can enter:
-[code]resetmap[/code][/list]
-
-[b][size=5]Possible Future Development[/size][/b]
-[list]
-[*]DONE [s]Allow pre-mod worlds to still work correctly[/s]
-[*]DONE [s]Expose parameters via configuration file[/s]
-[*]DONE [s]Allow use of image as base height map[/s]
-[*]Determine a set of parameter presets for different effects
-[*]Integrate FastNoiseLite to introduce alternative noise types for variation
-[*]Integrate a base heightmap pre-gen step to allow more time consuming or holistic techniques (e.g. erosion, tectonics, other physical processes etc.)
-[*]Calculate biomes using results from pre-gen physical modeling / simulation. e.g. use deposition to determine plains, erosion to determine mountains etc.
-[/list]
