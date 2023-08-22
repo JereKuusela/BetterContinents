@@ -1,3 +1,6 @@
+- v0.7.7
+  - Fixed for the new update.
+
 - v0.7.6
   - Fixed for the current version of the game.
   - Disables automatic genloc for Better Continents worlds.
