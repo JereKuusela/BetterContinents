@@ -28,8 +28,8 @@ internal class ImageMapFloat : ImageMapBase
 
     public float GetValue(float x, float y)
     {
-        float xa = x * (this.Size - 1);
-        float ya = y * (this.Size - 1);
+        float xa = x * (Size - 1);
+        float ya = y * (Size - 1);
 
         int xi = Mathf.FloorToInt(xa);
         int yi = Mathf.FloorToInt(ya);
@@ -37,15 +37,15 @@ internal class ImageMapFloat : ImageMapBase
         float xd = xa - xi;
         float yd = ya - yi;
 
-        int x0 = Mathf.Clamp(xi, 0, this.Size - 1);
-        int x1 = Mathf.Clamp(xi + 1, 0, this.Size - 1);
-        int y0 = Mathf.Clamp(yi, 0, this.Size - 1);
-        int y1 = Mathf.Clamp(yi + 1, 0, this.Size - 1);
+        int x0 = Mathf.Clamp(xi, 0, Size - 1);
+        int x1 = Mathf.Clamp(xi + 1, 0, Size - 1);
+        int y0 = Mathf.Clamp(yi, 0, Size - 1);
+        int y1 = Mathf.Clamp(yi + 1, 0, Size - 1);
 
-        float p00 = this.Map[y0 * this.Size + x0];
-        float p10 = this.Map[y0 * this.Size + x1];
-        float p01 = this.Map[y1 * this.Size + x0];
-        float p11 = this.Map[y1 * this.Size + x1];
+        float p00 = Map[y0 * Size + x0];
+        float p10 = Map[y0 * Size + x1];
+        float p01 = Map[y1 * Size + x0];
+        float p11 = Map[y1 * Size + x1];
 
         return Mathf.Lerp(
             Mathf.Lerp(p00, p10, xd),

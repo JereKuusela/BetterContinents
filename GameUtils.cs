@@ -16,18 +16,6 @@ public static class GameUtils
 {
     private static Dictionary<ZDOID, ZDO> GetObjectsByID() => ZDOMan.instance.m_objectsByID;
 
-    public static void BeginTerrainChanges()
-    {
-        // Stop and reset the heightmap generator first
-        HeightmapBuilder.instance.Dispose();
-        new HeightmapBuilder();
-    }
-
-    public static void EndTerrainChanges()
-    {
-        Refresh();
-    }
-
     public static void Refresh()
     {
         Console.instance.TryRunCommand("zones_reset start force");

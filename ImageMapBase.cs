@@ -116,14 +116,6 @@ internal abstract class ImageMapBase
                 $"Cannot use texture {FilePath}: it is not a power of two size (e.g. 256, 512, 1024, 2048)");
             return false;
         }
-
-        if (width > 4096)
-        {
-            BetterContinents.LogError(
-                $"Cannot use texture {FilePath}: it is too big ({width}x{height}), keep the size to less or equal to 4096x4096");
-            return false;
-        }
-
         return true;
     }
 }

@@ -731,23 +731,21 @@ public partial class DebugUtils
     private static Action<string> HeightmapCommand(Action<string> command) =>
         value =>
         {
-            GameUtils.BeginTerrainChanges();
             command(value);
             BetterContinents.WorldGeneratorPatch.ApplyNoiseSettings();
             noisePreviewTextures = null;
             maskPreviewTextures = null;
-            GameUtils.EndTerrainChanges();
+            GameUtils.Refresh();
         };
 
     private static Action<T> SetHeightmapValue<T>(Action<T> setValue) =>
         value =>
         {
-            GameUtils.BeginTerrainChanges();
             setValue(value);
             BetterContinents.WorldGeneratorPatch.ApplyNoiseSettings();
             noisePreviewTextures = null;
             maskPreviewTextures = null;
-            GameUtils.EndTerrainChanges();
+            GameUtils.Refresh();
         };
 
     private static readonly Command rootCommand;

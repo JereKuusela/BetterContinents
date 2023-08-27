@@ -1,3 +1,7 @@
+- v0.7.8
+  - Fixes error and terrain issues when reloading images.
+  - Removes the 4k image size limit.
+
 - v0.7.7
   - Fixed for the new update.
 

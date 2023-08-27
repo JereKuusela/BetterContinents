@@ -230,7 +230,7 @@ internal class ImageMapSpawn : ImageMapBase
                     // Just select the actual position from the area now, there is no point delaying this until later
                     var position = area[UnityEngine.Random.Range(0, area.Count)];
                     areas.Add(position);
-                    BetterContinents.Log((string)$"Found #{ColorUtility.ToHtmlStringRGB(color)} area of {area.Count} size at {x}, {Size - y}, selected position {position.x}, {position.y}");
+                    BetterContinents.Log($"Found #{ColorUtility.ToHtmlStringRGB(color)} area of {area.Count} size at {x}, {Size - y}, selected position {position.x}, {position.y}");
                 }
             }
         }
@@ -252,12 +252,12 @@ internal class ImageMapSpawn : ImageMapBase
                     }
 
                     positions.Add(position);
-                    BetterContinents.Log((string)$"Selected {spawn} for spawn position {position.x}, {position.y}");
+                    BetterContinents.Log($"Selected {spawn} for spawn position {position.x}, {position.y}");
                 }
             }
             else
             {
-                BetterContinents.Log((string)$"No spawns are mapped to color #{ColorUtility.ToHtmlStringRGB(colorPositions.Key)} (which has {colorPositions.Value.Count} spawn positions defined)");
+                BetterContinents.Log($"No spawns are mapped to color #{ColorUtility.ToHtmlStringRGB(colorPositions.Key)} (which has {colorPositions.Value.Count} spawn positions defined)");
             }
         }
 

@@ -80,8 +80,8 @@ internal class ImageMapBiome : ImageMapBase
 
     public Heightmap.Biome GetValue(float x, float y)
     {
-        float xa = x * (this.Size - 1);
-        float ya = y * (this.Size - 1);
+        float xa = x * (Size - 1);
+        float ya = y * (Size - 1);
 
         int xi = Mathf.FloorToInt(xa);
         int yi = Mathf.FloorToInt(ya);
@@ -90,7 +90,7 @@ internal class ImageMapBiome : ImageMapBase
         float yd = ya - yi;
 
         // "Interpolate" the 4 corners (sum the weights of the biomes at the four corners)
-        Heightmap.Biome GetBiome(int _x, int _y) => this.Map[Mathf.Clamp(_y, 0, this.Size - 1) * this.Size + Mathf.Clamp(_x, 0, this.Size - 1)];
+        Heightmap.Biome GetBiome(int _x, int _y) => Map[Mathf.Clamp(_y, 0, Size - 1) * Size + Mathf.Clamp(_x, 0, Size - 1)];
 
         var biomes = new Heightmap.Biome[4];
         var biomeWeights = new float[4];
@@ -125,14 +125,5 @@ internal class ImageMapBiome : ImageMapBase
         SampleBiomeWeighted(xi + 1, yi + 1, xd * yd);
 
         return biomes[topBiomeIdx];
-
-        // // Get the rounded value for the diff, so we can choose which of the 4 corner value to return
-        // int xo = Mathf.RoundToInt(xd); 
-        // int yo = Mathf.RoundToInt(yd);
-        //
-        // int xf = Mathf.Clamp(xi + xo, 0, this.Size - 1);
-        // int yf = Mathf.Clamp(yi + yo, 0, this.Size - 1);
-        //
-        // return this.Map[yf * this.Size + xf];
     }
 }
