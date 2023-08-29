@@ -49,15 +49,11 @@ public partial class BetterContinents
                         v.m_forestTresholdMin = 0f;
                         v.m_forestTresholdMax = 1.15f;
                     }
-
-                    // Log($"{v.m_name}, {v.m_prefab}, {v.m_biomeArea}, {v.m_biome}, {v.m_inForest}, {v.m_forestTresholdMin}, {v.m_forestTresholdMax}, {v.m_forcePlacement}");
                 }
             }
 
             if (Settings.EnabledForThisWorld)
             {
-                //baseNoiseLayer = new FastNoiseLite(world.m_seed);
-                //ridgeLayer = new FastNoiseLite(world.m_seed);
                 currentSeed = world.m_seed;
                 ApplyNoiseSettings();
             }

@@ -1,6 +1,8 @@
 - v0.7.8
+  - Changes refresh command to reset command.
   - Fixes error and terrain issues when reloading images.
   - Removes the 4k image size limit.
+  - Removes force from the upgrade world parameter.
 
 - v0.7.7
   - Fixed for the new update.

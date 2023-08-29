@@ -14,6 +14,8 @@ public partial class BetterContinents
         [HarmonyPostfix, HarmonyPatch(typeof(SaveSystem), nameof(SaveSystem.GetSaveInfo))]
         static void GetSaveInfoPostfix(ref string saveName, ref string actualFileEnding)
         {
+            if (string.IsNullOrEmpty(saveName)) return;
+            if (string.IsNullOrEmpty(actualFileEnding)) return;
             // BC uses .fwl.BetterContinents extension. GetSaveInfo uses only the last extension.
             // So we need to remove the .fwl extension from the file name.
             if (saveName.EndsWith(".fwl", StringComparison.OrdinalIgnoreCase))

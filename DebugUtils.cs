@@ -133,9 +133,9 @@ public partial class DebugUtils
                     GameUtils.MinimapDownscalingPower = Mathf.Clamp(val, 0, 3);
                     GameUtils.FastMinimapRegen();
                 });
-            bc.AddCommand("refresh", "Refresh",
-                "resets all vegetation and locations (done automatically on every change)",
-                _ => GameUtils.Refresh());
+            bc.AddCommand("reset", "reset",
+                "resets whole map(done automatically on every change)",
+                _ => GameUtils.Reset());
             bc.AddCommand("scr", "Save map screenshot",
                 "save the minimap to a png, optionally pass resolution, default is 2048", arg =>
                 {
@@ -735,7 +735,7 @@ public partial class DebugUtils
             BetterContinents.WorldGeneratorPatch.ApplyNoiseSettings();
             noisePreviewTextures = null;
             maskPreviewTextures = null;
-            GameUtils.Refresh();
+            GameUtils.Reset();
         };
 
     private static Action<T> SetHeightmapValue<T>(Action<T> setValue) =>
@@ -745,7 +745,7 @@ public partial class DebugUtils
             BetterContinents.WorldGeneratorPatch.ApplyNoiseSettings();
             noisePreviewTextures = null;
             maskPreviewTextures = null;
-            GameUtils.Refresh();
+            GameUtils.Reset();
         };
 
     private static readonly Command rootCommand;

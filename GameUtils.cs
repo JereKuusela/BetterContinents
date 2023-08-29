@@ -16,9 +16,9 @@ public static class GameUtils
 {
     private static Dictionary<ZDOID, ZDO> GetObjectsByID() => ZDOMan.instance.m_objectsByID;
 
-    public static void Refresh()
+    public static void Reset()
     {
-        Console.instance.TryRunCommand("zones_reset start force");
+        Console.instance.TryRunCommand("zones_reset start");
         FastMinimapRegen();
     }
     private static int MinimapOrigTextureSize = 0;
