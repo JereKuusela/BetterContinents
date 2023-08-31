@@ -1,4 +1,5 @@
 - v0.7.8
+  - Adds color codes for Mistlands_DvergrBossEntrance1 and Hildir_camp.
   - Changes refresh command to reset command.
   - Fixes error and terrain issues when reloading images.
   - Removes the 4k image size limit.
