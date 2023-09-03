@@ -56,6 +56,7 @@ public partial class BetterContinents : BaseUnityPlugin
 
     public static ConfigEntry<bool> ConfigDebugModeEnabled;
     public static ConfigEntry<bool> ConfigDebugSkipDefaultLocationPlacement;
+    public static ConfigEntry<string> ConfigDebugResetCommand;
 
     public static ConfigEntry<bool> ConfigExperimentalMultithreadedHeightmapBuild;
     public static ConfigEntry<bool> ConfigExperimentalParallelChunksBuild;
@@ -198,6 +199,8 @@ public partial class BetterContinents : BaseUnityPlugin
                     .Description("Automatically reveals the full map on respawn, enables cheat mode, and debug mode, for debugging purposes").Bind(out ConfigDebugModeEnabled);
                 groupBuilder.AddValue("Skip Default Location Placement")
                     .Description("Skips default location placement during world gen (spawn temple and spawnmap are still placed), for quickly testing the heightmap itself").Bind(out ConfigDebugSkipDefaultLocationPlacement);
+                groupBuilder.AddValue("Debug Reset Command")
+                    .Description("Upgrade World command to execute when reloading images.").Default("zones_reset start").Bind(out ConfigDebugResetCommand);
             })
             .AddGroup("BetterContinents.Experimental", groupBuilder =>
             {

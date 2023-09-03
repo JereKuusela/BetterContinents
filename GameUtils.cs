@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using HarmonyLib;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -18,7 +16,7 @@ public static class GameUtils
 
     public static void Reset()
     {
-        Console.instance.TryRunCommand("zones_reset start");
+        Console.instance.TryRunCommand(BetterContinents.ConfigDebugResetCommand.Value);
         FastMinimapRegen();
     }
     private static int MinimapOrigTextureSize = 0;

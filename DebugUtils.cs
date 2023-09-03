@@ -19,8 +19,13 @@ public class PlayerPatch
         }
     }
 }
+[HarmonyPatch(typeof(Terminal), nameof(Terminal.InitTerminal))]
 public partial class DebugUtils
 {
+    static void Postfix()
+    {
+        new DebugUtils();
+    }
     private static readonly string[] Bosses =
     {
             "StartTemple", "Eikthyrnir", "GDKing", "GoblinKing", "Bonemass", "Dragonqueen",

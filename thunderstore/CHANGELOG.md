@@ -1,9 +1,10 @@
 - v0.7.8
-  - Adds color codes for Mistlands_DvergrBossEntrance1 and Hildir_camp.
+  - Adds color codes for Mistlands_DvergrBossEntrance1 (#9900ff) and Hildir_camp (#FF69B4).
+  - Adds a new setting for the Upgrade World reset command.
   - Changes refresh command to reset command.
   - Fixes error and terrain issues when reloading images.
   - Removes the 4k image size limit.
-  - Removes force from the upgrade world parameter.
+  - Removes force parameter from the default Upgrade World command.
 
 - v0.7.7
   - Fixed for the new update.
