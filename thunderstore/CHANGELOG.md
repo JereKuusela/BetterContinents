@@ -1,3 +1,6 @@
+- v0.7.9
+  - Fixes world modifier menu disabling Better Continents.
+
 - v0.7.8
   - Adds color codes for Mistlands_DvergrBossEntrance1 (#9900ff) and Hildir_camp (#FF69B4).
   - Adds a new setting for the Upgrade World reset command.

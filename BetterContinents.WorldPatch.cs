@@ -73,6 +73,9 @@ public partial class BetterContinents
              new[] { ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Out, ArgumentType.Out })]
         private static void SaveWorldMetaDataPostfix(World __instance)
         {
+            // World modifiers being set, nothing to be done.
+            if (!bWorldBeingCreated && __instance != WorldGenerator.instance?.m_world)
+                return;
             Log($"[Saving][{__instance.m_name}] Saving settings for {__instance.m_name}");
 
             BetterContinentsSettings settingsToSave;
