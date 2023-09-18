@@ -151,6 +151,7 @@ internal class ImageMapSpawn : ImageMapBase
         new ColorSpawn(new Color32(0x99, 0x00, 0xFF, 0xFF), "Mistlands_DvergrBossEntrance1"),
         new ColorSpawn(new Color32(0xFF, 0x69, 0xB4, 0xFF), "Hildir_camp"),
     ];
+    public bool CreateMap() => CreateMap<Rgba32>();
     protected override bool LoadTextureToMap<T>(Image<T> image)
     {
         var sw = new Stopwatch();

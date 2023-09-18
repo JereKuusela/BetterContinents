@@ -71,8 +71,7 @@ internal abstract class ImageMapBase
         });
         return pixels;
     }
-    public bool CreateMap() => CreateMap<Rgba32>();
-    public bool CreateMap<T>() where T : unmanaged, IPixel<T>
+    protected bool CreateMap<T>() where T : unmanaged, IPixel<T>
     {
         try
         {

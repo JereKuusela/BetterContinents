@@ -335,9 +335,7 @@ public partial class BetterContinents
             {
                 Roughmap = new ImageMapFloat(finalPath);
                 if (!Roughmap.LoadSourceImage() || !Roughmap.CreateMap())
-                {
                     Roughmap = null;
-                }
             }
             else
             {
@@ -692,8 +690,8 @@ public partial class BetterContinents
                 if (!string.IsNullOrEmpty(heightmapFilePath))
                 {
                     Heightmap = new ImageMapFloat(heightmapFilePath, pkg.ReadByteArray());
-                    if (Version <= 4 && !Heightmap.CreateMap()
-                        || Version > 4 && !Heightmap.CreateMap<L16>())
+                    var result = Version > 4 ? Heightmap.CreateMap() : Heightmap.CreateMapLegacy();
+                    if (!result)
                     {
                         Heightmap = null;
                     }
@@ -758,9 +756,7 @@ public partial class BetterContinents
                     {
                         Roughmap = new ImageMapFloat(roughmapFilePath, pkg.ReadByteArray());
                         if (!Roughmap.CreateMap())
-                        {
                             Roughmap = null;
-                        }
                         RoughmapBlend = pkg.ReadSingle();
                     }
 
@@ -773,9 +769,7 @@ public partial class BetterContinents
                         {
                             Flatmap = new ImageMapFloat(flatmapFilePath, pkg.ReadByteArray());
                             if (!Flatmap.CreateMap())
-                            {
                                 Flatmap = null;
-                            }
                         }
                     }
 
@@ -784,9 +778,7 @@ public partial class BetterContinents
                     {
                         Forestmap = new ImageMapFloat(forestmapFilePath, pkg.ReadByteArray());
                         if (!Forestmap.CreateMap())
-                        {
                             Forestmap = null;
-                        }
                         ForestmapMultiply = pkg.ReadSingle();
                         ForestmapAdd = pkg.ReadSingle();
                     }
@@ -877,61 +869,47 @@ public partial class BetterContinents
             return finalValue;
         }
 
-        public Heightmap.Biome GetBiomeOverride(float mapX, float mapY) => Biomemap?.GetValue(mapX, mapY) ?? (Heightmap.Biome)0;
+        public Heightmap.Biome GetBiomeOverride(float mapX, float mapY) => Biomemap?.GetValue(mapX, mapY) ?? 0;
 
         public Vector2? FindSpawn(string spawn) => Spawnmap?.FindSpawn(spawn);
-        public IEnumerable<Vector2> GetAllSpawns(string spawn) => Spawnmap?.GetAllSpawns(spawn) ?? new List<Vector2>();
+        public IEnumerable<Vector2> GetAllSpawns(string spawn) => Spawnmap?.GetAllSpawns(spawn) ?? [];
 
         public void ReloadHeightmap()
         {
             if (Heightmap != null && Heightmap.LoadSourceImage())
-            {
                 Heightmap.CreateMap();
-            }
         }
 
         public void ReloadBiomemap()
         {
             if (Biomemap != null && Biomemap.LoadSourceImage())
-            {
                 Biomemap.CreateMap();
-            }
         }
 
         public void ReloadSpawnmap()
         {
             if (Spawnmap != null && Spawnmap.LoadSourceImage())
-            {
                 Spawnmap.CreateMap();
-            }
         }
 
         public void ReloadRoughmap()
         {
             if (Roughmap != null && Roughmap.LoadSourceImage())
-            {
                 Roughmap.CreateMap();
-            }
         }
 
         public void ReloadFlatmap()
         {
             if (UseRoughInvertedAsFlat)
-            {
                 ReloadRoughmap();
-            }
             else if (Flatmap != null && Flatmap.LoadSourceImage())
-            {
                 Flatmap.CreateMap();
-            }
         }
 
         public void ReloadForestmap()
         {
             if (Forestmap != null && Forestmap.LoadSourceImage())
-            {
                 Forestmap.CreateMap();
-            }
         }
     }
 }
