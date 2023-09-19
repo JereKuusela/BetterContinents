@@ -20,6 +20,7 @@ internal class ImageMapSpawn : ImageMapBase
         Deserialize(@from);
     }
 
+    public bool CreateMap() => CreateMap<Rgba32>();
     public void Serialize(ZPackage to)
     {
         to.Write(RemainingSpawnAreas.Count);

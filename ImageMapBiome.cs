@@ -51,7 +51,7 @@ internal class ImageMapBiome : ImageMapBase
             new ColorBiome(new Color32(0, 255, 255, 255), Heightmap.Biome.DeepNorth),
             new ColorBiome(new Color32(255, 0, 0, 255), Heightmap.Biome.AshLands),
     };
-
+    public bool CreateMap() => CreateMap<Rgba32>();
 
     protected override bool LoadTextureToMap<T>(Image<T> image)
     {

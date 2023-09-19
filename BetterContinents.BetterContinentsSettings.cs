@@ -169,7 +169,7 @@ public partial class BetterContinents
                     HeightmapOverrideAll = ConfigHeightmapOverrideAll.Value;
 
                     Heightmap = new ImageMapFloat(heightmapPath);
-                    if (!Heightmap.LoadSourceImage() || !Heightmap.CreateMap())
+                    if (!Heightmap.LoadSourceImage() || !Heightmap.CreateMap(Version > 4))
                     {
                         Heightmap = null;
                     }
@@ -214,7 +214,7 @@ public partial class BetterContinents
                     RoughmapBlend = ConfigRoughmapBlend.Value;
 
                     Roughmap = new ImageMapFloat(roughmapPath);
-                    if (!Roughmap.LoadSourceImage() || !Roughmap.CreateMap())
+                    if (!Roughmap.LoadSourceImage() || !Roughmap.CreateMap(false))
                     {
                         Roughmap = null;
                     }
@@ -227,7 +227,7 @@ public partial class BetterContinents
                     ForestmapMultiply = ConfigForestmapMultiply.Value;
 
                     Forestmap = new ImageMapFloat(forestmapPath);
-                    if (!Forestmap.LoadSourceImage() || !Forestmap.CreateMap())
+                    if (!Forestmap.LoadSourceImage() || !Forestmap.CreateMap(false))
                     {
                         Forestmap = null;
                     }
@@ -275,7 +275,7 @@ public partial class BetterContinents
             if (!string.IsNullOrEmpty(finalPath))
             {
                 Heightmap = new ImageMapFloat(finalPath);
-                if (!Heightmap.LoadSourceImage() || !Heightmap.CreateMap())
+                if (!Heightmap.LoadSourceImage() || !Heightmap.CreateMap(Version > 4))
                 {
                     Heightmap = null;
                 }
@@ -334,7 +334,7 @@ public partial class BetterContinents
             if (!string.IsNullOrEmpty(finalPath))
             {
                 Roughmap = new ImageMapFloat(finalPath);
-                if (!Roughmap.LoadSourceImage() || !Roughmap.CreateMap())
+                if (!Roughmap.LoadSourceImage() || !Roughmap.CreateMap(false))
                 {
                     Roughmap = null;
                 }
@@ -353,7 +353,7 @@ public partial class BetterContinents
             if (!string.IsNullOrEmpty(finalPath))
             {
                 Forestmap = new ImageMapFloat(finalPath);
-                if (!Forestmap.LoadSourceImage() || !Forestmap.CreateMap())
+                if (!Forestmap.LoadSourceImage() || !Forestmap.CreateMap(false))
                 {
                     Forestmap = null;
                 }
@@ -692,11 +692,8 @@ public partial class BetterContinents
                 if (!string.IsNullOrEmpty(heightmapFilePath))
                 {
                     Heightmap = new ImageMapFloat(heightmapFilePath, pkg.ReadByteArray());
-                    if (Version <= 4 && !Heightmap.CreateMap()
-                        || Version > 4 && !Heightmap.CreateMap<L16>())
-                    {
+                    if (!Heightmap.CreateMap(Version > 4))
                         Heightmap = null;
-                    }
                     HeightmapAmount = pkg.ReadSingle();
                     HeightmapBlend = pkg.ReadSingle();
                     HeightmapAdd = pkg.ReadSingle();
@@ -757,7 +754,7 @@ public partial class BetterContinents
                     if (!string.IsNullOrEmpty(roughmapFilePath))
                     {
                         Roughmap = new ImageMapFloat(roughmapFilePath, pkg.ReadByteArray());
-                        if (!Roughmap.CreateMap())
+                        if (!Roughmap.CreateMap(false))
                         {
                             Roughmap = null;
                         }
@@ -772,7 +769,7 @@ public partial class BetterContinents
                         if (!string.IsNullOrEmpty(flatmapFilePath))
                         {
                             Flatmap = new ImageMapFloat(flatmapFilePath, pkg.ReadByteArray());
-                            if (!Flatmap.CreateMap())
+                            if (!Flatmap.CreateMap(false))
                             {
                                 Flatmap = null;
                             }
@@ -783,7 +780,7 @@ public partial class BetterContinents
                     if (!string.IsNullOrEmpty(forestmapFilePath))
                     {
                         Forestmap = new ImageMapFloat(forestmapFilePath, pkg.ReadByteArray());
-                        if (!Forestmap.CreateMap())
+                        if (!Forestmap.CreateMap(false))
                         {
                             Forestmap = null;
                         }
@@ -886,7 +883,7 @@ public partial class BetterContinents
         {
             if (Heightmap != null && Heightmap.LoadSourceImage())
             {
-                Heightmap.CreateMap();
+                Heightmap.CreateMap(Version > 4);
             }
         }
 
@@ -910,7 +907,7 @@ public partial class BetterContinents
         {
             if (Roughmap != null && Roughmap.LoadSourceImage())
             {
-                Roughmap.CreateMap();
+                Roughmap.CreateMap(false);
             }
         }
 
@@ -922,7 +919,7 @@ public partial class BetterContinents
             }
             else if (Flatmap != null && Flatmap.LoadSourceImage())
             {
-                Flatmap.CreateMap();
+                Flatmap.CreateMap(false);
             }
         }
 
@@ -930,7 +927,7 @@ public partial class BetterContinents
         {
             if (Forestmap != null && Forestmap.LoadSourceImage())
             {
-                Forestmap.CreateMap();
+                Forestmap.CreateMap(false);
             }
         }
     }
