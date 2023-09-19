@@ -31,6 +31,7 @@ internal class ImageMapBiome : ImageMapBase
     private static readonly ColorBiome[] BiomeColorMapping = new ColorBiome[]
     {
             /*
+                    None #000000
                     Ocean #0000FF 
                     Meadows #00FF00
                     Black Forest #007F00
@@ -41,18 +42,20 @@ internal class ImageMapBiome : ImageMapBase
                     Deep North #00FFFF
                     Ash Lands #FF0000
                 */
-            new ColorBiome(new Color32(0, 0, 255, 255), Heightmap.Biome.Ocean),
-            new ColorBiome(new Color32(0, 255, 0, 255), Heightmap.Biome.Meadows),
-            new ColorBiome(new Color32(0, 127, 0, 255), Heightmap.Biome.BlackForest),
-            new ColorBiome(new Color32(127, 127, 0, 255), Heightmap.Biome.Swamp),
-            new ColorBiome(new Color32(255, 255, 255, 255), Heightmap.Biome.Mountain),
-            new ColorBiome(new Color32(255, 255, 0, 255), Heightmap.Biome.Plains),
-            new ColorBiome(new Color32(127, 127, 127, 255), Heightmap.Biome.Mistlands),
-            new ColorBiome(new Color32(0, 255, 255, 255), Heightmap.Biome.DeepNorth),
-            new ColorBiome(new Color32(255, 0, 0, 255), Heightmap.Biome.AshLands),
+            new(new Color32(0, 0, 0, 255), Heightmap.Biome.None),
+            new(new Color32(0, 0, 255, 255), Heightmap.Biome.Ocean),
+            new(new Color32(0, 255, 0, 255), Heightmap.Biome.Meadows),
+            new(new Color32(0, 127, 0, 255), Heightmap.Biome.BlackForest),
+            new(new Color32(127, 127, 0, 255), Heightmap.Biome.Swamp),
+            new(new Color32(255, 255, 255, 255), Heightmap.Biome.Mountain),
+            new(new Color32(255, 255, 0, 255), Heightmap.Biome.Plains),
+            new(new Color32(127, 127, 127, 255), Heightmap.Biome.Mistlands),
+            new(new Color32(0, 255, 255, 255), Heightmap.Biome.DeepNorth),
+            new(new Color32(255, 0, 0, 255), Heightmap.Biome.AshLands),
     };
     public bool CreateMap() => CreateMap<Rgba32>();
 
+    public bool CreateMap() => CreateMap<Rgba32>();
     protected override bool LoadTextureToMap<T>(Image<T> image)
     {
         int ColorDistance(Color32 a, Color32 b) =>

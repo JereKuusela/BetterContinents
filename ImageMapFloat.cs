@@ -16,6 +16,9 @@ internal class ImageMapFloat : ImageMapBase
     public ImageMapFloat(string filePath, byte[] sourceData) : base(filePath, sourceData) { }
     public bool CreateMap(bool bits16) => bits16 ? CreateMap<L16>() : CreateMap<Rgba32>();
 
+
+    public bool CreateMap() => CreateMap<L16>();
+    public bool CreateMapLegacy() => CreateMap<Rgba32>();
     protected override bool LoadTextureToMap<T>(Image<T> image)
     {
         var sw = new Stopwatch();

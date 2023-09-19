@@ -334,10 +334,8 @@ public partial class BetterContinents
             if (!string.IsNullOrEmpty(finalPath))
             {
                 Roughmap = new ImageMapFloat(finalPath);
-                if (!Roughmap.LoadSourceImage() || !Roughmap.CreateMap(false))
-                {
+                if (!Roughmap.LoadSourceImage() || !Roughmap.CreateMap())
                     Roughmap = null;
-                }
             }
             else
             {
@@ -692,243 +690,225 @@ public partial class BetterContinents
                 if (!string.IsNullOrEmpty(heightmapFilePath))
                 {
                     Heightmap = new ImageMapFloat(heightmapFilePath, pkg.ReadByteArray());
-                    if (!Heightmap.CreateMap(Version > 4))
+                    var result = Version > 4 ? Heightmap.CreateMap() : Heightmap.CreateMapLegacy();
+                    if (!result)
+                    {
                         Heightmap = null;
-                    HeightmapAmount = pkg.ReadSingle();
-                    HeightmapBlend = pkg.ReadSingle();
-                    HeightmapAdd = pkg.ReadSingle();
-                }
-
-                OceanChannelsEnabled = pkg.ReadBool();
-
-                if (Version >= 2)
-                {
-                    RiversEnabled = pkg.ReadBool();
-                    //LakesEnabled = pkg.ReadBool();
-
-                    string biomemapFilePath = pkg.ReadString();
-                    if (!string.IsNullOrEmpty(biomemapFilePath))
-                    {
-                        Biomemap = new ImageMapBiome(biomemapFilePath, pkg.ReadByteArray());
-                        if (!Biomemap.CreateMap())
-                        {
-                            Biomemap = null;
-                        }
+                        HeightmapAmount = pkg.ReadSingle();
+                        HeightmapBlend = pkg.ReadSingle();
+                        HeightmapAdd = pkg.ReadSingle();
                     }
 
-                    ForestScale = pkg.ReadSingle();
-                    ForestAmountOffset = pkg.ReadSingle();
+                    OceanChannelsEnabled = pkg.ReadBool();
 
-                    OverrideStartPosition = pkg.ReadBool();
-                    StartPositionX = pkg.ReadSingle();
-                    StartPositionY = pkg.ReadSingle();
-                }
-                else
-                {
-                    RiversEnabled = true;
-                    ForestScale = 1;
-                    ForestAmountOffset = 0;
-                    OverrideStartPosition = false;
-                    StartPositionX = 0;
-                    StartPositionY = 0;
-                    //LakesEnabled = true;
-                }
-
-                // Version 3
-                if (Version >= 3)
-                {
-                    string spawnmapFilePath = pkg.ReadString();
-                    if (!string.IsNullOrEmpty(spawnmapFilePath))
+                    if (Version >= 2)
                     {
-                        Spawnmap = new ImageMapSpawn(spawnmapFilePath, pkg);
-                    }
-                }
+                        RiversEnabled = pkg.ReadBool();
+                        //LakesEnabled = pkg.ReadBool();
 
-                // Version 4
-                // (nothing)
-
-                // Version 5
-                if (Version >= 5)
-                {
-                    string roughmapFilePath = pkg.ReadString();
-                    if (!string.IsNullOrEmpty(roughmapFilePath))
-                    {
-                        Roughmap = new ImageMapFloat(roughmapFilePath, pkg.ReadByteArray());
-                        if (!Roughmap.CreateMap(false))
+                        string biomemapFilePath = pkg.ReadString();
+                        if (!string.IsNullOrEmpty(biomemapFilePath))
                         {
-                            Roughmap = null;
-                        }
-                        RoughmapBlend = pkg.ReadSingle();
-                    }
-
-                    UseRoughInvertedAsFlat = pkg.ReadBool();
-                    FlatmapBlend = pkg.ReadSingle();
-                    if (!UseRoughInvertedAsFlat)
-                    {
-                        string flatmapFilePath = pkg.ReadString();
-                        if (!string.IsNullOrEmpty(flatmapFilePath))
-                        {
-                            Flatmap = new ImageMapFloat(flatmapFilePath, pkg.ReadByteArray());
-                            if (!Flatmap.CreateMap(false))
+                            Biomemap = new ImageMapBiome(biomemapFilePath, pkg.ReadByteArray());
+                            if (!Biomemap.CreateMap())
                             {
-                                Flatmap = null;
+                                Biomemap = null;
                             }
                         }
-                    }
 
-                    string forestmapFilePath = pkg.ReadString();
-                    if (!string.IsNullOrEmpty(forestmapFilePath))
+                        ForestScale = pkg.ReadSingle();
+                        ForestAmountOffset = pkg.ReadSingle();
+
+                        OverrideStartPosition = pkg.ReadBool();
+                        StartPositionX = pkg.ReadSingle();
+                        StartPositionY = pkg.ReadSingle();
+                    }
+                    else
                     {
-                        Forestmap = new ImageMapFloat(forestmapFilePath, pkg.ReadByteArray());
-                        if (!Forestmap.CreateMap(false))
-                        {
-                            Forestmap = null;
-                        }
-                        ForestmapMultiply = pkg.ReadSingle();
-                        ForestmapAdd = pkg.ReadSingle();
+                        RiversEnabled = true;
+                        ForestScale = 1;
+                        ForestAmountOffset = 0;
+                        OverrideStartPosition = false;
+                        StartPositionX = 0;
+                        StartPositionY = 0;
+                        //LakesEnabled = true;
                     }
 
-                    DisableMapEdgeDropoff = pkg.ReadBool();
-                    MountainsAllowedAtCenter = pkg.ReadBool();
-                    ForestFactorOverrideAllTrees = pkg.ReadBool();
-                }
+                    // Version 3
+                    if (Version >= 3)
+                    {
+                        string spawnmapFilePath = pkg.ReadString();
+                        if (!string.IsNullOrEmpty(spawnmapFilePath))
+                        {
+                            Spawnmap = new ImageMapSpawn(spawnmapFilePath, pkg);
+                        }
+                    }
 
-                // Version 6
-                if (Version >= 6)
+                    // Version 4
+                    // (nothing)
+
+                    // Version 5
+                    if (Version >= 5)
+                    {
+                        string roughmapFilePath = pkg.ReadString();
+                        if (!string.IsNullOrEmpty(roughmapFilePath))
+                        {
+                            Roughmap = new ImageMapFloat(roughmapFilePath, pkg.ReadByteArray());
+                            if (!Roughmap.CreateMap())
+                                Roughmap = null;
+                            RoughmapBlend = pkg.ReadSingle();
+                        }
+
+                        UseRoughInvertedAsFlat = pkg.ReadBool();
+                        FlatmapBlend = pkg.ReadSingle();
+                        if (!UseRoughInvertedAsFlat)
+                        {
+                            string flatmapFilePath = pkg.ReadString();
+                            if (!string.IsNullOrEmpty(flatmapFilePath))
+                            {
+                                Flatmap = new ImageMapFloat(flatmapFilePath, pkg.ReadByteArray());
+                                if (!Flatmap.CreateMap())
+                                    Flatmap = null;
+                            }
+                        }
+
+                        string forestmapFilePath = pkg.ReadString();
+                        if (!string.IsNullOrEmpty(forestmapFilePath))
+                        {
+                            Forestmap = new ImageMapFloat(forestmapFilePath, pkg.ReadByteArray());
+                            if (!Forestmap.CreateMap())
+                                Forestmap = null;
+                            ForestmapMultiply = pkg.ReadSingle();
+                            ForestmapAdd = pkg.ReadSingle();
+                        }
+
+                        DisableMapEdgeDropoff = pkg.ReadBool();
+                        MountainsAllowedAtCenter = pkg.ReadBool();
+                        ForestFactorOverrideAllTrees = pkg.ReadBool();
+                    }
+
+                    // Version 6
+                    if (Version >= 6)
+                    {
+                        HeightmapOverrideAll = pkg.ReadBool();
+                        HeightmapMask = pkg.ReadSingle();
+                    }
+                    else
+                    {
+                        HeightmapOverrideAll = false;
+                        HeightmapMask = 0;
+                    }
+
+                    // Version 7
+                    if (Version >= 7)
+                    {
+                        BaseHeightNoise = NoiseStackSettings.Deserialize(pkg);
+                    }
+                    else
+                    {
+                        BaseHeightNoise = null;
+                    }
+                }
+            }
+
+            public float ApplyHeightmap(float x, float y, float height)
+            {
+                if (Heightmap == null || (HeightmapBlend == 0 && HeightmapAdd == 0 && HeightmapMask == 0))
                 {
-                    HeightmapOverrideAll = pkg.ReadBool();
-                    HeightmapMask = pkg.ReadSingle();
+                    return height;
                 }
-                else
+
+                float h = Heightmap.GetValue(x, y);
+                float blendedHeight = Mathf.Lerp(height, h * HeightmapAmount, HeightmapBlend);
+                return Mathf.Lerp(blendedHeight, blendedHeight * h, HeightmapMask) + h * HeightmapAdd;
+            }
+
+            public float ApplyRoughmap(float x, float y, float smoothHeight, float roughHeight)
+            {
+                if (Roughmap == null)
                 {
-                    HeightmapOverrideAll = false;
-                    HeightmapMask = 0;
+                    return roughHeight;
                 }
 
-                // Version 7
-                if (Version >= 7)
+                float r = Roughmap.GetValue(x, y);
+                return Mathf.Lerp(smoothHeight, roughHeight, r * RoughmapBlend);
+            }
+
+            public float ApplyFlatmap(float x, float y, float flatHeight, float height)
+            {
+                if (Settings.ShouldHeightmapOverrideAll)
                 {
-                    BaseHeightNoise = NoiseStackSettings.Deserialize(pkg);
+                    return flatHeight;
                 }
-                else
+                var image = UseRoughInvertedAsFlat ? Roughmap : Flatmap;
+                if (image == null || RoughmapBlend == 0)
                 {
-                    BaseHeightNoise = null;
+                    return height;
                 }
-            }
-        }
 
-        public float ApplyHeightmap(float x, float y, float height)
-        {
-            if (Heightmap == null || (HeightmapBlend == 0 && HeightmapAdd == 0 && HeightmapMask == 0))
-            {
-                return height;
+                float f = UseRoughInvertedAsFlat ? 1 - image.GetValue(x, y) : image.GetValue(x, y);
+                return Mathf.Lerp(height, flatHeight, f * FlatmapBlend);
             }
 
-            float h = Heightmap.GetValue(x, y);
-            float blendedHeight = Mathf.Lerp(height, h * HeightmapAmount, HeightmapBlend);
-            return Mathf.Lerp(blendedHeight, blendedHeight * h, HeightmapMask) + h * HeightmapAdd;
-        }
-
-        public float ApplyRoughmap(float x, float y, float smoothHeight, float roughHeight)
-        {
-            if (Roughmap == null)
+            public float ApplyForest(float x, float y, float forest)
             {
-                return roughHeight;
+                float finalValue = forest;
+                if (Forestmap != null)
+                {
+                    // Map forest from weird vanilla range to 0 - 1
+                    float normalizedForestValue = Mathf.InverseLerp(1.850145f, 0.145071f, forest);
+                    float fmap = Forestmap.GetValue(x, y);
+                    float calculatedValue = Mathf.Lerp(normalizedForestValue, normalizedForestValue * fmap, ForestmapMultiply) + fmap * ForestmapAdd;
+                    // Map back to weird values
+                    finalValue = Mathf.Lerp(1.850145f, 0.145071f, calculatedValue);
+                }
+
+                // Clamp between the known good values (that vanilla generates)
+                finalValue = Mathf.Clamp(finalValue + ForestAmountOffset, 0.145071f, 1.850145f);
+                return finalValue;
             }
 
-            float r = Roughmap.GetValue(x, y);
-            return Mathf.Lerp(smoothHeight, roughHeight, r * RoughmapBlend);
-        }
+            public Heightmap.Biome GetBiomeOverride(float mapX, float mapY) => Biomemap?.GetValue(mapX, mapY) ?? 0;
 
-        public float ApplyFlatmap(float x, float y, float flatHeight, float height)
-        {
-            if (Settings.ShouldHeightmapOverrideAll)
+            public Vector2? FindSpawn(string spawn) => Spawnmap?.FindSpawn(spawn);
+            public IEnumerable<Vector2> GetAllSpawns(string spawn) => Spawnmap?.GetAllSpawns(spawn) ?? [];
+
+            public void ReloadHeightmap()
             {
-                return flatHeight;
-            }
-            var image = UseRoughInvertedAsFlat ? Roughmap : Flatmap;
-            if (image == null || RoughmapBlend == 0)
-            {
-                return height;
+                if (Heightmap != null && Heightmap.LoadSourceImage())
+                    Heightmap.CreateMap();
             }
 
-            float f = UseRoughInvertedAsFlat ? 1 - image.GetValue(x, y) : image.GetValue(x, y);
-            return Mathf.Lerp(height, flatHeight, f * FlatmapBlend);
-        }
-
-        public float ApplyForest(float x, float y, float forest)
-        {
-            float finalValue = forest;
-            if (Forestmap != null)
+            public void ReloadBiomemap()
             {
-                // Map forest from weird vanilla range to 0 - 1
-                float normalizedForestValue = Mathf.InverseLerp(1.850145f, 0.145071f, forest);
-                float fmap = Forestmap.GetValue(x, y);
-                float calculatedValue = Mathf.Lerp(normalizedForestValue, normalizedForestValue * fmap, ForestmapMultiply) + fmap * ForestmapAdd;
-                // Map back to weird values
-                finalValue = Mathf.Lerp(1.850145f, 0.145071f, calculatedValue);
+                if (Biomemap != null && Biomemap.LoadSourceImage())
+                    Biomemap.CreateMap();
             }
 
-            // Clamp between the known good values (that vanilla generates)
-            finalValue = Mathf.Clamp(finalValue + ForestAmountOffset, 0.145071f, 1.850145f);
-            return finalValue;
-        }
-
-        public Heightmap.Biome GetBiomeOverride(float mapX, float mapY) => Biomemap?.GetValue(mapX, mapY) ?? (Heightmap.Biome)0;
-
-        public Vector2? FindSpawn(string spawn) => Spawnmap?.FindSpawn(spawn);
-        public IEnumerable<Vector2> GetAllSpawns(string spawn) => Spawnmap?.GetAllSpawns(spawn) ?? new List<Vector2>();
-
-        public void ReloadHeightmap()
-        {
-            if (Heightmap != null && Heightmap.LoadSourceImage())
+            public void ReloadSpawnmap()
             {
-                Heightmap.CreateMap(Version > 4);
+                if (Spawnmap != null && Spawnmap.LoadSourceImage())
+                    Spawnmap.CreateMap();
             }
-        }
 
-        public void ReloadBiomemap()
-        {
-            if (Biomemap != null && Biomemap.LoadSourceImage())
+            public void ReloadRoughmap()
             {
-                Biomemap.CreateMap();
+                if (Roughmap != null && Roughmap.LoadSourceImage())
+                    Roughmap.CreateMap();
             }
-        }
 
-        public void ReloadSpawnmap()
-        {
-            if (Spawnmap != null && Spawnmap.LoadSourceImage())
+            public void ReloadFlatmap()
             {
-                Spawnmap.CreateMap();
+                if (UseRoughInvertedAsFlat)
+                    ReloadRoughmap();
+                else if (Flatmap != null && Flatmap.LoadSourceImage())
+                    Flatmap.CreateMap();
             }
-        }
 
-        public void ReloadRoughmap()
-        {
-            if (Roughmap != null && Roughmap.LoadSourceImage())
+            public void ReloadForestmap()
             {
-                Roughmap.CreateMap(false);
-            }
-        }
-
-        public void ReloadFlatmap()
-        {
-            if (UseRoughInvertedAsFlat)
-            {
-                ReloadRoughmap();
-            }
-            else if (Flatmap != null && Flatmap.LoadSourceImage())
-            {
-                Flatmap.CreateMap(false);
-            }
-        }
-
-        public void ReloadForestmap()
-        {
-            if (Forestmap != null && Forestmap.LoadSourceImage())
-            {
-                Forestmap.CreateMap(false);
+                if (Forestmap != null && Forestmap.LoadSourceImage())
+                    Forestmap.CreateMap();
             }
         }
     }
-}

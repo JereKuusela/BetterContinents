@@ -71,7 +71,6 @@ internal abstract class ImageMapBase
         });
         return pixels;
     }
-
     protected bool CreateMap<T>() where T : unmanaged, IPixel<T>
     {
         try
