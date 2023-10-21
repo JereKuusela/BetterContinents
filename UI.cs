@@ -9,7 +9,7 @@ namespace BetterContinents;
 
 public static class UI
 {
-    private static readonly Dictionary<string, Action> UICallbacks = new();
+    private static readonly Dictionary<string, Action> UICallbacks = [];
 
     private static readonly Color ValheimColor = new(1, 0.714f, 0.361f, 1);
 #nullable disable
@@ -110,13 +110,13 @@ public static class UI
 
     public static void Remove(string key) => UICallbacks.Remove(key);
 
-    private static readonly Dictionary<Color, Texture2D> ColorTextures = new();
+    private static readonly Dictionary<Color, Texture2D> ColorTextures = [];
     public static Texture2D CreateFillTexture(Color color)
     {
         if (ColorTextures.TryGetValue(color, out var texture) && texture != null)
             return texture;
         texture = new Texture2D(1, 1);
-        texture.SetPixels(new[] { color });
+        texture.SetPixels([color]);
         texture.Apply(false);
         ColorTextures[color] = texture;
         return texture;

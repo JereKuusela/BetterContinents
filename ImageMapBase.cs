@@ -11,26 +11,20 @@ namespace BetterContinents;
 // Loads and stores source image file in original format.
 // Derived types will define the final type of the image pixels (the "map"), and
 // how to access them
-internal abstract class ImageMapBase
+internal abstract class ImageMapBase(string filePath)
 {
-    public string FilePath;
+    public string FilePath = filePath;
 
-    public byte[] SourceData;
+    public byte[] SourceData = [];
 
     public int Size;
-
-    public ImageMapBase(string filePath)
-    {
-        FilePath = filePath;
-        SourceData = new byte[0];
-    }
 
     public ImageMapBase(string filePath, byte[] sourceData) : this(filePath)
     {
         SourceData = sourceData;
     }
 
-    public bool LoadSourceImage()
+    public virtual bool LoadSourceImage()
     {
         if (!File.Exists(FilePath))
         {
@@ -116,5 +110,11 @@ internal abstract class ImageMapBase
             return false;
         }
         return true;
+    }
+
+    public virtual void Serialize(ZPackage pkg, int version, bool network)
+    {
+        pkg.Write(network ? "" : FilePath);
+        pkg.Write(SourceData);
     }
 }

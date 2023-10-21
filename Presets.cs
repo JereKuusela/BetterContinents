@@ -16,7 +16,7 @@ public class Presets
     private static bool DisabledPreset => BetterContinents.ConfigSelectedPreset.Value == Disabled;
     private static bool ConfigPreset => BetterContinents.ConfigSelectedPreset.Value == FromConfig;
 
-    private List<string> presets = new();
+    private List<string> presets = [];
     private const string Disabled = "Disabled";
     private const string FromConfig = "From Config";
 
@@ -104,7 +104,7 @@ public class Presets
 
     private void Refresh()
     {
-        string NameFromPath(string path) => Path.GetFileName(path).UpTo(".").AddSpacesToWords();
+        static string NameFromPath(string path) => Path.GetFileName(path).UpTo(".").AddSpacesToWords();
 
         try
         {

@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -7,56 +9,52 @@ using UnityEngine;
 
 namespace BetterContinents;
 
-internal class ImageMapBiome : ImageMapBase
+internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
 {
-    private Heightmap.Biome[] Map = new Heightmap.Biome[0];
-
-    public ImageMapBiome(string filePath) : base(filePath) { }
-
-    public ImageMapBiome(string filePath, byte[] sourceData) : base(filePath, sourceData) { }
-
-    private struct ColorBiome
+    private Heightmap.Biome[] Map = [];
+    private Dictionary<Heightmap.Biome, Color32> Colors = [];
+    public override bool LoadSourceImage()
     {
-        public Color32 color;
-        public Heightmap.Biome biome;
-
-
-        public ColorBiome(Color32 color, Heightmap.Biome biome)
+        if (!base.LoadSourceImage()) return false;
+        var path = Path.Combine(Path.GetDirectoryName(FilePath), Path.GetFileNameWithoutExtension(FilePath) + ".txt");
+        if (!File.Exists(path))
         {
-            this.color = color;
-            this.biome = biome;
+            File.WriteAllLines(path, DefaultColors.Split('|'));
+            Colors = ParseColors(DefaultColors);
+            return true;
         }
+        try
+        {
+            var colors = string.Join("|", File.ReadAllLines(path));
+            Colors = ParseColors(colors);
+        }
+        catch (Exception ex)
+        {
+            BetterContinents.LogError($"Cannot load file {path}: {ex.Message}.");
+            Colors = ParseColors(DefaultColors);
+        }
+        return true;
     }
 
-    private static readonly ColorBiome[] BiomeColorMapping = new ColorBiome[]
-    {
-            /*
-                    None #000000
-                    Ocean #0000FF 
-                    Meadows #00FF00
-                    Black Forest #007F00
-                    Swamp #7F7F00
-                    Mountains #FFFFFF
-                    Plains #FFFF00
-                    Mistlands #7F7F7F
-                    Deep North #00FFFF
-                    Ash Lands #FF0000
-                */
-            new(new Color32(0, 0, 0, 255), Heightmap.Biome.None),
-            new(new Color32(0, 0, 255, 255), Heightmap.Biome.Ocean),
-            new(new Color32(0, 255, 0, 255), Heightmap.Biome.Meadows),
-            new(new Color32(0, 127, 0, 255), Heightmap.Biome.BlackForest),
-            new(new Color32(127, 127, 0, 255), Heightmap.Biome.Swamp),
-            new(new Color32(255, 255, 255, 255), Heightmap.Biome.Mountain),
-            new(new Color32(255, 255, 0, 255), Heightmap.Biome.Plains),
-            new(new Color32(127, 127, 127, 255), Heightmap.Biome.Mistlands),
-            new(new Color32(0, 255, 255, 255), Heightmap.Biome.DeepNorth),
-            new(new Color32(255, 0, 0, 255), Heightmap.Biome.AshLands),
-    };
+    private static Dictionary<Heightmap.Biome, Color32> ParseColors(string colors) => colors.Split('|')
+        .Select(s => s.Trim().Split(':')).Where(s => s.Length == 2)
+        .ToDictionary(
+            s => Enum.TryParse<Heightmap.Biome>(s[0].Trim(), true, out var biome) ? biome : throw new Exception($"Invalid biome name {s[0]}"),
+            s =>
+            {
+                var split = s[1].Trim().Split(',').Select(s => s.Trim()).ToArray();
+                if (split.Length < 3)
+                    throw new Exception($"Invalid biome color {s[1]}");
+                var a = split.Length == 3 ? "255" : split[3];
+                return new Color32(byte.Parse(split[0]), byte.Parse(split[1]), byte.Parse(split[2]), byte.Parse(a));
+            }
+        );
+
+    private static readonly string DefaultColors = "None: 0,0,0|Ocean: 0,0,255|Plains: 255,255,0|BlackForest: 0,127,0|Swamp: 127,127,0|Mountains: 255,255,255|Mistlands: 127,127,127|DeepNorth: 0,255,255|AshLands: 255,0,0";
     public bool CreateMap() => CreateMap<Rgba32>();
     protected override bool LoadTextureToMap<T>(Image<T> image)
     {
-        int ColorDistance(Color32 a, Color32 b) =>
+        static int ColorDistance(Color32 a, Color32 b) =>
             (a.r - b.r) * (a.r - b.r) + (a.g - b.g) * (a.g - b.g) + (a.b - b.b) * (a.b - b.b);
 
         var st = new Stopwatch();
@@ -69,7 +67,7 @@ internal class ImageMapBiome : ImageMapBase
             var color = Convert(pixel);
             if (!colorMapping.TryGetValue(color, out var biome))
             {
-                biome = BiomeColorMapping.OrderBy(d => ColorDistance(color, d.color)).First().biome;
+                biome = Colors.OrderBy(d => ColorDistance(color, d.Value)).First().Key;
                 colorMapping.Add(color, biome);
             }
             return biome;
@@ -126,5 +124,30 @@ internal class ImageMapBiome : ImageMapBase
         SampleBiomeWeighted(xi + 1, yi + 1, xd * yd);
 
         return biomes[topBiomeIdx];
+    }
+
+    public override void Serialize(ZPackage pkg, int version, bool network)
+    {
+        base.Serialize(pkg, version, network);
+        if (version >= 8)
+        {
+            var colors = Colors.Select(d => $"{d.Key}:{d.Value.r},{d.Value.g},{d.Value.b},{d.Value.a}");
+            pkg.Write(string.Join("|", colors));
+        }
+    }
+    public static ImageMapBiome? Load(ZPackage pkg, int version)
+    {
+        var path = pkg.ReadString();
+        if (string.IsNullOrEmpty(path))
+            return null;
+        var map = new ImageMapBiome(path);
+        map.Deserialize(pkg, version);
+        return map.CreateMap() ? map : null;
+    }
+    public void Deserialize(ZPackage pkg, int version)
+    {
+        SourceData = pkg.ReadByteArray();
+        if (version >= 8)
+            Colors = ParseColors(pkg.ReadString());
     }
 }

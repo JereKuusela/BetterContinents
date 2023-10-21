@@ -28,24 +28,24 @@ public partial class BetterContinents : BaseUnityPlugin
 
     public static ConfigEntry<string> ConfigMapSourceDir;
 
-    public static ConfigEntry<string> ConfigHeightmapFile;
+    public static ConfigEntry<string> ConfigHeightFile;
     public static ConfigEntry<float> ConfigHeightmapAmount;
     public static ConfigEntry<float> ConfigHeightmapBlend;
     public static ConfigEntry<float> ConfigHeightmapAdd;
     public static ConfigEntry<float> ConfigHeightmapMask;
     public static ConfigEntry<bool> ConfigHeightmapOverrideAll;
 
-    public static ConfigEntry<string> ConfigBiomemapFile;
+    public static ConfigEntry<string> ConfigBiomeFile;
 
-    public static ConfigEntry<string> ConfigSpawnmapFile;
+    public static ConfigEntry<string> ConfigLocationFile;
 
-    public static ConfigEntry<string> ConfigRoughmapFile;
+    public static ConfigEntry<string> ConfigRoughFile;
     public static ConfigEntry<float> ConfigRoughmapBlend;
 
     public static ConfigEntry<float> ConfigForestScale;
     public static ConfigEntry<float> ConfigForestAmount;
     public static ConfigEntry<bool> ConfigForestFactorOverrideAllTrees;
-    public static ConfigEntry<string> ConfigForestmapFile;
+    public static ConfigEntry<string> ConfigForestFile;
     public static ConfigEntry<float> ConfigForestmapMultiply;
     public static ConfigEntry<float> ConfigForestmapAdd;
 
@@ -120,12 +120,12 @@ public partial class BetterContinents : BaseUnityPlugin
             .AddGroup("BetterContinents.Project", groupBuilder =>
             {
                 groupBuilder.AddValue("Directory")
-                    .Description("This directory will load automatically any existing map files matching the correct names, overriding specific files specified below. Filenames must match: heightmap.png, biomemap.png, spawnmap.png, roughmap.png, forestmap.png.").Bind(out ConfigMapSourceDir);
+                    .Description("This directory will load automatically any existing map files matching the correct names, overriding specific files specified below. Filenames must match: heightmap.png, biomemap.png, locationmap.png, roughmap.png, forestmap.png.").Bind(out ConfigMapSourceDir);
             })
             .AddGroup("BetterContinents.Heightmap", groupBuilder =>
             {
                 groupBuilder.AddValue("Heightmap File")
-                    .Description("Path to a heightmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigHeightmapFile);
+                    .Description("Path to a heightmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigHeightFile);
                 groupBuilder.AddValue("Heightmap Amount")
                     .Description("Multiplier of the height value from the heightmap file (more than 1 leads to higher max height than vanilla, good results are not guaranteed)")
                     .Default(1f).Range(0f, 5f).Bind(out ConfigHeightmapAmount);
@@ -145,7 +145,7 @@ public partial class BetterContinents : BaseUnityPlugin
             .AddGroup("BetterContinents.Roughmap", groupBuilder =>
             {
                 groupBuilder.AddValue("Roughmap File")
-                    .Description("Path to a roughmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigRoughmapFile);
+                    .Description("Path to a roughmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigRoughFile);
                 groupBuilder.AddValue("Roughmap Blend")
                     .Description("How strongly to apply the roughmap file")
                     .Default(1f).Range(0f, 1f).Bind(out ConfigRoughmapBlend);
@@ -153,7 +153,7 @@ public partial class BetterContinents : BaseUnityPlugin
             .AddGroup("BetterContinents.Biomemap", groupBuilder =>
             {
                 groupBuilder.AddValue("Biomemap File")
-                    .Description("Path to a biomemap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigBiomemapFile);
+                    .Description("Path to a biomemap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigBiomeFile);
             })
             .AddGroup("BetterContinents.Forest", groupBuilder =>
             {
@@ -167,7 +167,7 @@ public partial class BetterContinents : BaseUnityPlugin
                     .Description("Trees in all biomes will be affected by forest factor (both procedural and from forestmap)")
                     .Default(false).Bind(out ConfigForestFactorOverrideAllTrees);
                 groupBuilder.AddValue("Forestmap File")
-                    .Description("Path to a forestmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigForestmapFile);
+                    .Description("Path to a forestmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigForestFile);
                 groupBuilder.AddValue("Forestmap Multiply")
                     .Description("How strongly to scale the vanilla forest factor by the forestmap")
                     .Default(1f).Range(0f, 1f).Bind(out ConfigForestmapMultiply);
@@ -175,10 +175,10 @@ public partial class BetterContinents : BaseUnityPlugin
                     .Description("How strongly to add the forestmap directly to the vanilla forest factor")
                     .Default(1f).Range(0f, 1f).Bind(out ConfigForestmapAdd);
             })
-            .AddGroup("BetterContinents.Spawnmap", groupBuilder =>
+            .AddGroup("BetterContinents.Locationmap", groupBuilder =>
             {
-                groupBuilder.AddValue("Spawnmap File")
-                    .Description("Path to a spawnmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigSpawnmapFile);
+                groupBuilder.AddValue("Locationmap File")
+                    .Description("Path to a locationmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigLocationFile);
             })
             .AddGroup("BetterContinents.StartPosition", groupBuilder =>
             {
@@ -197,7 +197,7 @@ public partial class BetterContinents : BaseUnityPlugin
                 groupBuilder.AddValue("Debug Mode")
                     .Description("Automatically reveals the full map on respawn, enables cheat mode, and debug mode, for debugging purposes").Bind(out ConfigDebugModeEnabled);
                 groupBuilder.AddValue("Skip Default Location Placement")
-                    .Description("Skips default location placement during world gen (spawn temple and spawnmap are still placed), for quickly testing the heightmap itself").Bind(out ConfigDebugSkipDefaultLocationPlacement);
+                    .Description("Skips default location placement during world gen (spawn temple and locationmap are still placed), for quickly testing the heightmap itself").Bind(out ConfigDebugSkipDefaultLocationPlacement);
                 groupBuilder.AddValue("Debug Reset Command")
                     .Description("Upgrade World command to execute when reloading images.").Default("zones_reset start").Bind(out ConfigDebugResetCommand);
             })

@@ -64,16 +64,10 @@ public partial class DebugUtils
             setValue = args => command((string)args);
         }
 
-        public class SubcommandBuilder
+        public class SubcommandBuilder(Command parent, List<Command> subcommands)
         {
-            private readonly Command parent;
-            private readonly List<Command> subcommands;
-
-            public SubcommandBuilder(Command parent, List<Command> subcommands)
-            {
-                this.parent = parent;
-                this.subcommands = subcommands;
-            }
+            private readonly Command parent = parent;
+            private readonly List<Command> subcommands = subcommands;
 
             public Command AddGroup(string cmd, string uiName, string desc, Action<SubcommandBuilder> group = null)
             {
@@ -521,7 +515,7 @@ public partial class DebugUtils
             }
 
             private static readonly Dictionary<string, CommandUIState> commandUIState =
-                new();
+                [];
 
             private static CommandUIState GetUIState(Command cmd)
             {

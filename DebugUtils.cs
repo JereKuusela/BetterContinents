@@ -27,10 +27,10 @@ public partial class DebugUtils
         new DebugUtils();
     }
     private static readonly string[] Bosses =
-    {
+    [
             "StartTemple", "Eikthyrnir", "GDKing", "GoblinKing", "Bonemass", "Dragonqueen",
             "Vendor_BlackForest", "Mistlands_DvergrBossEntrance1"
-        };
+        ];
 
     static DebugUtils()
     {
@@ -61,9 +61,9 @@ public partial class DebugUtils
                     if (BetterContinents.Settings.HasBiomemap)
                         reload.AddCommand("bm", "Biomemap", "Reload the biomemap",
                             HeightmapCommand(_ => BetterContinents.Settings.ReloadBiomemap()));
-                    if (BetterContinents.Settings.HasSpawnmap)
-                        reload.AddCommand("sm", "Spawnmap", "Reload the spawnmap",
-                            HeightmapCommand(_ => BetterContinents.Settings.ReloadSpawnmap()));
+                    if (BetterContinents.Settings.HasLocationmap)
+                        reload.AddCommand("lm", "Locationmap", "Reload the locationmap",
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadLocationmap()));
                     if (BetterContinents.Settings.HasForestmap)
                         reload.AddCommand("fom", "Forestmap", "Reload the forestmap",
                             HeightmapCommand(_ => BetterContinents.Settings.ReloadForestmap()));
@@ -75,7 +75,7 @@ public partial class DebugUtils
                             if (BetterContinents.Settings.HasRoughmap) BetterContinents.Settings.ReloadRoughmap();
                             if (BetterContinents.Settings.HasFlatmap) BetterContinents.Settings.ReloadFlatmap();
                             if (BetterContinents.Settings.HasBiomemap) BetterContinents.Settings.ReloadBiomemap();
-                            if (BetterContinents.Settings.HasSpawnmap) BetterContinents.Settings.ReloadSpawnmap();
+                            if (BetterContinents.Settings.HasLocationmap) BetterContinents.Settings.ReloadLocationmap();
                             if (BetterContinents.Settings.HasForestmap) BetterContinents.Settings.ReloadForestmap();
                         }));
                     }
@@ -131,7 +131,7 @@ public partial class DebugUtils
             });
             bc.AddValue("mapds", "Minimap downscaling", "set minimap downscaling factor (for faster updates)",
                 defaultValue: 2,
-                list: new[] { 0, 1, 2, 3 },
+                list: [0, 1, 2, 3],
                 getter: () => GameUtils.MinimapDownscalingPower,
                 setter: val =>
                 {
@@ -199,9 +199,9 @@ public partial class DebugUtils
                             else if (!File.Exists(BetterContinents.CleanPath(path)))
                                 Console.instance.Print($"<color=red>ERROR: {path} doesn't exist</color>");
                             else
-                                BetterContinents.Settings.SetHeightmapPath(path);
+                                BetterContinents.Settings.SetHeightPath(path);
                         }),
-                        getter: () => BetterContinents.Settings.GetHeightmapPath());
+                        getter: () => BetterContinents.Settings.GetHeightPath());
                     group.AddValue<bool>("ov", "Heightmap Override All",
                         "causes the terrain to conform to the heightmap, ignoring biome specific variance",
                         defaultValue: false,
@@ -242,9 +242,9 @@ public partial class DebugUtils
                         else if (!File.Exists(BetterContinents.CleanPath(path)))
                             Console.instance.Print($"<color=red>ERROR: {path} doesn't exist</color>");
                         else
-                            BetterContinents.Settings.SetRoughmapPath(path);
+                            BetterContinents.Settings.SetRoughPath(path);
                     }),
-                    getter: () => BetterContinents.Settings.GetRoughmapPath());
+                    getter: () => BetterContinents.Settings.GetRoughPath());
                 group.AddValue<float>("bl", "Roughmap Blend", "roughmap blend",
                     defaultValue: 1f, minValue: 0, maxValue: 1,
                     setter: SetHeightmapValue<float>(value => BetterContinents.Settings.RoughmapBlend = value),
@@ -252,7 +252,7 @@ public partial class DebugUtils
             });
             bc.AddGroup("b", "Biomemap", "biomemap settings, get more info with 'bc param b help'", group =>
             {
-                group.AddValue<string>("fn", "Biomemap Filename",
+                group.AddValue("fn", "Biomemap Filename",
                     "set biomemap filename (full path including filename, or nothing to disable)",
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
@@ -265,21 +265,21 @@ public partial class DebugUtils
                         else if (!File.Exists(BetterContinents.CleanPath(path)))
                             Console.instance.Print($"<color=red>ERROR: {path} doesn't exist</color>");
                         else
-                            BetterContinents.Settings.SetBiomemapPath(path);
+                            BetterContinents.Settings.SetBiomePath(path);
                     }),
-                    getter: () => BetterContinents.Settings.GetBiomemapPath());
+                    getter: () => BetterContinents.Settings.GetBiomePath());
             });
-            bc.AddGroup("s", "Spawnmap", "spawnmap settings, get more info with 'bc param s help'", group =>
+            bc.AddGroup("l", "Locationmap", "locationmap settings, get more info with 'bc param s help'", group =>
             {
-                group.AddValue<string>("fn", "Spawnmap Filename",
-                    "set spawnmap filename (full path including filename, or nothing to disable)",
+                group.AddValue("fn", "Locationmap Filename",
+                    "set locationmap filename (full path including filename, or nothing to disable)",
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
                         if (string.IsNullOrEmpty(path))
                         {
-                            BetterContinents.Settings.DisableSpawnmap();
-                            Console.instance.Print($"<color=orange>Spawnmap disabled!</color>");
+                            BetterContinents.Settings.DisableLocationMap();
+                            Console.instance.Print($"<color=orange>Locationmap disabled!</color>");
                             Console.instance.Print(
                                 $"<color=orange>INFO: Use 'bc regenloc' to update the location spawns in the world</color>");
                         }
@@ -287,12 +287,12 @@ public partial class DebugUtils
                             Console.instance.Print($"<color=red>ERROR: {path} doesn't exist</color>");
                         else
                         {
-                            BetterContinents.Settings.SetSpawnmapPath(path);
+                            BetterContinents.Settings.SetLocationPath(path);
                             Console.instance.Print(
                                 $"<color=orange>INFO: Use 'bc regenloc' to update the location spawns in the world</color>");
                         }
                     }),
-                    getter: () => BetterContinents.Settings.GetSpawnmapPath());
+                    getter: () => BetterContinents.Settings.GetLocationPath());
             });
             bc.AddGroup("fo", "Forest", "forest settings, get more info with 'bc param fo help'", group =>
             {
@@ -325,9 +325,9 @@ public partial class DebugUtils
                         else if (!File.Exists(BetterContinents.CleanPath(path)))
                             Console.instance.Print($"<color=red>ERROR: {path} doesn't exist</color>");
                         else
-                            BetterContinents.Settings.SetForestmapPath(path);
+                            BetterContinents.Settings.SetForestPath(path);
                     }),
-                    getter: () => BetterContinents.Settings.GetForestmapPath());
+                    getter: () => BetterContinents.Settings.GetForestPath());
                 group.AddValue<float>("mu", "Forestmap Multiply", "forestmap multiply",
                     defaultValue: 1f, minValue: 0f, maxValue: 1f,
                     setter: SetHeightmapValue<float>(value => BetterContinents.Settings.ForestmapMultiply = value),
@@ -756,7 +756,7 @@ public partial class DebugUtils
     private static readonly Command rootCommand;
     private static List<Texture> noisePreviewTextures = null;
     private static List<Texture> maskPreviewTextures = null;
-    private static readonly List<bool> noisePreviewExpanded = new();
+    private static readonly List<bool> noisePreviewExpanded = [];
 
     private const int NoisePreviewSize = 512;
     private static (Texture noise, Texture mask) GetPreviewTextures(int layerIndex)
@@ -764,8 +764,8 @@ public partial class DebugUtils
         if (noisePreviewTextures == null)
         {
             var noise = BetterContinents.WorldGeneratorPatch.BaseHeightNoise;
-            noisePreviewTextures = new List<Texture>();
-            maskPreviewTextures = new List<Texture>();
+            noisePreviewTextures = [];
+            maskPreviewTextures = [];
             for (int i = 0; i < noise.layers.Count; i++)
             {
                 noisePreviewTextures.Add(CreateNoisePreview((x, y) => noise.layers[i].noise.GetNoise(x, y),

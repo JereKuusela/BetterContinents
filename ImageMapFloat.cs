@@ -9,7 +9,7 @@ namespace BetterContinents;
 
 internal class ImageMapFloat : ImageMapBase
 {
-    private float[] Map = new float[0];
+    private float[] Map = [];
 
     public ImageMapFloat(string filePath) : base(filePath) { }
 

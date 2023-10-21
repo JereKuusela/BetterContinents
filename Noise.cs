@@ -12,18 +12,18 @@ public class NoiseStackSettings
         // Add new properties at the end, and comment where new versions start
         public const int LatestVersion = 1;
 
-        public static readonly FastNoiseLite.FractalType[] WarpFractalTypes = {
+        public static readonly FastNoiseLite.FractalType[] WarpFractalTypes = [
                 FastNoiseLite.FractalType.None,
                 FastNoiseLite.FractalType.DomainWarpIndependent,
                 FastNoiseLite.FractalType.DomainWarpProgressive,
-            };
+            ];
 
-        public static readonly FastNoiseLite.FractalType[] NonFractalTypes = {
+        public static readonly FastNoiseLite.FractalType[] NonFractalTypes = [
                 FastNoiseLite.FractalType.None,
                 FastNoiseLite.FractalType.FBm,
                 FastNoiseLite.FractalType.Ridged,
                 FastNoiseLite.FractalType.PingPong,
-            };
+            ];
 
         // Version 1
         public int Version = LatestVersion;
@@ -358,7 +358,7 @@ public class NoiseStackSettings
         }
     }
 
-    public readonly List<NoiseLayer> NoiseLayers = new List<NoiseLayer>();
+    public readonly List<NoiseLayer> NoiseLayers = [];
 
     public static NoiseStackSettings Default()
     {
@@ -524,7 +524,7 @@ public struct NoiseLayer
 
 public class NoiseStack
 {
-    public List<NoiseLayer> layers = new List<NoiseLayer>();
+    public List<NoiseLayer> layers = [];
 
     public NoiseStack(int seed, NoiseStackSettings settings)
     {

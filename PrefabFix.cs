@@ -202,9 +202,9 @@ public static class Prefab
                                 // mono...
                                 var cast = ReflectionHelper.Cache.EnumerableCast;
                                 var castT = cast.MakeGenericMethod(enumeratedType);
-                                var correctTypeList = castT.Invoke(null, new object[] { list });
+                                var correctTypeList = castT.Invoke(null, [list]);
 
-                                var array = toArrayT.Invoke(null, new object[] { correctTypeList });
+                                var array = toArrayT.Invoke(null, [correctTypeList]);
                                 field.SetValue(objectToFix, array);
                             }
                             else
@@ -334,11 +334,11 @@ public static class Prefab
     public static class Cache
     {
         private static readonly Dictionary<Type, Dictionary<string, UnityObject>> DictionaryCache =
-            new Dictionary<Type, Dictionary<string, UnityObject>>();
+            [];
 
         private static void InitCache(Type type, Dictionary<string, UnityObject> map = null)
         {
-            map ??= new Dictionary<string, UnityObject>();
+            map ??= [];
             foreach (var unityObject in Resources.FindObjectsOfTypeAll(type))
             {
                 map[unityObject.name] = unityObject;

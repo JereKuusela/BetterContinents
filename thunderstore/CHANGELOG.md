@@ -1,5 +1,11 @@
+- v0.7.12
+  - Adds support for remapping the biome and location colors.
+  - Renames spawnmap to locationmap (old file is renamed automatically).
+  - Changes file format version to 8.
+  - Fixes server usage clearing file paths from the save file.
+
 - v0.7.11
-  - Fixes for the new patch.
+  - Fixed for the new patch.
 
 - v0.7.10
   - Adds a new biome color #000000 for None. When None is returned, BC uses the original biome.

@@ -17,7 +17,7 @@ public partial class BetterContinents
     public class WorldGeneratorPatch
     {
         private static readonly string[] TreePrefixes =
-        {
+        [
                 "FirTree",
                 "Pinetree_01",
                 "SwampTree2_darkland",
@@ -31,7 +31,7 @@ public partial class BetterContinents
                 "vertical_web",
                 "horizontal_web",
                 "tunnel_web",
-            };
+            ];
 
         private static int currentSeed;
 
@@ -397,7 +397,7 @@ public class HeightmapBuilderPatch
         }
     }
 
-    private static List<float> buildTimes = new List<float>();
+    private static List<float> buildTimes = [];
     [HarmonyPrefix, HarmonyPatch(nameof(HeightmapBuilder.BuildThread))]
     private static bool BuildThreadPrefix(HeightmapBuilder __instance)
     {

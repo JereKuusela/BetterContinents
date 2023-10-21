@@ -28,7 +28,7 @@ public partial class BetterContinents
             Log($"Generating location of group {groupName}, required {location.m_quantity}, unique {location.m_unique}, name {location.m_prefabName}");
             if (Settings.EnabledForThisWorld)
             {
-                if (Settings.HasSpawnmap)
+                if (Settings.HasLocationmap)
                 {
                     // Place all locations specified by the spawn map, ignoring counts specified in the prefab
                     int placed = 0;

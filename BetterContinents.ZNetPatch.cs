@@ -85,7 +85,7 @@ public partial class BetterContinents
             }
         }
 
-        private static byte[] SettingsReceiveBuffer = new byte[0];
+        private static byte[] SettingsReceiveBuffer = [];
         private static int SettingsReceiveBufferBytesReceived;
         private static int SettingsReceiveHash;
 
@@ -194,7 +194,7 @@ public partial class BetterContinents
             public override string ToString() => $"{id} ({player})";
         }
 
-        private static readonly List<BCClientInfo> ClientInfo = new();
+        private static readonly List<BCClientInfo> ClientInfo = [];
 
         // Register our RPC for receiving settings on clients
         [HarmonyPrefix, HarmonyPatch("OnNewConnection")]
@@ -471,8 +471,7 @@ public partial class BetterContinents
                 rpc.Invoke("BetterContinentsVersion", ModInfo.Version);
 
                 var settingsPackage = new ZPackage();
-                var cleanSettings = Settings.Clean();
-                cleanSettings.Serialize(settingsPackage);
+                Settings.Serialize(settingsPackage, true);
 
                 if (WorldCache.CacheItemExists(settingsPackage, bcClientInfo.worldCache))
                 {
@@ -484,7 +483,7 @@ public partial class BetterContinents
                 else
                 {
                     Log($"Client {bcClientInfo} doesn't have cached settings, sending them now");
-                    cleanSettings.Dump();
+                    Settings.Dump();
 
                     var settingsData = settingsPackage.GetArray();
                     Log($"Sending settings package header for {settingsData.Length} byte stream");

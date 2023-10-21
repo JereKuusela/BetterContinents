@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using SixLabors.ImageSharp.PixelFormats;
 using UnityEngine;
 
 namespace BetterContinents;
@@ -11,78 +10,52 @@ public partial class BetterContinents
     // These are what are baked into the world when it is created
     public class BetterContinentsSettings
     {
-        // Add new properties at the end, and comment where new versions start
-        public const int LatestVersion = 7;
+        public const int LatestVersion = 8;
 
-        // Version 1
         public int Version;
 
         public long WorldUId;
-
         public bool EnabledForThisWorld;
-
         public float GlobalScale;
         public float MountainsAmount;
         public float SeaLevelAdjustment;
-
         public float MaxRidgeHeight;
         public float RidgeScale;
         public float RidgeBlendSigmoidB;
         public float RidgeBlendSigmoidXOffset;
-
         public float HeightmapAmount;
         public float HeightmapBlend;
         public float HeightmapAdd;
-
-        // Version 2
         public bool OceanChannelsEnabled;
         public bool RiversEnabled;
-
         public float ForestScale;
         public float ForestAmountOffset;
-
         public bool OverrideStartPosition;
         public float StartPositionX;
         public float StartPositionY;
-
-        // Version 3
-        // <none>
-
-        // Version 4
-        // <none>
-
-        // Version 5
         public float RoughmapBlend;
-
         public bool UseRoughInvertedAsFlat;
         public float FlatmapBlend;
-
         public float ForestmapMultiply;
         public float ForestmapAdd;
-
         public bool DisableMapEdgeDropoff;
         public bool MountainsAllowedAtCenter;
-
         public bool ForestFactorOverrideAllTrees;
-
-        // Version 6
         public bool HeightmapOverrideAll;
         public float HeightmapMask;
-
-        // Version 7
         public NoiseStackSettings? BaseHeightNoise;
 
         // Non-serialized
         private ImageMapFloat? Heightmap;
         private ImageMapBiome? Biomemap;
-        private ImageMapSpawn? Spawnmap;
+        private ImageMapLocation? Locationmap;
         private ImageMapFloat? Roughmap;
         private ImageMapFloat? Flatmap;
         private ImageMapFloat? Forestmap;
 
         public bool HasHeightmap => Heightmap != null;
         public bool HasBiomemap => Biomemap != null;
-        public bool HasSpawnmap => Spawnmap != null;
+        public bool HasLocationmap => Locationmap != null;
         public bool HasRoughmap => Roughmap != null;
         public bool HasFlatmap => Flatmap != null;
         public bool HasForestmap => Forestmap != null;
@@ -91,7 +64,7 @@ public partial class BetterContinents
                                    || HasRoughmap
                                    || HasFlatmap
                                    || HasBiomemap
-                                   || HasSpawnmap
+                                   || HasLocationmap
                                    || HasForestmap;
         public bool ShouldHeightmapOverrideAll => HasHeightmap && HeightmapOverrideAll;
 
@@ -109,18 +82,6 @@ public partial class BetterContinents
             return settings;
         }
 
-        public BetterContinentsSettings Clean()
-        {
-            var copy = this;
-            if (copy.Heightmap != null) copy.Heightmap.FilePath = "(heightmap)";
-            if (copy.Biomemap != null) copy.Biomemap.FilePath = "(biomemap)";
-            if (copy.Spawnmap != null) copy.Spawnmap.FilePath = "(spawnmap)";
-            if (copy.Roughmap != null) copy.Roughmap.FilePath = "(roughmap)";
-            if (copy.Flatmap != null) copy.Flatmap.FilePath = "(flatmap)";
-            if (copy.Forestmap != null) copy.Forestmap.FilePath = "(forestmap)";
-            return copy;
-        }
-
         private static string GetPath(string projectDir, string projectDirFileName, string defaultFileName)
         {
             if (string.IsNullOrEmpty(projectDir))
@@ -132,17 +93,17 @@ public partial class BetterContinents
                 return "";
         }
 
-        private static readonly string HeightmapFilename = "Heightmap.png";
-        private static readonly string BiomemapFilename = "Biomemap.png";
-        private static readonly string SpawnmapFilename = "Spawnmap.png";
-        private static readonly string RoughmapFilename = "Roughmap.png";
-        private static readonly string ForestmapFilename = "Forestmap.png";
+        private static readonly string HeightFile = "Heightmap.png";
+        private static readonly string BiomeFile = "Biomemap.png";
+        private static readonly string LocationFile = "Locationmap.png";
+        private static readonly string RoughFile = "Roughmap.png";
+        private static readonly string ForestFile = "Forestmap.png";
 
-        private static string HeightmapPath(string defaultFilename, string projectDir) => GetPath(projectDir, HeightmapFilename, defaultFilename);
-        private static string BiomemapPath(string defaultFilename, string projectDir) => GetPath(projectDir, BiomemapFilename, defaultFilename);
-        private static string SpawnmapPath(string defaultFilename, string projectDir) => GetPath(projectDir, SpawnmapFilename, defaultFilename);
-        private static string RoughmapPath(string defaultFilename, string projectDir) => GetPath(projectDir, RoughmapFilename, defaultFilename);
-        private static string ForestmapPath(string defaultFilename, string projectDir) => GetPath(projectDir, ForestmapFilename, defaultFilename);
+        private static string HeightPath(string defaultFilename, string projectDir) => GetPath(projectDir, HeightFile, defaultFilename);
+        private static string BiomePath(string defaultFilename, string projectDir) => GetPath(projectDir, BiomeFile, defaultFilename);
+        private static string LocationPath(string defaultFilename, string projectDir) => GetPath(projectDir, LocationFile, defaultFilename);
+        private static string RoughPath(string defaultFilename, string projectDir) => GetPath(projectDir, RoughFile, defaultFilename);
+        private static string ForestPath(string defaultFilename, string projectDir) => GetPath(projectDir, ForestFile, defaultFilename);
 
         private void InitSettings(long worldUId, bool enabled)
         {
@@ -159,7 +120,7 @@ public partial class BetterContinents
                 ContinentSize = ConfigContinentSize.Value;
                 SeaLevel = ConfigSeaLevelAdjustment.Value;
 
-                string heightmapPath = HeightmapPath(ConfigHeightmapFile.Value, ConfigMapSourceDir.Value);
+                string heightmapPath = HeightPath(ConfigHeightFile.Value, ConfigMapSourceDir.Value);
                 if (!string.IsNullOrEmpty(heightmapPath))
                 {
                     HeightmapAmount = ConfigHeightmapAmount.Value;
@@ -175,10 +136,11 @@ public partial class BetterContinents
 
                 BaseHeightNoise = NoiseStackSettings.Default();
 
-                string biomemapPath = BiomemapPath(ConfigBiomemapFile.Value, ConfigMapSourceDir.Value);
+                string biomemapPath = BiomePath(ConfigBiomeFile.Value, ConfigMapSourceDir.Value);
                 if (!string.IsNullOrEmpty(biomemapPath))
                 {
-                    Biomemap = new ImageMapBiome(biomemapPath);
+
+                    Biomemap = new(biomemapPath);
                     if (!Biomemap.LoadSourceImage() || !Biomemap.CreateMap())
                         Biomemap = null;
                 }
@@ -194,31 +156,31 @@ public partial class BetterContinents
                 StartPositionX = ConfigStartPositionX.Value;
                 StartPositionY = ConfigStartPositionY.Value;
 
-                string spawnmapPath = SpawnmapPath(ConfigSpawnmapFile.Value, ConfigMapSourceDir.Value);
-                if (!string.IsNullOrEmpty(spawnmapPath))
+                string locationPath = LocationPath(ConfigLocationFile.Value, ConfigMapSourceDir.Value);
+                if (!string.IsNullOrEmpty(locationPath))
                 {
-                    Spawnmap = new ImageMapSpawn(spawnmapPath);
-                    if (!Spawnmap.LoadSourceImage() || !Spawnmap.CreateMap())
-                        Spawnmap = null;
+                    Locationmap = new(locationPath);
+                    if (!Locationmap.LoadSourceImage() || !Locationmap.CreateMap())
+                        Locationmap = null;
                 }
 
-                string roughmapPath = RoughmapPath(ConfigRoughmapFile.Value, ConfigMapSourceDir.Value);
+                string roughmapPath = RoughPath(ConfigRoughFile.Value, ConfigMapSourceDir.Value);
                 if (!string.IsNullOrEmpty(roughmapPath))
                 {
                     RoughmapBlend = ConfigRoughmapBlend.Value;
 
-                    Roughmap = new ImageMapFloat(roughmapPath);
+                    Roughmap = new(roughmapPath);
                     if (!Roughmap.LoadSourceImage() || !Roughmap.CreateMap())
                         Roughmap = null;
                 }
 
-                string forestmapPath = ForestmapPath(ConfigForestmapFile.Value, ConfigMapSourceDir.Value);
+                string forestmapPath = ForestPath(ConfigForestFile.Value, ConfigMapSourceDir.Value);
                 if (!string.IsNullOrEmpty(forestmapPath))
                 {
                     ForestmapAdd = ConfigForestmapAdd.Value;
                     ForestmapMultiply = ConfigForestmapMultiply.Value;
 
-                    Forestmap = new ImageMapFloat(forestmapPath);
+                    Forestmap = new(forestmapPath);
                     if (!Forestmap.LoadSourceImage() || !Forestmap.CreateMap())
                         Forestmap = null;
                 }
@@ -259,12 +221,12 @@ public partial class BetterContinents
             get => Mathf.InverseLerp(1, -1, ForestAmountOffset);
         }
 
-        public void SetHeightmapPath(string path, string projectDir = "")
+        public void SetHeightPath(string path, string projectDir = "")
         {
-            string finalPath = HeightmapPath(path, projectDir);
+            string finalPath = HeightPath(path, projectDir);
             if (!string.IsNullOrEmpty(finalPath))
             {
-                Heightmap = new ImageMapFloat(finalPath);
+                Heightmap = new(finalPath);
                 if (!Heightmap.LoadSourceImage() || !Heightmap.CreateMap())
                     Heightmap = null;
             }
@@ -274,16 +236,16 @@ public partial class BetterContinents
             }
         }
 
-        public string GetHeightmapPath() => Heightmap?.FilePath ?? string.Empty;
+        public string GetHeightPath() => Heightmap?.FilePath ?? string.Empty;
 
         public void DisableHeightmap() => Heightmap = null;
 
-        public void SetBiomemapPath(string path, string projectDir = "")
+        public void SetBiomePath(string path, string projectDir = "")
         {
-            string finalPath = BiomemapPath(path, projectDir);
+            string finalPath = BiomePath(path, projectDir);
             if (!string.IsNullOrEmpty(finalPath))
             {
-                Biomemap = new ImageMapBiome(finalPath);
+                Biomemap = new(finalPath);
                 if (!Biomemap.LoadSourceImage() || !Biomemap.CreateMap())
                     Biomemap = null;
             }
@@ -292,32 +254,32 @@ public partial class BetterContinents
                 Biomemap = null;
             }
         }
-        public string GetBiomemapPath() => Biomemap?.FilePath ?? string.Empty;
+        public string GetBiomePath() => Biomemap?.FilePath ?? string.Empty;
         public void DisableBiomemap() => Biomemap = null;
 
-        public void SetSpawnmapPath(string path, string projectDir = "")
+        public void SetLocationPath(string path, string projectDir = "")
         {
-            string finalPath = SpawnmapPath(path, projectDir);
+            var finalPath = LocationPath(path, projectDir);
             if (!string.IsNullOrEmpty(finalPath))
             {
-                Spawnmap = new ImageMapSpawn(finalPath);
-                if (!Spawnmap.LoadSourceImage() || !Spawnmap.CreateMap())
-                    Spawnmap = null;
+                Locationmap = new(finalPath);
+                if (!Locationmap.LoadSourceImage() || !Locationmap.CreateMap())
+                    Locationmap = null;
             }
             else
             {
-                Spawnmap = null;
+                Locationmap = null;
             }
         }
-        public string GetSpawnmapPath() => Spawnmap?.FilePath ?? string.Empty;
-        public void DisableSpawnmap() => Spawnmap = null;
+        public string GetLocationPath() => Locationmap?.FilePath ?? string.Empty;
+        public void DisableLocationMap() => Locationmap = null;
 
-        public void SetRoughmapPath(string path, string projectDir = "")
+        public void SetRoughPath(string path, string projectDir = "")
         {
-            string finalPath = RoughmapPath(path, projectDir);
+            string finalPath = RoughPath(path, projectDir);
             if (!string.IsNullOrEmpty(finalPath))
             {
-                Roughmap = new ImageMapFloat(finalPath);
+                Roughmap = new(finalPath);
                 if (!Roughmap.LoadSourceImage() || !Roughmap.CreateMap())
                     Roughmap = null;
             }
@@ -326,15 +288,15 @@ public partial class BetterContinents
                 Roughmap = null;
             }
         }
-        public string GetRoughmapPath() => Roughmap?.FilePath ?? string.Empty;
+        public string GetRoughPath() => Roughmap?.FilePath ?? string.Empty;
         public void DisableRoughmap() => Roughmap = null;
 
-        public void SetForestmapPath(string path, string projectDir = "")
+        public void SetForestPath(string path, string projectDir = "")
         {
-            string finalPath = ForestmapPath(path, projectDir);
+            string finalPath = ForestPath(path, projectDir);
             if (!string.IsNullOrEmpty(finalPath))
             {
-                Forestmap = new ImageMapFloat(finalPath);
+                Forestmap = new(finalPath);
                 if (!Forestmap.LoadSourceImage() || !Forestmap.CreateMap())
                     Forestmap = null;
             }
@@ -343,7 +305,7 @@ public partial class BetterContinents
                 Forestmap = null;
             }
         }
-        public string GetForestmapPath() => Forestmap?.FilePath ?? string.Empty;
+        public string GetForestPath() => Forestmap?.FilePath ?? string.Empty;
         public void DisableForestmap() => Forestmap = null;
         #endregion
 
@@ -453,14 +415,14 @@ public partial class BetterContinents
                     output($"Forestmap disabled");
                 }
 
-                if (Spawnmap != null)
+                if (Locationmap != null)
                 {
-                    output($"Spawnmap file {Spawnmap.FilePath}");
-                    output($"Spawnmap includes spawns for {Spawnmap.RemainingSpawnAreas.Count} types");
+                    output($"Location file {Locationmap.FilePath}");
+                    output($"Locationmap includes spawns for {Locationmap.RemainingAreas.Count} types");
                 }
                 else
                 {
-                    output($"Spawnmap disabled");
+                    output($"Locationmap disabled");
                 }
 
                 if (OverrideStartPosition)
@@ -477,17 +439,16 @@ public partial class BetterContinents
         public ZPackage Serialize()
         {
             var pkg = new ZPackage();
-            Serialize(pkg);
+            Serialize(pkg, false);
             return pkg;
         }
 
-        public void Serialize(ZPackage pkg)
+        public void Serialize(ZPackage pkg, bool network)
         {
             pkg.Write(Version);
 
             pkg.Write(WorldUId);
 
-            // Version 1
             pkg.Write(EnabledForThisWorld);
 
             if (EnabledForThisWorld)
@@ -501,29 +462,25 @@ public partial class BetterContinents
                 pkg.Write(RidgeBlendSigmoidB);
                 pkg.Write(RidgeBlendSigmoidXOffset);
 
-                pkg.Write(Heightmap?.FilePath ?? string.Empty);
-                if (Heightmap != null)
+                if (Heightmap == null)
+                    pkg.Write(string.Empty);
+                else
                 {
-                    pkg.Write(Heightmap.SourceData);
+                    Heightmap.Serialize(pkg, Version, network);
                     pkg.Write(HeightmapAmount);
                     pkg.Write(HeightmapBlend);
                     pkg.Write(HeightmapAdd);
                 }
-
                 pkg.Write(OceanChannelsEnabled);
 
-                // Version 2
                 if (Version >= 2)
                 {
                     pkg.Write(RiversEnabled);
-                    //pkg.Write(LakesEnabled);
 
-                    pkg.Write(Biomemap?.FilePath ?? string.Empty);
-                    if (Biomemap != null)
-                    {
-                        pkg.Write(Biomemap.SourceData);
-                    }
-
+                    if (Biomemap == null)
+                        pkg.Write("");
+                    else
+                        Biomemap.Serialize(pkg, Version, network);
                     pkg.Write(ForestScale);
                     pkg.Write(ForestAmountOffset);
 
@@ -532,23 +489,21 @@ public partial class BetterContinents
                     pkg.Write(StartPositionY);
                 }
 
-                // Version 3
                 if (Version >= 3)
                 {
-                    pkg.Write(Spawnmap?.FilePath ?? string.Empty);
-                    Spawnmap?.Serialize(pkg);
+                    if (Locationmap == null)
+                        pkg.Write("");
+                    else
+                        Locationmap.Serialize(pkg, Version, network);
                 }
 
-                // Version 4
-                // (nothing)
-
-                // Version 5
                 if (Version >= 5)
                 {
-                    pkg.Write(Roughmap?.FilePath ?? string.Empty);
-                    if (Roughmap != null)
+                    if (Roughmap == null)
+                        pkg.Write("");
+                    else
                     {
-                        pkg.Write(Roughmap.SourceData);
+                        Roughmap.Serialize(pkg, Version, network);
                         pkg.Write(RoughmapBlend);
                     }
 
@@ -556,17 +511,17 @@ public partial class BetterContinents
                     pkg.Write(FlatmapBlend);
                     if (!UseRoughInvertedAsFlat)
                     {
-                        pkg.Write(Flatmap?.FilePath ?? string.Empty);
-                        if (Flatmap != null)
-                        {
-                            pkg.Write(Flatmap.SourceData);
-                        }
+                        if (Flatmap == null)
+                            pkg.Write("");
+                        else
+                            Flatmap.Serialize(pkg, Version, network);
                     }
 
-                    pkg.Write(Forestmap?.FilePath ?? string.Empty);
-                    if (Forestmap != null)
+                    if (Forestmap == null)
+                        pkg.Write("");
+                    else
                     {
-                        pkg.Write(Forestmap.SourceData);
+                        Forestmap.Serialize(pkg, Version, network);
                         pkg.Write(ForestmapMultiply);
                         pkg.Write(ForestmapAdd);
                     }
@@ -576,14 +531,12 @@ public partial class BetterContinents
                     pkg.Write(ForestFactorOverrideAllTrees);
                 }
 
-                // Version 6
                 if (Version >= 6)
                 {
                     pkg.Write(HeightmapOverrideAll);
                     pkg.Write(HeightmapMask);
                 }
 
-                // Version 7
                 if (Version >= 7)
                 {
                     BaseHeightNoise?.Serialize(pkg);
@@ -608,7 +561,7 @@ public partial class BetterContinents
         public void Save(string path)
         {
             var zpackage = new ZPackage();
-            Serialize(zpackage);
+            Serialize(zpackage, false);
 
             byte[] binaryData = zpackage.GetArray();
             Directory.CreateDirectory(Path.GetDirectoryName(path));
@@ -635,7 +588,7 @@ public partial class BetterContinents
         public void SaveToSource(string path, FileHelpers.FileSource fileSource)
         {
             var zpackage = new ZPackage();
-            Serialize(zpackage);
+            Serialize(zpackage, false);
 
             byte[] binaryData = zpackage.GetArray();
             var fileWriter = new FileWriter(path, FileHelpers.FileHelperType.Binary, fileSource);
@@ -682,20 +635,20 @@ public partial class BetterContinents
 
                 OceanChannelsEnabled = pkg.ReadBool();
 
+                RiversEnabled = true;
+                ForestScale = 1;
+                ForestAmountOffset = 0;
+                OverrideStartPosition = false;
+                StartPositionX = 0;
+                StartPositionY = 0;
+                BaseHeightNoise = null;
+                HeightmapOverrideAll = false;
+                HeightmapMask = 0;
+
                 if (Version >= 2)
                 {
                     RiversEnabled = pkg.ReadBool();
-                    //LakesEnabled = pkg.ReadBool();
-
-                    string biomemapFilePath = pkg.ReadString();
-                    if (!string.IsNullOrEmpty(biomemapFilePath))
-                    {
-                        Biomemap = new ImageMapBiome(biomemapFilePath, pkg.ReadByteArray());
-                        if (!Biomemap.CreateMap())
-                        {
-                            Biomemap = null;
-                        }
-                    }
+                    Biomemap = ImageMapBiome.Load(pkg, Version);
 
                     ForestScale = pkg.ReadSingle();
                     ForestAmountOffset = pkg.ReadSingle();
@@ -704,31 +657,8 @@ public partial class BetterContinents
                     StartPositionX = pkg.ReadSingle();
                     StartPositionY = pkg.ReadSingle();
                 }
-                else
-                {
-                    RiversEnabled = true;
-                    ForestScale = 1;
-                    ForestAmountOffset = 0;
-                    OverrideStartPosition = false;
-                    StartPositionX = 0;
-                    StartPositionY = 0;
-                    //LakesEnabled = true;
-                }
-
-                // Version 3
                 if (Version >= 3)
-                {
-                    string spawnmapFilePath = pkg.ReadString();
-                    if (!string.IsNullOrEmpty(spawnmapFilePath))
-                    {
-                        Spawnmap = new ImageMapSpawn(spawnmapFilePath, pkg);
-                    }
-                }
-
-                // Version 4
-                // (nothing)
-
-                // Version 5
+                    Locationmap = ImageMapLocation.Load(pkg, Version);
                 if (Version >= 5)
                 {
                     string roughmapFilePath = pkg.ReadString();
@@ -767,28 +697,13 @@ public partial class BetterContinents
                     MountainsAllowedAtCenter = pkg.ReadBool();
                     ForestFactorOverrideAllTrees = pkg.ReadBool();
                 }
-
-                // Version 6
                 if (Version >= 6)
                 {
                     HeightmapOverrideAll = pkg.ReadBool();
                     HeightmapMask = pkg.ReadSingle();
                 }
-                else
-                {
-                    HeightmapOverrideAll = false;
-                    HeightmapMask = 0;
-                }
-
-                // Version 7
                 if (Version >= 7)
-                {
                     BaseHeightNoise = NoiseStackSettings.Deserialize(pkg);
-                }
-                else
-                {
-                    BaseHeightNoise = null;
-                }
             }
         }
 
@@ -851,8 +766,8 @@ public partial class BetterContinents
 
         public Heightmap.Biome GetBiomeOverride(float mapX, float mapY) => Biomemap?.GetValue(mapX, mapY) ?? (Heightmap.Biome)0;
 
-        public Vector2? FindSpawn(string spawn) => Spawnmap?.FindSpawn(spawn);
-        public IEnumerable<Vector2> GetAllSpawns(string spawn) => Spawnmap?.GetAllSpawns(spawn) ?? new List<Vector2>();
+        public Vector2? FindSpawn(string spawn) => Locationmap?.FindSpawn(spawn);
+        public IEnumerable<Vector2> GetAllSpawns(string spawn) => Locationmap?.GetAllSpawns(spawn) ?? new List<Vector2>();
 
         public void ReloadHeightmap()
         {
@@ -866,10 +781,10 @@ public partial class BetterContinents
                 Biomemap.CreateMap();
         }
 
-        public void ReloadSpawnmap()
+        public void ReloadLocationmap()
         {
-            if (Spawnmap != null && Spawnmap.LoadSourceImage())
-                Spawnmap.CreateMap();
+            if (Locationmap != null && Locationmap.LoadSourceImage())
+                Locationmap.CreateMap();
         }
 
         public void ReloadRoughmap()
