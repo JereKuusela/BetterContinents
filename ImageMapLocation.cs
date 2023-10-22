@@ -17,7 +17,7 @@ internal class ImageMapLocation(string path) : ImageMapBase(path)
 
     public override bool LoadSourceImage()
     {
-        if (!File.Exists(FilePath))
+        if (Path.GetExtension(FilePath) == ".png" && !File.Exists(FilePath))
         {
             var legacyFile = Path.Combine(Path.GetDirectoryName(FilePath), "spawnmap.png");
             if (File.Exists(legacyFile))
@@ -62,7 +62,8 @@ internal class ImageMapLocation(string path) : ImageMapBase(path)
 
     public override void Serialize(ZPackage pkg, int version, bool network)
     {
-        pkg.Write(network ? "" : FilePath);
+        // File path may contain sensitive imformation so its removed from network serialization.
+        pkg.Write(network ? "?" : FilePath);
         pkg.Write(RemainingAreas.Count);
         foreach (var kv in RemainingAreas)
         {

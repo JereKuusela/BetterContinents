@@ -114,7 +114,8 @@ internal abstract class ImageMapBase(string filePath)
 
     public virtual void Serialize(ZPackage pkg, int version, bool network)
     {
-        pkg.Write(network ? "" : FilePath);
+        // File path may contain sensitive imformation so its removed from network serialization.
+        pkg.Write(network ? "?" : FilePath);
         pkg.Write(SourceData);
     }
 }

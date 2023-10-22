@@ -105,6 +105,13 @@ public partial class BetterContinents
         private static string RoughPath(string defaultFilename, string projectDir) => GetPath(projectDir, RoughFile, defaultFilename);
         private static string ForestPath(string defaultFilename, string projectDir) => GetPath(projectDir, ForestFile, defaultFilename);
 
+        private static string HeightConfigPath => HeightPath(ConfigHeightFile.Value, ConfigMapSourceDir.Value);
+        private static string BiomeConfigPath => BiomePath(ConfigBiomeFile.Value, ConfigMapSourceDir.Value);
+        private static string LocationConfigPath => LocationPath(ConfigLocationFile.Value, ConfigMapSourceDir.Value);
+        private static string RoughConfigPath => RoughPath(ConfigRoughFile.Value, ConfigMapSourceDir.Value);
+        private static string ForestConfigPath => ForestPath(ConfigForestFile.Value, ConfigMapSourceDir.Value);
+
+
         private void InitSettings(long worldUId, bool enabled)
         {
             Log($"Init settings for new world");
@@ -120,7 +127,7 @@ public partial class BetterContinents
                 ContinentSize = ConfigContinentSize.Value;
                 SeaLevel = ConfigSeaLevelAdjustment.Value;
 
-                string heightmapPath = HeightPath(ConfigHeightFile.Value, ConfigMapSourceDir.Value);
+                string heightmapPath = HeightConfigPath;
                 if (!string.IsNullOrEmpty(heightmapPath))
                 {
                     HeightmapAmount = ConfigHeightmapAmount.Value;
@@ -136,7 +143,7 @@ public partial class BetterContinents
 
                 BaseHeightNoise = NoiseStackSettings.Default();
 
-                string biomemapPath = BiomePath(ConfigBiomeFile.Value, ConfigMapSourceDir.Value);
+                string biomemapPath = BiomeConfigPath;
                 if (!string.IsNullOrEmpty(biomemapPath))
                 {
 
@@ -156,7 +163,7 @@ public partial class BetterContinents
                 StartPositionX = ConfigStartPositionX.Value;
                 StartPositionY = ConfigStartPositionY.Value;
 
-                string locationPath = LocationPath(ConfigLocationFile.Value, ConfigMapSourceDir.Value);
+                string locationPath = LocationConfigPath;
                 if (!string.IsNullOrEmpty(locationPath))
                 {
                     Locationmap = new(locationPath);
@@ -164,7 +171,7 @@ public partial class BetterContinents
                         Locationmap = null;
                 }
 
-                string roughmapPath = RoughPath(ConfigRoughFile.Value, ConfigMapSourceDir.Value);
+                string roughmapPath = RoughConfigPath;
                 if (!string.IsNullOrEmpty(roughmapPath))
                 {
                     RoughmapBlend = ConfigRoughmapBlend.Value;
@@ -174,7 +181,7 @@ public partial class BetterContinents
                         Roughmap = null;
                 }
 
-                string forestmapPath = ForestPath(ConfigForestFile.Value, ConfigMapSourceDir.Value);
+                string forestmapPath = ForestConfigPath;
                 if (!string.IsNullOrEmpty(forestmapPath))
                 {
                     ForestmapAdd = ConfigForestmapAdd.Value;
@@ -803,8 +810,15 @@ public partial class BetterContinents
 
         public void ReloadForestmap()
         {
-            if (Forestmap != null && Forestmap.LoadSourceImage())
-                Forestmap.CreateMap();
+            if (Forestmap == null) return;
+            if (!Forestmap.LoadSourceImage())
+            {
+                if (!File.Exists(ForestConfigPath) || File.Exists(Forestmap.FilePath)) return;
+                LogWarning($"Cannot find image {Forestmap.FilePath}: Using default path from config.");
+                Forestmap.FilePath = ForestConfigPath;
+                if (!Forestmap.CreateMap()) return;
+            }
+            Forestmap.CreateMap();
         }
     }
 }
