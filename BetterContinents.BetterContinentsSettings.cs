@@ -778,34 +778,72 @@ public partial class BetterContinents
 
         public void ReloadHeightmap()
         {
-            if (Heightmap != null && Heightmap.LoadSourceImage())
-                Heightmap.CreateMap();
+            if (Heightmap == null) return;
+            if (!Heightmap.LoadSourceImage())
+            {
+                if (!File.Exists(HeightConfigPath) || File.Exists(Heightmap.FilePath)) return;
+                LogWarning($"Cannot find image {Heightmap.FilePath}: Using default path from config.");
+                Heightmap.FilePath = HeightConfigPath;
+                if (!Heightmap.LoadSourceImage()) return;
+            }
+            Heightmap.CreateMap();
         }
 
         public void ReloadBiomemap()
         {
-            if (Biomemap != null && Biomemap.LoadSourceImage())
-                Biomemap.CreateMap();
+            if (Biomemap == null) return;
+            if (!Biomemap.LoadSourceImage())
+            {
+                if (!File.Exists(BiomeConfigPath) || File.Exists(Biomemap.FilePath)) return;
+                LogWarning($"Cannot find image {Biomemap.FilePath}: Using default path from config.");
+                Biomemap.FilePath = BiomeConfigPath;
+                if (!Biomemap.LoadSourceImage()) return;
+            }
+            Biomemap.CreateMap();
         }
 
         public void ReloadLocationmap()
         {
-            if (Locationmap != null && Locationmap.LoadSourceImage())
-                Locationmap.CreateMap();
+            if (Locationmap == null) return;
+            if (!Locationmap.LoadSourceImage())
+            {
+                if (!File.Exists(LocationConfigPath) || File.Exists(Locationmap.FilePath)) return;
+                LogWarning($"Cannot find image {Locationmap.FilePath}: Using default path from config.");
+                Locationmap.FilePath = LocationConfigPath;
+                if (!Locationmap.LoadSourceImage()) return;
+            }
+            Locationmap.CreateMap();
         }
 
         public void ReloadRoughmap()
         {
-            if (Roughmap != null && Roughmap.LoadSourceImage())
-                Roughmap.CreateMap();
+            if (Roughmap == null) return;
+            if (!Roughmap.LoadSourceImage())
+            {
+                if (!File.Exists(RoughConfigPath) || File.Exists(Roughmap.FilePath)) return;
+                LogWarning($"Cannot find image {Roughmap.FilePath}: Using default path from config.");
+                Roughmap.FilePath = RoughConfigPath;
+                if (!Roughmap.LoadSourceImage()) return;
+            }
+            Roughmap.CreateMap();
         }
 
         public void ReloadFlatmap()
         {
             if (UseRoughInvertedAsFlat)
+            {
                 ReloadRoughmap();
-            else if (Flatmap != null && Flatmap.LoadSourceImage())
-                Flatmap.CreateMap();
+                return;
+            }
+            if (Flatmap == null) return;
+            if (!Flatmap.LoadSourceImage())
+            {
+                if (!File.Exists(RoughConfigPath) || File.Exists(Flatmap.FilePath)) return;
+                LogWarning($"Cannot find image {Flatmap.FilePath}: Using default path from config.");
+                Flatmap.FilePath = RoughConfigPath;
+                if (!Flatmap.LoadSourceImage()) return;
+            }
+            Flatmap.CreateMap();
         }
 
         public void ReloadForestmap()
@@ -816,7 +854,7 @@ public partial class BetterContinents
                 if (!File.Exists(ForestConfigPath) || File.Exists(Forestmap.FilePath)) return;
                 LogWarning($"Cannot find image {Forestmap.FilePath}: Using default path from config.");
                 Forestmap.FilePath = ForestConfigPath;
-                if (!Forestmap.CreateMap()) return;
+                if (!Forestmap.LoadSourceImage()) return;
             }
             Forestmap.CreateMap();
         }

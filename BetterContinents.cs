@@ -39,6 +39,8 @@ public partial class BetterContinents : BaseUnityPlugin
 
     public static ConfigEntry<string> ConfigLocationFile;
 
+    public static ConfigEntry<string> ConfigSpawnFile;
+
     public static ConfigEntry<string> ConfigRoughFile;
     public static ConfigEntry<float> ConfigRoughmapBlend;
 
@@ -175,10 +177,10 @@ public partial class BetterContinents : BaseUnityPlugin
                     .Description("How strongly to add the forestmap directly to the vanilla forest factor")
                     .Default(1f).Range(0f, 1f).Bind(out ConfigForestmapAdd);
             })
-            .AddGroup("BetterContinents.Locationmap", groupBuilder =>
+            .AddGroup("BetterContinents.Spawnmap", groupBuilder =>
             {
-                groupBuilder.AddValue("Locationmap File")
-                    .Description("Path to a locationmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigLocationFile);
+                groupBuilder.AddValue("Spawnmap File")
+                    .Description("Legay path to a locationmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigSpawnFile);
             })
             .AddGroup("BetterContinents.StartPosition", groupBuilder =>
             {
@@ -214,8 +216,18 @@ public partial class BetterContinents : BaseUnityPlugin
                     .Hidden().Default(446).Bind(out NexusID);
                 groupBuilder.AddValue("SelectedPreset")
                     .Hidden().Default("Vanilla").Bind(out ConfigSelectedPreset);
+            })
+            .AddGroup("BetterContinents.Locationmap", groupBuilder =>
+            {
+                groupBuilder.AddValue("Locationmap File")
+                    .Description("Path to a locationmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)").Bind(out ConfigLocationFile);
             });
-
+        if (ConfigLocationFile.Value == "" && ConfigSpawnFile.Value != "")
+        {
+            ConfigLocationFile.Value = ConfigSpawnFile.Value.Replace("spawnmap", "locationmap");
+            ConfigSpawnFile.Value = "";
+            Config.Save();
+        }
         new Harmony("BetterContinents.Harmony").PatchAll();
         Log("Awake");
         UI.Init();
