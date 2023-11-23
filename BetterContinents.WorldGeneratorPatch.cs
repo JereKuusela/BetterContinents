@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using HarmonyLib;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace BetterContinents;
 
@@ -93,7 +91,10 @@ public partial class BetterContinents
                     break;
                 case 7:
                 default:
-                    __result = GetBaseHeightV3(wx, wy, ___m_minMountainDistance);
+                    // GetBaseHeightV3 doesn't work at all without heightmap which makes testing more difficult.
+                    if (Settings.HasHeightmap)
+                        __result = GetBaseHeightV3(wx, wy, ___m_minMountainDistance);
+                    else return true;
                     break;
             }
 

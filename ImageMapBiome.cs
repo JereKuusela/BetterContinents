@@ -27,6 +27,11 @@ internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
         {
             var colors = string.Join("|", File.ReadAllLines(path));
             Colors = ParseColors(colors);
+
+            foreach (var color in Colors)
+            {
+                BetterContinents.Log($"Color: {color.Key} = {color.Value}");
+            }
         }
         catch (Exception ex)
         {
@@ -50,7 +55,7 @@ internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
             }
         );
 
-    private static readonly string DefaultColors = "None: 0,0,0|Ocean: 0,0,255|Plains: 255,255,0|BlackForest: 0,127,0|Swamp: 127,127,0|Mountains: 255,255,255|Mistlands: 127,127,127|DeepNorth: 0,255,255|AshLands: 255,0,0";
+    private static readonly string DefaultColors = "None: 0,0,0|Meadows: 0,255,0|BlackForest: 0,127,0|Swamp: 127,127,0|Mountain: 255,255,255|Plains: 255,255,0|Mistlands: 127,127,127|AshLands: 255,0,0|DeepNorth: 0,255,255|Ocean: 0,0,255";
     public bool CreateMap() => CreateMap<Rgba32>();
     protected override bool LoadTextureToMap<T>(Image<T> image)
     {
@@ -149,5 +154,9 @@ internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
         SourceData = pkg.ReadByteArray();
         if (version >= 8)
             Colors = ParseColors(pkg.ReadString());
+        foreach (var color in Colors)
+        {
+            BetterContinents.Log($"Color: {color.Key} = {color.Value}");
+        }
     }
 }

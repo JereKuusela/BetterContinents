@@ -3,6 +3,7 @@
   - Renames spawnmap to locationmap (old file is renamed automatically).
   - Changes file format version to 8.
   - Fixes server usage clearing file paths from the save file.
+  - Removes heightmap being required. If missing, default height generation is used.
 
 - v0.7.11
   - Fixed for the new patch.
