@@ -27,11 +27,6 @@ internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
         {
             var colors = string.Join("|", File.ReadAllLines(path));
             Colors = ParseColors(colors);
-
-            foreach (var color in Colors)
-            {
-                BetterContinents.Log($"Color: {color.Key} = {color.Value}");
-            }
         }
         catch (Exception ex)
         {
@@ -59,6 +54,11 @@ internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
     public bool CreateMap() => CreateMap<Rgba32>();
     protected override bool LoadTextureToMap<T>(Image<T> image)
     {
+        if (Colors.Count == 0)
+        {
+            BetterContinents.LogError($"No biome colors defined for image {FilePath}.");
+            Colors = ParseColors(DefaultColors);
+        }
         static int ColorDistance(Color32 a, Color32 b) =>
             (a.r - b.r) * (a.r - b.r) + (a.g - b.g) * (a.g - b.g) + (a.b - b.b) * (a.b - b.b);
 
@@ -154,9 +154,7 @@ internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
         SourceData = pkg.ReadByteArray();
         if (version >= 8)
             Colors = ParseColors(pkg.ReadString());
-        foreach (var color in Colors)
-        {
-            BetterContinents.Log($"Color: {color.Key} = {color.Value}");
-        }
+        else
+            Colors = ParseColors(DefaultColors);
     }
 }

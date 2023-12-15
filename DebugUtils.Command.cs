@@ -174,7 +174,7 @@ public partial class DebugUtils
                         }
                         else
                         {
-                            Console.instance.Print($"Current value of {cmd} is {GetValueString()}");
+                            Console.instance.Print($"Current value of {cmd} is {GetValueString().Replace("\\", "\\\\")}");
                         }
                     }
                     catch (Exception ex)
