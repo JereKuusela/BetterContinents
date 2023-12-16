@@ -1,3 +1,6 @@
+- v0.7.13
+  - Fixes preset worlds not working.
+
 - v0.7.12
   - Adds support for remapping the biome and location colors.
   - Renames spawnmap to locationmap (old file is renamed automatically).
