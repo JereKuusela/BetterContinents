@@ -22,6 +22,3 @@
   - Fixes error and terrain issues when reloading images.
   - Removes the 4k image size limit.
   - Removes force parameter from the default Upgrade World command.
-
-- v0.7.7
-  - Fixed for the new update.
