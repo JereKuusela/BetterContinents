@@ -264,36 +264,44 @@ public partial class BetterContinents : BaseUnityPlugin
             return true;
         }
 
+        // Some map mods may do stuff after generation which won't work with async.
+        // So do one "fake" generate call to trigger those.
+        static bool DoFakeGenerate = false;
         [HarmonyPrefix, HarmonyPatch(nameof(Minimap.GenerateWorldMap))]
         private static bool GenerateWorldMapPrefix(Minimap __instance)
         {
+            if (DoFakeGenerate)
+            {
+                DoFakeGenerate = false;
+                return false;
+            }
             __instance.StartCoroutine(GenerateWorldMapMT(__instance));
             return false;
         }
 
-        private static IEnumerator GenerateWorldMapMT(Minimap __instance)
+        private static IEnumerator GenerateWorldMapMT(Minimap map)
         {
             Log($"Generating minimap textures multi-threaded ...");
-            int halfSize = __instance.m_textureSize / 2;
-            float halfSizeF = __instance.m_pixelSize / 2f;
-            var mapPixels = new Color32[__instance.m_textureSize * __instance.m_textureSize];
-            var forestPixels = new Color32[__instance.m_textureSize * __instance.m_textureSize];
-            var heightPixels = new Color[__instance.m_textureSize * __instance.m_textureSize];
+            int halfSize = map.m_textureSize / 2;
+            float halfSizeF = map.m_pixelSize / 2f;
+            var mapPixels = new Color32[map.m_textureSize * map.m_textureSize];
+            var forestPixels = new Color32[map.m_textureSize * map.m_textureSize];
+            var heightPixels = new Color[map.m_textureSize * map.m_textureSize];
 
             int progress = 0;
             var task = Task.Run(() =>
             {
-                GameUtils.SimpleParallelFor(4, 0, __instance.m_textureSize, i =>
+                GameUtils.SimpleParallelFor(4, 0, map.m_textureSize, i =>
                 {
-                    for (int j = 0; j < __instance.m_textureSize; j++)
+                    for (int j = 0; j < map.m_textureSize; j++)
                     {
-                        float wx = (float)(j - halfSize) * __instance.m_pixelSize + halfSizeF;
-                        float wy = (float)(i - halfSize) * __instance.m_pixelSize + halfSizeF;
+                        float wx = (float)(j - halfSize) * map.m_pixelSize + halfSizeF;
+                        float wy = (float)(i - halfSize) * map.m_pixelSize + halfSizeF;
                         var biome = WorldGenerator.instance.GetBiome(wx, wy);
                         float biomeHeight = WorldGenerator.instance.GetBiomeHeight(biome, wx, wy, out _);
-                        mapPixels[i * __instance.m_textureSize + j] = __instance.GetPixelColor(biome);
-                        forestPixels[i * __instance.m_textureSize + j] = __instance.GetMaskColor(wx, wy, biomeHeight, biome);
-                        heightPixels[i * __instance.m_textureSize + j] = new Color(biomeHeight, 0f, 0f);
+                        mapPixels[i * map.m_textureSize + j] = map.GetPixelColor(biome);
+                        forestPixels[i * map.m_textureSize + j] = map.GetMaskColor(wx, wy, biomeHeight, biome);
+                        heightPixels[i * map.m_textureSize + j] = new Color(biomeHeight, 0f, 0f);
                         Interlocked.Increment(ref progress);
                     }
                 });
@@ -303,7 +311,7 @@ public partial class BetterContinents : BaseUnityPlugin
             {
                 UI.Add("GeneratingMinimap", () =>
                 {
-                    int percentProgress = (int)(100 * ((float)progress / (__instance.m_textureSize * __instance.m_textureSize)));
+                    int percentProgress = (int)(100 * ((float)progress / (map.m_textureSize * map.m_textureSize)));
                     UI.DisplayMessage($"Better Continents: generating minimap {percentProgress}% ...");
                 });
                 yield return new WaitUntil(() => task.IsCompleted);
@@ -313,14 +321,19 @@ public partial class BetterContinents : BaseUnityPlugin
                 UI.Remove("GeneratingMinimap");
             }
 
-            __instance.m_forestMaskTexture.SetPixels32(forestPixels);
-            __instance.m_forestMaskTexture.Apply();
-            __instance.m_mapTexture.SetPixels32(mapPixels);
-            __instance.m_mapTexture.Apply();
-            __instance.m_heightTexture.SetPixels(heightPixels);
-            __instance.m_heightTexture.Apply();
+            map.m_forestMaskTexture.SetPixels32(forestPixels);
+            map.m_forestMaskTexture.Apply();
+            map.m_mapTexture.SetPixels32(mapPixels);
+            map.m_mapTexture.Apply();
+            map.m_heightTexture.SetPixels(heightPixels);
+            map.m_heightTexture.Apply();
 
             Log($"Finished generating minimap textures multi-threaded ...");
+
+            // Some map mods may do stuff after generation which won't work with async.
+            // So do one "fake" generate call to trigger those.
+            DoFakeGenerate = true;
+            map.GenerateWorldMap();
         }
     }
 

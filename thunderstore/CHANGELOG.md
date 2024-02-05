@@ -1,3 +1,6 @@
+- v0.7.14
+  - Improves compatibility with mods that affect the minimap.
+
 - v0.7.13
   - Fixes preset worlds not working.
 
