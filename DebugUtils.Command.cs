@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using UnityEngine;
@@ -27,7 +28,7 @@ public partial class DebugUtils
         private readonly Type valueType;
         private readonly Command parent;
 
-        private Color backgroundColor;
+        private UnityEngine.Color backgroundColor;
         private KeyValuePair<object, object>? range;
         private List<object> validValues;
         private Action<object> setValue;
@@ -39,12 +40,12 @@ public partial class DebugUtils
         private static readonly Dictionary<Type, Func<string, object>> StringToTypeConverters = new()
             {
                 { typeof(string), s => s },
-                { typeof(float), s => float.Parse(s) },
+                { typeof(float), s => float.Parse(s, NumberStyles.Number, CultureInfo.InvariantCulture) },
                 { typeof(int), s => int.Parse(s) },
                 { typeof(bool), s => bool.Parse(s) },
-                { typeof(float?), s => float.TryParse(s, out var value) ? (object)value : null },
-                { typeof(int?), s => int.TryParse(s, out var value) ? (object)value : null },
-                { typeof(bool?), s => bool.TryParse(s, out var value) ? (object)value : null },
+                { typeof(float?), s => float.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : null },
+                { typeof(int?), s => int.TryParse(s, out var value) ? value : null },
+                { typeof(bool?), s => bool.TryParse(s, out var value) ? value : null },
             };
 
         private Command(CommandType commandType, Command parent, string cmd, string uiName, string desc, Type valueType = null)
@@ -276,9 +277,18 @@ public partial class DebugUtils
         private const string NullValueStr = "(disabled)";
 
         private string GetValueString()
-            => getValue == null
-                ? "(not a value)"
-                : $"<size=18><b><color=#55ff55ff>{getValue() ?? NullValueStr}</color></b></size>";
+        {
+            if (getValue == null) return "(not a value)";
+            var value = getValue();
+            var str = "";
+            if (value == null)
+                str = NullValueStr;
+            else if (value is float f)
+                str = f.ToString(CultureInfo.InvariantCulture);
+            else
+                str = value.ToString();
+            return $"<size=18><b><color=#55ff55ff>{str}</color></b></size>";
+        }
 
         public void ShowHelp()
         {
@@ -454,7 +464,7 @@ public partial class DebugUtils
 
                     var style = new GUIStyle
                     {
-                        normal = new GUIStyleState { textColor = Color.black, background = Texture2D.whiteTexture },
+                        normal = new GUIStyleState { textColor = UnityEngine.Color.black, background = Texture2D.whiteTexture },
                         wordWrap = true,
                         alignment = TextAnchor.MiddleCenter
                     };
@@ -593,7 +603,12 @@ public partial class DebugUtils
                 if (state.stringValue == null)
                 {
                     var rawValue = cmd.getValue();
-                    state.stringValue = rawValue == null ? "" : rawValue.ToString();
+                    if (rawValue == null)
+                        state.stringValue = "";
+                    else if (rawValue is float f)
+                        state.stringValue = f.ToString(CultureInfo.InvariantCulture);
+                    else
+                        state.stringValue = rawValue.ToString();
                 }
 
                 var name = cmd.GetFullCmdName();

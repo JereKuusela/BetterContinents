@@ -771,7 +771,7 @@ public partial class BetterContinents
             return finalValue;
         }
 
-        public Heightmap.Biome GetBiomeOverride(float mapX, float mapY) => Biomemap?.GetValue(mapX, mapY) ?? (Heightmap.Biome)0;
+        public Heightmap.Biome GetBiomeOverride(float mapX, float mapY) => Biomemap?.GetValue(mapX, mapY) ?? 0;
 
         public Vector2? FindSpawn(string spawn) => Locationmap?.FindSpawn(spawn);
         public IEnumerable<Vector2> GetAllSpawns(string spawn) => Locationmap?.GetAllSpawns(spawn) ?? new List<Vector2>();

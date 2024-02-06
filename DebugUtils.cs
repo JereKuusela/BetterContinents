@@ -163,19 +163,19 @@ public partial class DebugUtils
             bc.AddGroup("g", "Global", "global settings, get more info with 'bc g help'",
                 group =>
                 {
-                    group.AddValue<float>("sl", "Sea level adjustment", "sea level adjustment",
+                    group.AddValue("sl", "Sea level adjustment", "sea level adjustment",
                         defaultValue: 0.5f, minValue: 0, maxValue: 1,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.SeaLevel = value),
                         getter: () => BetterContinents.Settings.SeaLevel);
-                    group.AddValue<bool>("r", "Enable rivers", "whether rivers are enabled",
+                    group.AddValue("r", "Enable rivers", "whether rivers are enabled",
                         defaultValue: true,
                         setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.RiversEnabled = value),
                         getter: () => BetterContinents.Settings.RiversEnabled);
-                    group.AddValue<bool>("me", "Map edge drop off", "whether the map drops away at the boundary",
+                    group.AddValue("me", "Map edge drop off", "whether the map drops away at the boundary",
                         defaultValue: true,
                         setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.MapEdgeDropoff = value),
                         getter: () => BetterContinents.Settings.MapEdgeDropoff);
-                    group.AddValue<bool>("mc", "Allow mountains in center",
+                    group.AddValue("mc", "Allow mountains in center",
                         "whether the center of the map (usually the spawn area), is flattened",
                         defaultValue: false,
                         setter: SetHeightmapValue<bool>(value =>
@@ -186,7 +186,7 @@ public partial class DebugUtils
             bc.AddGroup("h", "Heightmap", "heightmap settings, get more info with 'bc param h help'",
                 group =>
                 {
-                    group.AddValue<string>("fn", "Heightmap filename",
+                    group.AddValue("fn", "Heightmap filename",
                         "set heightmap filename (full path including filename, or nothing to disable)",
                         defaultValue: string.Empty,
                         setter: SetHeightmapValue<string>(path =>
@@ -202,26 +202,26 @@ public partial class DebugUtils
                                 BetterContinents.Settings.SetHeightPath(path);
                         }),
                         getter: () => BetterContinents.Settings.GetHeightPath());
-                    group.AddValue<bool>("ov", "Heightmap Override All",
+                    group.AddValue("ov", "Heightmap Override All",
                         "causes the terrain to conform to the heightmap, ignoring biome specific variance",
                         defaultValue: false,
                         setter: SetHeightmapValue<bool>(value =>
                             BetterContinents.Settings.HeightmapOverrideAll = value),
                         getter: () => BetterContinents.Settings.HeightmapOverrideAll);
-                    group.AddValue<float>("am", "Heightmap Amount", "heightmap amount",
+                    group.AddValue("am", "Heightmap Amount", "heightmap amount",
                         defaultValue: 1f, minValue: 0, maxValue: 5,
                         setter: SetHeightmapValue<float>(value =>
                             BetterContinents.Settings.HeightmapAmount = value),
                         getter: () => BetterContinents.Settings.HeightmapAmount);
-                    group.AddValue<float>("bl", "Heightmap Blend", "heightmap blend",
+                    group.AddValue("bl", "Heightmap Blend", "heightmap blend",
                         defaultValue: 1f, minValue: 0, maxValue: 1,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.HeightmapBlend = value),
                         getter: () => BetterContinents.Settings.HeightmapBlend);
-                    group.AddValue<float>("ad", "Heightmap Add", "heightmap add",
+                    group.AddValue("ad", "Heightmap Add", "heightmap add",
                         defaultValue: 0f, minValue: -1, maxValue: 1,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.HeightmapAdd = value),
                         getter: () => BetterContinents.Settings.HeightmapAdd);
-                    group.AddValue<float>("ma", "Heightmap Mask", "heightmap mask",
+                    group.AddValue("ma", "Heightmap Mask", "heightmap mask",
                         defaultValue: 0f, minValue: 0, maxValue: 1,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.HeightmapMask = value),
                         getter: () => BetterContinents.Settings.HeightmapMask);

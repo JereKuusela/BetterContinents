@@ -510,7 +510,7 @@ public struct NoiseLayer
         noise = new WarpedNoise(seed, noiseLayerSettings.noiseSettings, noiseLayerSettings.noiseWarpSettings);
         mask = noiseLayerSettings.maskSettings != null
             ? new WarpedNoise(seed * 107, noiseLayerSettings.maskSettings, noiseLayerSettings.maskWarpSettings)
-            : (WarpedNoise?)null;
+            : null;
     }
 
     public float Apply(float wx, float wy, float inValue)

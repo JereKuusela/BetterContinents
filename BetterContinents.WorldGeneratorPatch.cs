@@ -175,13 +175,15 @@ public partial class BetterContinents
             }
 
             // Edge of the world
-            if (distance > 10000f)
+            var size = WorldSize - EdgeSize;
+            if (distance > size)
             {
-                float t = Utils.LerpStep(10000f, 10500f, distance);
+                float t = Utils.LerpStep(size, WorldSize, distance);
                 finalHeight = Mathf.Lerp(finalHeight, -0.2f, t);
-                if (distance > 10490f)
+                var edge = WorldSize - 10;
+                if (distance > edge)
                 {
-                    float t2 = Utils.LerpStep(10490f, 10500f, distance);
+                    float t2 = Utils.LerpStep(edge, WorldSize, distance);
                     finalHeight = Mathf.Lerp(finalHeight, -2f, t2);
                 }
             }
@@ -247,13 +249,15 @@ public partial class BetterContinents
             }
 
             // Edge of the world
-            if (!Settings.DisableMapEdgeDropoff && distance > 10000f)
+            var size = WorldSize - EdgeSize;
+            if (!Settings.DisableMapEdgeDropoff && distance > size)
             {
-                float t = Utils.LerpStep(10000f, 10500f, distance);
+                float t = Utils.LerpStep(size, WorldSize, distance);
                 finalHeight = Mathf.Lerp(finalHeight, -0.2f, t);
-                if (distance > 10490f)
+                var edge = WorldSize - 10;
+                if (distance > edge)
                 {
-                    float t2 = Utils.LerpStep(10490f, 10500f, distance);
+                    float t2 = Utils.LerpStep(edge, WorldSize, distance);
                     finalHeight = Mathf.Lerp(finalHeight, -2f, t2);
                 }
             }
@@ -281,13 +285,15 @@ public partial class BetterContinents
             finalHeight += Settings.SeaLevelAdjustment;
 
             // Edge of the world
-            if (!Settings.DisableMapEdgeDropoff && distance > 10000f)
+            var size = WorldSize - EdgeSize;
+            if (!Settings.DisableMapEdgeDropoff && distance > size)
             {
-                float t = Utils.LerpStep(10000f, 10500f, distance);
+                float t = Utils.LerpStep(size, WorldSize, distance);
                 finalHeight = Mathf.Lerp(finalHeight, -0.2f, t);
-                if (distance > 10490f)
+                var edge = WorldSize - 10;
+                if (distance > edge)
                 {
-                    float t2 = Utils.LerpStep(10490f, 10500f, distance);
+                    float t2 = Utils.LerpStep(edge, WorldSize, distance);
                     finalHeight = Mathf.Lerp(finalHeight, -2f, t2);
                 }
             }
@@ -488,13 +494,13 @@ public class HeightmapBuilderPatch
     {
         int num = data.m_width + 1;
         int num2 = num * num;
-        Vector3 vector = data.m_center + new Vector3((float)data.m_width * data.m_scale * -0.5f, 0f, (float)data.m_width * data.m_scale * -0.5f);
+        Vector3 vector = data.m_center + new Vector3(data.m_width * data.m_scale * -0.5f, 0f, data.m_width * data.m_scale * -0.5f);
         WorldGenerator worldGen = data.m_worldGen;
         data.m_cornerBiomes = new Heightmap.Biome[4];
         data.m_cornerBiomes[0] = worldGen.GetBiome(vector.x, vector.z);
-        data.m_cornerBiomes[1] = worldGen.GetBiome(vector.x + (float)data.m_width * data.m_scale, vector.z);
-        data.m_cornerBiomes[2] = worldGen.GetBiome(vector.x, vector.z + (float)data.m_width * data.m_scale);
-        data.m_cornerBiomes[3] = worldGen.GetBiome(vector.x + (float)data.m_width * data.m_scale, vector.z + (float)data.m_width * data.m_scale);
+        data.m_cornerBiomes[1] = worldGen.GetBiome(vector.x + data.m_width * data.m_scale, vector.z);
+        data.m_cornerBiomes[2] = worldGen.GetBiome(vector.x, vector.z + data.m_width * data.m_scale);
+        data.m_cornerBiomes[3] = worldGen.GetBiome(vector.x + data.m_width * data.m_scale, vector.z + data.m_width * data.m_scale);
         Heightmap.Biome biome = data.m_cornerBiomes[0];
         Heightmap.Biome biome2 = data.m_cornerBiomes[1];
         Heightmap.Biome biome3 = data.m_cornerBiomes[2];
@@ -508,12 +514,12 @@ public class HeightmapBuilderPatch
         GameUtils.SimpleParallelFor(4, 0, num, j =>
         //for (int j = 0; j < num; j++)
         {
-            float wy = vector.z + (float)j * data.m_scale;
-            float t = Mathf.SmoothStep(0f, 1f, (float)j / (float)data.m_width);
+            float wy = vector.z + j * data.m_scale;
+            float t = Mathf.SmoothStep(0f, 1f, j / (float)data.m_width);
             for (int k = 0; k < num; k++)
             {
-                float wx = vector.x + (float)k * data.m_scale;
-                float t2 = Mathf.SmoothStep(0f, 1f, (float)k / (float)data.m_width);
+                float wx = vector.x + k * data.m_scale;
+                float t2 = Mathf.SmoothStep(0f, 1f, k / (float)data.m_width);
                 float value;
                 if (data.m_distantLod)
                 {
@@ -543,7 +549,7 @@ public class HeightmapBuilderPatch
         {
             for (int l = 0; l < 4; l++)
             {
-                List<float> list = new List<float>(data.m_baseHeights);
+                List<float> list = new(data.m_baseHeights);
                 for (int m = 1; m < num - 1; m++)
                 {
                     for (int n = 1; n < num - 1; n++)

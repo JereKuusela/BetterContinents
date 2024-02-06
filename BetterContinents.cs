@@ -64,6 +64,7 @@ public partial class BetterContinents : BaseUnityPlugin
     public static BetterContinents instance;
 #nullable enable
     public static float WorldSize = 10500f;
+    public static float EdgeSize = 500f;
     public const string ConfigFileExtension = ".BetterContinents";
     public static string GetBCFile(string path) => path + ConfigFileExtension;
     private static readonly Vector2 Half = Vector2.one * 0.5f;
@@ -295,8 +296,8 @@ public partial class BetterContinents : BaseUnityPlugin
                 {
                     for (int j = 0; j < map.m_textureSize; j++)
                     {
-                        float wx = (float)(j - halfSize) * map.m_pixelSize + halfSizeF;
-                        float wy = (float)(i - halfSize) * map.m_pixelSize + halfSizeF;
+                        float wx = (j - halfSize) * map.m_pixelSize + halfSizeF;
+                        float wy = (i - halfSize) * map.m_pixelSize + halfSizeF;
                         var biome = WorldGenerator.instance.GetBiome(wx, wy);
                         float biomeHeight = WorldGenerator.instance.GetBiomeHeight(biome, wx, wy, out _);
                         mapPixels[i * map.m_textureSize + j] = map.GetPixelColor(biome);

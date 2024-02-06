@@ -1,5 +1,7 @@
 - v0.7.14
   - Improves compatibility with mods that affect the minimap.
+  - Fixes the world edge not working with Expand World Size.
+  - Fixes float values in console commands using system locale (now always uses `.`).
 
 - v0.7.13
   - Fixes preset worlds not working.

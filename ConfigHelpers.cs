@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using BepInEx.Configuration;
 using UnityEngine.Assertions;
 
@@ -7,7 +8,7 @@ namespace BetterContinents;
 
 public static class ConfigFileExtensions
 {
-    public static ConfigBuilder Declare(this ConfigFile configFile) => new ConfigBuilder(configFile);
+    public static ConfigBuilder Declare(this ConfigFile configFile) => new(configFile);
 }
 
 public class ConfigBuilder
@@ -36,7 +37,7 @@ public class GroupBuilder
         this.groupName = $"{configBuilder.groupIdx++:00} {groupNameBase}";
     }
 
-    public ValueBuilder AddValue(string key) => new ValueBuilder(this, key); //ref ConfigEntry<T> bindTarget, string key, T defaultValue, AcceptableValueBase range, string description);//=> configFile.
+    public ValueBuilder AddValue(string key) => new(this, key); //ref ConfigEntry<T> bindTarget, string key, T defaultValue, AcceptableValueBase range, string description);//=> configFile.
 }
 
 public class ValueBuilder
@@ -122,7 +123,7 @@ public class ValueBuilder
     public void Bind<T>(out ConfigEntry<T> bindTarget)
     {
         Assert.IsFalse(bound, "Already bound this Key");
-        bindTarget = groupBuilder.configBuilder.configFile.Bind<T>(groupBuilder.groupName, key, defaultValue == null ? default(T) : (T)defaultValue,
+        bindTarget = groupBuilder.configBuilder.configFile.Bind(groupBuilder.groupName, key, defaultValue == null ? default : (T)defaultValue,
             new ConfigDescription(description, range, new ConfigurationManagerAttributes
             {
                 Order = --groupBuilder.valueIdx,
@@ -130,6 +131,16 @@ public class ValueBuilder
                 ReadOnly = isReadOnly,
                 IsAdvanced = isAdvanced,
                 ShowRangeAsPercent = showAsPercent,
+                ObjToStr = o =>
+                {
+                    if (o is float f) return f.ToString(CultureInfo.InvariantCulture);
+                    return o.ToString();
+                },
+                StrToObj = s =>
+                {
+                    if (typeof(T) == typeof(float)) return float.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out var f) ? f : default;
+                    return s;
+                }
             }));
         bound = true;
     }
