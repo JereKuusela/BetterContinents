@@ -171,10 +171,6 @@ public partial class DebugUtils
                         defaultValue: 0.5f, minValue: 0, maxValue: 1,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.SeaLevel = value),
                         getter: () => BetterContinents.Settings.SeaLevel);
-                    group.AddValue("oc", "Ocean channels", "whether ocean channels are enabled",
-                        defaultValue: true,
-                        setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.OceanChannelsEnabled = value),
-                        getter: () => BetterContinents.Settings.OceanChannelsEnabled);
                     group.AddValue("r", "Rivers", "whether rivers are enabled",
                         defaultValue: true,
                         setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.RiversEnabled = value),
