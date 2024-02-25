@@ -163,11 +163,15 @@ public partial class DebugUtils
             bc.AddGroup("g", "Global", "global settings, get more info with 'bc g help'",
                 group =>
                 {
+                    group.AddValue("cs", "Continent size adjustment", "continent size adjustment",
+                        defaultValue: 0.5f, minValue: 0, maxValue: 1,
+                        setter: SetHeightmapValue<float>(value => BetterContinents.Settings.ContinentSize = value),
+                        getter: () => BetterContinents.Settings.ContinentSize);
                     group.AddValue("sl", "Sea level adjustment", "sea level adjustment",
                         defaultValue: 0.5f, minValue: 0, maxValue: 1,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.SeaLevel = value),
                         getter: () => BetterContinents.Settings.SeaLevel);
-                    group.AddValue("r", "Enable rivers", "whether rivers are enabled",
+                    group.AddValue("r", "Rivers", "whether rivers are enabled",
                         defaultValue: true,
                         setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.RiversEnabled = value),
                         getter: () => BetterContinents.Settings.RiversEnabled);
