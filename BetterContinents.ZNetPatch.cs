@@ -74,7 +74,6 @@ public partial class BetterContinents
                     Log($"Couldn't find loaded settings for world {world.m_name} at {settingsPath}, mod is disabled for this World");
                     Settings = BetterContinentsSettings.Disabled(world.m_uid);
                 }
-
                 Settings.Dump();
             }
             else
@@ -83,6 +82,7 @@ public partial class BetterContinents
                 Log($"Joining a server, so disabling local settings");
                 Settings = BetterContinentsSettings.Disabled();
             }
+            DynamicPatch();
         }
 
         private static byte[] SettingsReceiveBuffer = [];
@@ -316,6 +316,7 @@ public partial class BetterContinents
             }
 
             Settings = loadTask.Result;
+            DynamicPatch();
             Settings.Dump();
 
             // We only care about server/client version match when the server sends a world that actually uses the mod
@@ -369,6 +370,7 @@ public partial class BetterContinents
                 }
 
                 Settings = loadingTask.Result;
+                DynamicPatch();
                 Settings.Dump();
 
                 // We only care about server/client version match when the server sends a world that actually uses the mod

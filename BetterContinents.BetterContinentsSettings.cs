@@ -722,7 +722,6 @@ public partial class BetterContinents
                 if (Version >= 9)
                     BiomePrecision = pkg.ReadInt();
             }
-            DynamicPatch();
         }
 
         public float ApplyHeightmap(float x, float y, float height)

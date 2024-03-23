@@ -3,6 +3,8 @@
   - Changes file format version to 9.
   - Fixes "Forest map add" sharing the same debug command as "Forest map multiply".
   - Fixes some Configuration Managers not working with Better Continents.
+  - Improves performance.
+  - Removes settings "Multithreaded Heightmap Build" and "Parallel Chunks Build" as unused.
 
 - v0.7.15
   - Fixes the log always showing the original amount of locations even when changed with Expand World Size.

@@ -61,8 +61,6 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<bool> ConfigDebugSkipDefaultLocationPlacement;
     public static ConfigEntry<string> ConfigDebugResetCommand;
 
-    public static ConfigEntry<bool> ConfigExperimentalMultithreadedHeightmapBuild;
-    public static ConfigEntry<bool> ConfigExperimentalParallelChunksBuild;
     public static BetterContinents instance;
 #nullable enable
     public static float WorldSize = 10500f;
@@ -214,13 +212,6 @@ public partial class BetterContinents : BaseUnityPlugin
                     .Description("Skips default location placement during world gen (spawn temple and locationmap are still placed), for quickly testing the heightmap itself").Bind(out ConfigDebugSkipDefaultLocationPlacement);
                 groupBuilder.AddValue("Debug Reset Command")
                     .Description("Upgrade World command to execute when reloading images.").Default("zones_reset start").Bind(out ConfigDebugResetCommand);
-            })
-            .AddGroup("BetterContinents.Experimental", groupBuilder =>
-            {
-                groupBuilder.AddValue("Multithreaded Heightmap Build")
-                    .Advanced().Description("").Bind(out ConfigExperimentalMultithreadedHeightmapBuild);
-                groupBuilder.AddValue("Parallel Chunks Build")
-                    .Advanced().Description("").Bind(out ConfigExperimentalParallelChunksBuild);
             })
             .AddGroup("BetterContinents.Misc", groupBuilder =>
             {
