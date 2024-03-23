@@ -272,6 +272,11 @@ public partial class DebugUtils
                             BetterContinents.Settings.SetBiomePath(path);
                     }),
                     getter: () => BetterContinents.Settings.GetBiomePath());
+
+                group.AddValue("p", "Biome precision", "biome precision",
+                    defaultValue: 0, minValue: 0, maxValue: 5,
+                    setter: SetHeightmapValue<int>(value => BetterContinents.Settings.BiomePrecision = value),
+                    getter: () => BetterContinents.Settings.BiomePrecision);
             });
             bc.AddGroup("l", "Locationmap", "locationmap settings, get more info with 'bc param s help'", group =>
             {
@@ -300,15 +305,15 @@ public partial class DebugUtils
             });
             bc.AddGroup("fo", "Forest", "forest settings, get more info with 'bc param fo help'", group =>
             {
-                group.AddValue<float>("sc", "Forest Scale", "forest scale",
+                group.AddValue("sc", "Forest Scale", "forest scale",
                     defaultValue: 0.5f, minValue: 0f, maxValue: 1f,
                     setter: SetHeightmapValue<float>(value => BetterContinents.Settings.ForestScaleFactor = value),
                     getter: () => BetterContinents.Settings.ForestScaleFactor);
-                group.AddValue<float>("am", "Forest Amount", "forest amount",
+                group.AddValue("am", "Forest Amount", "forest amount",
                     defaultValue: 0.5f, minValue: 0f, maxValue: 1f,
                     setter: SetHeightmapValue<float>(value => BetterContinents.Settings.ForestAmount = value),
                     getter: () => BetterContinents.Settings.ForestAmount);
-                group.AddValue<bool>("ffo", "Forest Factor Override All", "forest factor override all trees",
+                group.AddValue("ffo", "Forest Factor Override All", "forest factor override all trees",
                     setter: SetHeightmapValue<bool>(value =>
                     {
                         BetterContinents.Settings.ForestFactorOverrideAllTrees = value;
@@ -316,7 +321,7 @@ public partial class DebugUtils
                             "<color=orange>NOTE: You need to reload the world to apply this change to the forest factor override!</color>");
                     }),
                     getter: () => BetterContinents.Settings.ForestFactorOverrideAllTrees);
-                group.AddValue<string>("fn", "Forestmap Filename",
+                group.AddValue("fn", "Forestmap Filename",
                     "set forestmap filename (full path including filename, or nothing to disable)",
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
@@ -332,11 +337,11 @@ public partial class DebugUtils
                             BetterContinents.Settings.SetForestPath(path);
                     }),
                     getter: () => BetterContinents.Settings.GetForestPath());
-                group.AddValue<float>("mu", "Forestmap Multiply", "forestmap multiply",
+                group.AddValue("mu", "Forestmap Multiply", "forestmap multiply",
                     defaultValue: 1f, minValue: 0f, maxValue: 1f,
                     setter: SetHeightmapValue<float>(value => BetterContinents.Settings.ForestmapMultiply = value),
                     getter: () => BetterContinents.Settings.ForestmapMultiply);
-                group.AddValue<float>("mu", "Forestmap Add", "forestmap add",
+                group.AddValue("add", "Forestmap Add", "forestmap add",
                     defaultValue: 0f, minValue: 0f, maxValue: 1f,
                     setter: SetHeightmapValue<float>(value => BetterContinents.Settings.ForestmapAdd = value),
                     getter: () => BetterContinents.Settings.ForestmapAdd);
@@ -751,6 +756,7 @@ public partial class DebugUtils
         value =>
         {
             setValue(value);
+            BetterContinents.DynamicPatch();
             BetterContinents.WorldGeneratorPatch.ApplyNoiseSettings();
             noisePreviewTextures = null;
             maskPreviewTextures = null;

@@ -1,3 +1,13 @@
+- v0.7.16
+  - Adds new setting "Biome precision" to control how precisely the biome map is used.
+  - Changes file format version to 9.
+  - Fixes "Forest map add" sharing the same debug command as "Forest map multiply".
+  - Fixes some Configuration Managers not working with Better Continents.
+
+- v0.7.15
+  - Fixes the log always showing the original amount of locations even when changed with Expand World Size.
+  - Fixes the debug menu missing Continents Size setting.
+
 - v0.7.14
   - Improves compatibility with mods that affect the minimap.
   - Fixes the world edge not working with Expand World Size.

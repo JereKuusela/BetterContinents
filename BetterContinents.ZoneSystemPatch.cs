@@ -21,7 +21,7 @@ public partial class BetterContinents
             }
         }
         // Changes to location type spawn placement (this is the functional part of the mod)
-        [HarmonyPrefix, HarmonyPatch(nameof(ZoneSystem.GenerateLocations), typeof(ZoneSystem.ZoneLocation))]
+        [HarmonyPrefix, HarmonyPatch(nameof(ZoneSystem.GenerateLocations), typeof(ZoneSystem.ZoneLocation)), HarmonyPriority(Priority.Low)]
         private static bool GenerateLocationsPrefix(ZoneSystem __instance, ZoneSystem.ZoneLocation location)
         {
             var groupName = string.IsNullOrEmpty(location.m_group) ? "<unnamed>" : location.m_group;

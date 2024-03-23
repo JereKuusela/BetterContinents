@@ -10,7 +10,7 @@ public partial class BetterContinents
     // These are what are baked into the world when it is created
     public class BetterContinentsSettings
     {
-        public const int LatestVersion = 8;
+        public const int LatestVersion = 9;
 
         public int Version;
 
@@ -30,6 +30,7 @@ public partial class BetterContinents
         public bool RiversEnabled;
         public float ForestScale;
         public float ForestAmountOffset;
+        public int BiomePrecision;
         public bool OverrideStartPosition;
         public float StartPositionX;
         public float StartPositionY;
@@ -194,7 +195,9 @@ public partial class BetterContinents
 
                 MapEdgeDropoff = ConfigMapEdgeDropoff.Value;
                 MountainsAllowedAtCenter = ConfigMountainsAllowedAtCenter.Value;
+                BiomePrecision = ConfigBiomePrecision.Value;
             }
+            DynamicPatch();
         }
 
         #region Setters
@@ -392,6 +395,7 @@ public partial class BetterContinents
                     output($"Roughmap disabled");
                 }
 
+                output($"Biome precision {BiomePrecision}");
                 if (Biomemap != null)
                 {
                     output($"Biomemap file {Biomemap.FilePath}");
@@ -401,7 +405,6 @@ public partial class BetterContinents
                 {
                     output($"Biomemap disabled");
                 }
-
                 output($"Forest scale {ForestScaleFactor}");
                 output($"Forest amount {ForestAmount}");
                 if (Forestmap != null)
@@ -548,6 +551,10 @@ public partial class BetterContinents
                 {
                     BaseHeightNoise?.Serialize(pkg);
                 }
+                if (Version >= 9)
+                {
+                    pkg.Write(BiomePrecision);
+                }
             }
         }
 
@@ -651,6 +658,7 @@ public partial class BetterContinents
                 BaseHeightNoise = null;
                 HeightmapOverrideAll = false;
                 HeightmapMask = 0;
+                BiomePrecision = 0;
 
                 if (Version >= 2)
                 {
@@ -711,7 +719,10 @@ public partial class BetterContinents
                 }
                 if (Version >= 7)
                     BaseHeightNoise = NoiseStackSettings.Deserialize(pkg);
+                if (Version >= 9)
+                    BiomePrecision = pkg.ReadInt();
             }
+            DynamicPatch();
         }
 
         public float ApplyHeightmap(float x, float y, float height)
