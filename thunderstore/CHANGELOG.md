@@ -3,6 +3,7 @@
   - Changes file format version to 9.
   - Fixes "Forest map add" sharing the same debug command as "Forest map multiply".
   - Fixes some Configuration Managers not working with Better Continents.
+  - Fixed for the new game version.
   - Improves performance.
   - Removes settings "Multithreaded Heightmap Build" and "Parallel Chunks Build" as unused.
 
