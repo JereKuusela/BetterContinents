@@ -1,3 +1,6 @@
+- v0.7.17
+  - Fixes noise layer not being applied without a heightmap.
+
 - v0.7.16
   - Adds new setting "Biome precision" to control how precisely the biome map is used.
   - Changes file format version to 9.

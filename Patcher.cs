@@ -54,7 +54,7 @@ public partial class BetterContinents
           break;
         default:
           // GetBaseHeightV3 doesn't work at all without heightmap which makes testing more difficult.
-          if (Settings.HasHeightmap || WorldGeneratorPatch.BaseHeightNoise != null)
+          if (Settings.HasHeightmap || Settings.BaseHeightNoise != null)
             patchVersion = 3;
           break;
       }
