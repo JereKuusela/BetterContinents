@@ -17,22 +17,37 @@ public partial class BetterContinents
   private static int HeightmapGetBiomePatched = 0;
   private static void PatchHeightmap()
   {
-    var method = AccessTools.Method(typeof(Heightmap), nameof(Heightmap.GetBiome));
-    var patch = AccessTools.Method(typeof(BetterContinents), nameof(GetBiomePatch));
-    if (Settings.BiomePrecision == HeightmapGetBiomePatched)
+    var precision = Settings.EnabledForThisWorld ? Settings.BiomePrecision : 0;
+    if (precision == HeightmapGetBiomePatched)
       return;
+    var method1 = AccessTools.Method(typeof(Heightmap), nameof(Heightmap.GetBiome));
+    var patch1 = AccessTools.Method(typeof(BetterContinents), nameof(GetBiomePatch));
+    var method2 = AccessTools.Method(typeof(HeightmapBuilder), nameof(HeightmapBuilder.Build));
+    var patch2 = AccessTools.Method(typeof(BetterContinents), nameof(BuildPatch));
+    var method3 = AccessTools.Method(typeof(Heightmap), nameof(Heightmap.GetBiomeColor), [typeof(float), typeof(float)]);
+    var patch3 = AccessTools.Method(typeof(BetterContinents), nameof(GetBiomeColorPatch));
     if (HeightmapGetBiomePatched > 0)
     {
       Log("Unpatching Heightmap.GetBiome");
-      HarmonyInstance.Unpatch(method, patch);
+      HarmonyInstance.Unpatch(method1, patch1);
+      HarmonyInstance.Unpatch(method2, patch2);
+      HarmonyInstance.Unpatch(method3, patch3);
       HeightmapGetBiomePatched = 0;
     }
-    if (Settings.BiomePrecision > 0)
+    if (precision > 0)
     {
-      Log($"Patching Heightmap.GetBiome with precision {Settings.BiomePrecision}");
-      HarmonyInstance.Patch(method, transpiler: new(patch));
-      HeightmapGetBiomePatched = Settings.BiomePrecision;
+      Log($"Patching Heightmap.GetBiome with precision {precision}");
+      HarmonyInstance.Patch(method1, transpiler: new(patch1));
+      HarmonyInstance.Patch(method2, prefix: new(patch2));
+      HarmonyInstance.Patch(method3, prefix: new(patch3));
+      HeightmapGetBiomePatched = precision;
     }
+    foreach (var hm in Heightmap.Instances)
+    {
+      hm.m_buildData = null;
+      hm.Regenerate();
+    }
+
   }
   private static int GetBaseHeightPatched = 0;
   private static void PatchGetBaseHeight()

@@ -1,3 +1,7 @@
+- v0.7.18
+  - Adds a new command "bc g v" which allows setting the save version.
+  - Fixes the new setting "Biome precision" not doing anything.
+
 - v0.7.17
   - Fixes noise layer not being applied without a heightmap.
 

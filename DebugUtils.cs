@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using HarmonyLib;
 using UnityEngine;
+using static BetterContinents.BetterContinents;
 #nullable disable
 namespace BetterContinents;
 
@@ -185,6 +186,10 @@ public partial class DebugUtils
                         setter: SetHeightmapValue<bool>(value =>
                             BetterContinents.Settings.MountainsAllowedAtCenter = value),
                         getter: () => BetterContinents.Settings.MountainsAllowedAtCenter);
+                    group.AddValue("v", "Version", "version",
+                        defaultValue: 0, minValue: 0, maxValue: BetterContinentsSettings.LatestVersion,
+                        setter: value => BetterContinents.Settings.Version = value,
+                        getter: () => BetterContinents.Settings.Version);
                 });
 
             bc.AddGroup("h", "Heightmap", "heightmap settings, get more info with 'bc param h help'",
@@ -746,7 +751,7 @@ public partial class DebugUtils
         value =>
         {
             command(value);
-            BetterContinents.WorldGeneratorPatch.ApplyNoiseSettings();
+            WorldGeneratorPatch.ApplyNoiseSettings();
             noisePreviewTextures = null;
             maskPreviewTextures = null;
             GameUtils.Reset();
@@ -756,8 +761,8 @@ public partial class DebugUtils
         value =>
         {
             setValue(value);
-            BetterContinents.DynamicPatch();
-            BetterContinents.WorldGeneratorPatch.ApplyNoiseSettings();
+            DynamicPatch();
+            WorldGeneratorPatch.ApplyNoiseSettings();
             noisePreviewTextures = null;
             maskPreviewTextures = null;
             GameUtils.Reset();
