@@ -17,17 +17,23 @@ public partial class BetterContinents
                 LastConnectionError = null;
             }
         }
-
+        [HarmonyPrefix, HarmonyPatch("Awake")]
+        static void AwakePrefix(FejdStartup __instance)
+        {
+            // Unpatching everything on main menu means other patches don't have to check for main menu.
+            Settings.EnabledForThisWorld = false;
+            DynamicPatch();
+        }
         private static readonly Presets presets = new();
 
         [HarmonyPostfix, HarmonyPatch("Start")]
-        private static void StartPostfix(FejdStartup __instance)
+        static void StartPostfix(FejdStartup __instance)
         {
             Log("Start postfix");
             presets.InitUI(__instance);
         }
         [HarmonyPrefix, HarmonyPatch("OnNewWorldDone")]
-        private static void OnNewWorldDonePrefix()
+        static void OnNewWorldDonePrefix()
         {
             // Indicator to SaveWorldMetaDataPostfix that it should save a new BC config file using the 
             // selected preset, rather than saving the active worlds settings.

@@ -1,6 +1,8 @@
 - v0.7.18
   - Adds a new command "bc g v" which allows setting the save version.
   - Fixes the new setting "Biome precision" not doing anything.
+  - Fixes minimap not being cached.
+  - Fixes main menu terrain getting messed up after exiting a world.
 
 - v0.7.17
   - Fixes noise layer not being applied without a heightmap.

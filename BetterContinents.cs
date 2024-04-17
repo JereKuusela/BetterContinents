@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using BepInEx;
@@ -292,7 +294,8 @@ public partial class BetterContinents : BaseUnityPlugin
             var mapPixels = new Color32[map.m_textureSize * map.m_textureSize];
             var forestPixels = new Color32[map.m_textureSize * map.m_textureSize];
             var heightPixels = new Color[map.m_textureSize * map.m_textureSize];
-
+            var cachedTexture = new Color32[map.m_textureSize * map.m_textureSize];
+            var half = 127.5f;
             int progress = 0;
             var task = Task.Run(() =>
             {
@@ -307,6 +310,11 @@ public partial class BetterContinents : BaseUnityPlugin
                         mapPixels[i * map.m_textureSize + j] = map.GetPixelColor(biome);
                         forestPixels[i * map.m_textureSize + j] = map.GetMaskColor(wx, wy, biomeHeight, biome);
                         heightPixels[i * map.m_textureSize + j] = new Color(biomeHeight, 0f, 0f);
+
+                        var num = Mathf.Clamp((int)(biomeHeight * half), 0, 65025);
+                        var r = (byte)(num >> 8);
+                        var g = (byte)(num & 255);
+                        cachedTexture[i * map.m_textureSize + j] = new(r, g, 0, byte.MaxValue);
                         Interlocked.Increment(ref progress);
                     }
                 });
@@ -332,9 +340,12 @@ public partial class BetterContinents : BaseUnityPlugin
             map.m_mapTexture.Apply();
             map.m_heightTexture.SetPixels(heightPixels);
             map.m_heightTexture.Apply();
+            Texture2D cached = new(map.m_textureSize, map.m_textureSize);
+            cached.SetPixels32(cachedTexture);
+            cached.Apply();
 
             Log($"Finished generating minimap textures multi-threaded ...");
-
+            map.SaveMapTextureDataToDisk(map.m_forestMaskTexture, map.m_mapTexture, cached);
             // Some map mods may do stuff after generation which won't work with async.
             // So do one "fake" generate call to trigger those.
             DoFakeGenerate = true;
@@ -342,6 +353,59 @@ public partial class BetterContinents : BaseUnityPlugin
         }
     }
 
-    // Show the connection error message
+    // Cache might have wrong map size so has to be fully reimplemented.
+    // This could be transpiled too but more complex.
+    [HarmonyPatch(typeof(Minimap), nameof(Minimap.TryLoadMinimapTextureData))]
+    public class PatchTryLoadMinimapTextureData
+    {
+        static bool Prefix(Minimap __instance, ref bool __result)
+        {
+            __result = TryLoadMinimapTextureData(__instance);
+            return false;
+        }
+
+        private static bool TryLoadMinimapTextureData(Minimap obj)
+        {
+            if (string.IsNullOrEmpty(obj.m_forestMaskTexturePath) || !File.Exists(obj.m_forestMaskTexturePath) || !File.Exists(obj.m_mapTexturePath) || !File.Exists(obj.m_heightTexturePath) || 33 != ZNet.World.m_worldVersion)
+            {
+                return false;
+            }
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            Texture2D texture2D = new Texture2D(obj.m_forestMaskTexture.width, obj.m_forestMaskTexture.height, TextureFormat.ARGB32, false);
+            if (!texture2D.LoadImage(File.ReadAllBytes(obj.m_forestMaskTexturePath)))
+                return false;
+            if (obj.m_forestMaskTexture.width != texture2D.width || obj.m_forestMaskTexture.height != texture2D.height)
+                return false;
+            obj.m_forestMaskTexture.SetPixels(texture2D.GetPixels());
+            obj.m_forestMaskTexture.Apply();
+            if (!texture2D.LoadImage(File.ReadAllBytes(obj.m_mapTexturePath)))
+                return false;
+            if (obj.m_mapTexture.width != texture2D.width || obj.m_mapTexture.height != texture2D.height)
+                return false;
+            obj.m_mapTexture.SetPixels(texture2D.GetPixels());
+            obj.m_mapTexture.Apply();
+            if (!texture2D.LoadImage(File.ReadAllBytes(obj.m_heightTexturePath)))
+                return false;
+            if (obj.m_heightTexture.width != texture2D.width || obj.m_heightTexture.height != texture2D.height)
+                return false;
+            Color[] pixels = texture2D.GetPixels();
+            for (int i = 0; i < obj.m_textureSize; i++)
+            {
+                for (int j = 0; j < obj.m_textureSize; j++)
+                {
+                    int num = i * obj.m_textureSize + j;
+                    int num2 = (int)(pixels[num].r * 255f);
+                    int num3 = (int)(pixels[num].g * 255f);
+                    int num4 = (num2 << 8) + num3;
+                    float num5 = 127.5f;
+                    pixels[num].r = (float)num4 / num5;
+                }
+            }
+            obj.m_heightTexture.SetPixels(pixels);
+            obj.m_heightTexture.Apply();
+            ZLog.Log("Loading minimap textures done [" + stopwatch.ElapsedMilliseconds.ToString() + "ms]");
+            return true;
+        }
+    }
 }
 
