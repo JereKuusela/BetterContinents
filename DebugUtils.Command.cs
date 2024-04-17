@@ -22,9 +22,9 @@ public partial class DebugUtils
         }
 
         private readonly CommandType commandType;
-        private readonly string cmd;
+        public readonly string cmd;
         private readonly string uiName;
-        private readonly string desc;
+        public readonly string desc;
         private readonly Type valueType;
         private readonly Command parent;
 
@@ -139,7 +139,7 @@ public partial class DebugUtils
                 }
                 else if (!GetSubcommands().Any(subcmd => subcmd.Run(args)))
                 {
-                    Console.instance.Print($"<color=red>Error: argument {args} is not recognized as a subcommand of {cmd}</color>");
+                    Console.instance.Print($"<color=#ff0000>Error: argument {args} is not recognized as a subcommand of {cmd}</color>");
                     ShowSubcommandHelp();
                 }
             }
@@ -188,7 +188,7 @@ public partial class DebugUtils
             return true;
         }
 
-        private List<Command> GetSubcommands()
+        public List<Command> GetSubcommands()
         {
             var allSubcommands = new List<Command>();
             subCommandBuilder?.Invoke(new SubcommandBuilder(this, allSubcommands));
@@ -287,12 +287,12 @@ public partial class DebugUtils
                 str = f.ToString(CultureInfo.InvariantCulture);
             else
                 str = value.ToString();
-            return $"<size=18><b><color=#55ff55ff>{str}</color></b></size>";
+            return $"<size=18><b><color=#55ff55>{str}</color></b></size>";
         }
 
         public void ShowHelp()
         {
-            var helpString = $"<size=18><b><color=cyan>{GetFullCmdName()}</color></b></size>";
+            var helpString = $"<size=18><b><color=#00ffff>{GetFullCmdName()}</color></b></size>";
             if (range != null)
             {
                 helpString += $" ({range.Value.Key} - {range.Value.Value})";

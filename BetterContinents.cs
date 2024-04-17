@@ -242,6 +242,7 @@ public partial class BetterContinents : BaseUnityPlugin
 
     public void OnGUI()
     {
+        CommandWrapper.Init();
         UI.OnGUI();
     }
 

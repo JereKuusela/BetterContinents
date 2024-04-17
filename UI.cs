@@ -65,11 +65,11 @@ public static class UI
                 {
                     if (BetterContinents.Settings.EnabledForThisWorld)
                     {
-                        DisplayMessage($"<color=gray><size=20><b>{ModInfo.Name} v{ModInfo.Version}</b>: <color=green>ENABLED</color> for this world</size></color>");
+                        DisplayMessage($"<color=#808080><size=20><b>{ModInfo.Name} v{ModInfo.Version}</b>: <color=green>ENABLED</color> for this world</size></color>");
                     }
                     else
                     {
-                        DisplayMessage($"<color=gray><size=20><b>{ModInfo.Name} v{ModInfo.Version}</b>: <color=#505050ff>DISABLED</color> for this world</size></color>");
+                        DisplayMessage($"<color=#808080><size=20><b>{ModInfo.Name} v{ModInfo.Version}</b>: <color=#505050ff>DISABLED</color> for this world</size></color>");
                     }
                 }
             });

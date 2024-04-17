@@ -41,4 +41,9 @@ public static class CommandWrapper
     if (ServerDevcommands == null) return;
     GetMethod(Type(), "Register", [typeof(string), typeof(Func<int, List<string>>), typeof(Dictionary<string, Func<int, List<string>>>)]).Invoke(null, [command, action, named]);
   }
+  public static List<string> Info(string value)
+  {
+    if (ServerDevcommands == null) return [];
+    return GetMethod(InfoType(), "Create", [typeof(string)]).Invoke(null, [value]) as List<string>;
+  }
 }
