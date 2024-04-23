@@ -1,7 +1,7 @@
 - v0.7.18
   - Adds a new command "bc g v" which allows setting the save version.
   - Adds improved autocomplete when Server Devcommands mod is installed.
-  - Fixes the new setting "Biome precision" not doing anything.
+  - Fixes the new setting "Biome precision" not doing anything (still needs some work).
   - Fixes console output colors.
   - Fixes minimap not being cached.
   - Fixes main menu terrain getting messed up after exiting a world.

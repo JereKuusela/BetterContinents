@@ -37,7 +37,7 @@ public partial class BetterContinents
     if (precision > 0)
     {
       Log($"Patching Heightmap.GetBiome with precision {precision}");
-      HarmonyInstance.Patch(method1, transpiler: new(patch1));
+      HarmonyInstance.Patch(method1, prefix: new(patch1));
       HarmonyInstance.Patch(method2, prefix: new(patch2));
       HarmonyInstance.Patch(method3, prefix: new(patch3));
       HeightmapGetBiomePatched = precision;
@@ -47,6 +47,7 @@ public partial class BetterContinents
       hm.m_buildData = null;
       hm.Regenerate();
     }
+    ClutterSystem.instance?.ClearAll();
 
   }
   private static int GetBaseHeightPatched = 0;

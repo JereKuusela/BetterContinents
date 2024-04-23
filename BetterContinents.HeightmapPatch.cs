@@ -1,53 +1,66 @@
-using System;
 using System.Collections.Generic;
-using System.Reflection.Emit;
-using HarmonyLib;
 using UnityEngine;
 
 namespace BetterContinents;
 
 public partial class BetterContinents
 {
-  private static IEnumerable<CodeInstruction> GetBiomePatch(IEnumerable<CodeInstruction> instructions)
+  private static bool GetBiomePatch(Heightmap __instance, Vector3 point, ref Heightmap.Biome __result)
   {
-    var precision = Settings.BiomePrecision;
-    CodeMatcher matcher = new(instructions);
-    matcher = matcher.End().MatchEndBackwards(new CodeMatch(OpCodes.Stind_R4));
-    // Precision 1 = 3x3, 2 = 5x5, 3 = 7x7, etc.
-    var last = precision + 1;
-    var multiplier = 1f / last;
-    for (int x = 0; x <= last; x++)
+    if (__instance.m_isDistantLod) return true;
+    __result = GetBiome(__instance, point);
+    return false;
+  }
+  private static Heightmap.Biome GetBiome(Heightmap obj, Vector3 point)
+  {
+    if (obj.m_cornerBiomes[0] == obj.m_cornerBiomes[1] && obj.m_cornerBiomes[0] == obj.m_cornerBiomes[2] && obj.m_cornerBiomes[0] == obj.m_cornerBiomes[3])
+      return obj.m_cornerBiomes[0];
+    obj.WorldToNormalizedHM(point, out var ix, out var iy);
+    for (int i = 1; i < Heightmap.s_tempBiomeWeights.Length; i++)
     {
-      for (int y = 0; y <= last; y++)
+      Heightmap.s_tempBiomeWeights[i] = 0f;
+    }
+    var size = Settings.BiomePrecision + 1;
+    var x = ix * size;
+    var y = iy * size;
+    var sx = (int)x;
+    var sy = (int)y;
+    var ex = sx + 1;
+    var ey = sy + 1;
+    if (sx == size)
+    {
+      sx -= 1;
+      ex -= 1;
+    }
+    if (sy == size)
+    {
+      sy -= 1;
+      ey -= 1;
+    }
+    size += 1;
+    var corner1 = 4 + sx * size + sy;
+    var corner2 = 4 + ex * size + sy;
+    var corner3 = 4 + sx * size + ey;
+    var corner4 = 4 + ex * size + ey;
+    if (obj.m_cornerBiomes.Length <= corner4)
+      return obj.m_cornerBiomes[0];
+
+    Heightmap.s_tempBiomeWeights[Heightmap.s_biomeToIndex[obj.m_cornerBiomes[corner1]]] += Heightmap.Distance(x, y, sx, sy);
+    Heightmap.s_tempBiomeWeights[Heightmap.s_biomeToIndex[obj.m_cornerBiomes[corner2]]] += Heightmap.Distance(x, y, ex, sy);
+    Heightmap.s_tempBiomeWeights[Heightmap.s_biomeToIndex[obj.m_cornerBiomes[corner3]]] += Heightmap.Distance(x, y, sx, ey);
+    Heightmap.s_tempBiomeWeights[Heightmap.s_biomeToIndex[obj.m_cornerBiomes[corner4]]] += Heightmap.Distance(x, y, ex, ey);
+    int num = Heightmap.s_biomeToIndex[Heightmap.Biome.None];
+    float num2 = -99999f;
+    for (int j = 1; j < Heightmap.s_tempBiomeWeights.Length; j++)
+    {
+      if (Heightmap.s_tempBiomeWeights[j] > num2)
       {
-        // Corners are already handled.
-        if ((x == 0 || x == last) && (y == 0 || y == last))
-          continue;
-        var index = 4 + x * last + y;
-        matcher = AddBiomeCheck(matcher, x * multiplier, y * multiplier, index);
+        num = j;
+        num2 = Heightmap.s_tempBiomeWeights[j];
       }
     }
-    return matcher.InstructionEnumeration();
+    return Heightmap.s_indexToBiome[num];
   }
-  private static CodeMatcher AddBiomeCheck(CodeMatcher matcher, float x, float y, int index) => matcher
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Heightmap), nameof(Heightmap.s_tempBiomeWeights))))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Heightmap), nameof(Heightmap.s_biomeToIndex))))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldarg_0))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Heightmap), nameof(Heightmap.m_cornerBiomes))))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldc_I4, index))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldelem_I4))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<Heightmap.Biome, int>), "get_Item")))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldelema, typeof(float)))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Dup))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldind_R4))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldloc_0))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldloc_1))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldc_R4, x))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Ldc_R4, y))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Heightmap), nameof(Heightmap.Distance))))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Add))
-      .InsertAndAdvance(new CodeInstruction(OpCodes.Stind_R4));
-
 
   private static bool GetBiomeColorPatch(Heightmap __instance, float ix, float iy, ref Color __result)
   {
@@ -126,13 +139,13 @@ public partial class BetterContinents
       // Precision 1 = 3x3, 2 = 5x5, 3 = 7x7, etc.
       var last = Settings.BiomePrecision + 1;
       var multiplier = 1f / last;
-      var index = 4;
+      var index = 3;
       for (int x = 0; x <= last; x++)
       {
         for (int y = 0; y <= last; y++)
         {
-          data.m_cornerBiomes[index] = worldGen.GetBiome(vector.x + data.m_width * data.m_scale * x * multiplier, vector.z + data.m_width * data.m_scale * y * multiplier);
           index += 1;
+          data.m_cornerBiomes[index] = worldGen.GetBiome(vector.x + data.m_width * data.m_scale * x * multiplier, vector.z + data.m_width * data.m_scale * y * multiplier);
         }
       }
     }
