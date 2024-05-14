@@ -42,7 +42,7 @@ public partial class BetterContinents
       HarmonyInstance.Patch(method3, prefix: new(patch3));
       HeightmapGetBiomePatched = precision;
     }
-    foreach (var hm in Heightmap.Instances)
+    foreach (Heightmap hm in Heightmap.Instances)
     {
       hm.m_buildData = null;
       hm.Regenerate();
@@ -145,7 +145,7 @@ public partial class BetterContinents
   private static void PatchGetBiome()
   {
     var toPatch = Settings.EnabledForThisWorld && Settings.HasBiomemap;
-    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiome), [typeof(float), typeof(float)]);
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiome), [typeof(float), typeof(float), typeof(float), typeof(bool)]);
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomePrefix));
     if (toPatch == GetBiomePatched)
       return;

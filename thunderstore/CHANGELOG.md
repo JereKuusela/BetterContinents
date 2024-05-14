@@ -1,3 +1,6 @@
+- v0.7.19
+  - Fixed for the new game version.
+
 - v0.7.18
   - Adds a new command "bc g v" which allows setting the save version.
   - Adds improved autocomplete when Server Devcommands mod is installed.
