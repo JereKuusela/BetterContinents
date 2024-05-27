@@ -33,6 +33,20 @@ public partial class BetterContinents
 
         private static int currentSeed;
 
+        // Hardcoded gaps don't work well with the mod when often the whole world layout is changed.
+        [HarmonyPrefix, HarmonyPatch(nameof(WorldGenerator.CreateAshlandsGap))]
+        private static bool CreateAshlandsGap(ref double __result)
+        {
+            if (Settings.EnabledForThisWorld) __result = 1d;
+            return !Settings.EnabledForThisWorld;
+        }
+        [HarmonyPrefix, HarmonyPatch(nameof(WorldGenerator.CreateDeepNorthGap))]
+        private static bool CreateDeepNorthGap(ref double __result)
+        {
+            if (Settings.EnabledForThisWorld) __result = 1d;
+            return !Settings.EnabledForThisWorld;
+        }
+
         //private static Noise 
         [HarmonyPrefix, HarmonyPatch(nameof(WorldGenerator.Initialize))]
         private static void InitializePrefix(World world)
@@ -61,10 +75,7 @@ public partial class BetterContinents
 
         public static void ApplyNoiseSettings()
         {
-            if (Settings.BaseHeightNoise != null)
-            {
-                BaseHeightNoise = new NoiseStack(currentSeed, Settings.BaseHeightNoise);
-            }
+            BaseHeightNoise = new NoiseStack(currentSeed, Settings.BaseHeightNoise);
         }
 
         // wx, wy are [-10500, 10500]
@@ -85,12 +96,33 @@ public partial class BetterContinents
             return false;
         }
 
-        public static void GetBiomeHeightPostfix(WorldGenerator __instance, float wx, float wy, ref float __result)
+
+        public static bool GetBiomeHeightWithHeightPaint(WorldGenerator __instance, float wx, float wy, out Color mask, ref float __result)
+        {
+            __result = __instance.GetBaseHeight(wx, wy, false) * 200f;
+            mask = Settings.ApplyPaintMap(wx, wy);
+            return false;
+        }
+#pragma warning disable IDE0060
+        public static float GetBiomeHeightWithHeight(float result, WorldGenerator __instance, float wx, float wy)
+        {
+            return __instance.GetBaseHeight(wx, wy, false) * 200f;
+        }
+#pragma warning restore IDE0060
+        public static float GetBiomeHeightWithRoughPaint(float result, WorldGenerator __instance, ref Color mask, float wx, float wy)
         {
             var smoothHeight = __instance.GetBaseHeight(wx, wy, false) * 200f;
-            __result = Settings.ShouldHeightmapOverrideAll
-                ? smoothHeight
-                : Settings.ApplyRoughmap(NormalizedX(wx), NormalizedY(wy), smoothHeight, __result);
+            mask = Settings.ApplyPaintMap(wx, wy);
+            return Settings.ApplyRoughmap(NormalizedX(wx), NormalizedY(wy), smoothHeight, result);
+        }
+        public static float GetBiomeHeightWithRough(float result, WorldGenerator __instance, ref Color mask, float wx, float wy)
+        {
+            var smoothHeight = __instance.GetBaseHeight(wx, wy, false) * 200f;
+            return Settings.ApplyRoughmap(NormalizedX(wx), NormalizedY(wy), smoothHeight, result);
+        }
+        public static void GetBiomeHeightWithPaint(ref Color mask, float wx, float wy)
+        {
+            mask = Settings.ApplyPaintMap(wx, wy);
         }
 
         private static float GetBaseHeightV1(float wx, float wy, float ___m_offset0, float ___m_offset1, float ___m_minMountainDistance)

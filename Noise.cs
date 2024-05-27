@@ -156,7 +156,7 @@ public class NoiseStackSettings
         public static NoiseSettings Deserialize(ZPackage pkg)
         {
             // Don't use object initializer, although it executes in lexical order, it isn't explicit in the spec
-            // ReSharper disable once UseObjectOrCollectionInitializer
+#pragma warning disable IDE0017
             var settings = new NoiseSettings();
 
             settings.Version = pkg.ReadInt();
@@ -197,6 +197,7 @@ public class NoiseStackSettings
 
             settings.BlendMode = (BlendOperations.BlendModeType)pkg.ReadInt();
 
+#pragma warning restore IDE0017
             return settings;
         }
 
@@ -359,13 +360,6 @@ public class NoiseStackSettings
     }
 
     public readonly List<NoiseLayer> NoiseLayers = [];
-
-    public static NoiseStackSettings Default()
-    {
-        var val = new NoiseStackSettings();
-        // val.NoiseLayers.Add(new NoiseLayer());
-        return val;
-    }
 
     public void AddNoiseLayer() => SetNoiseLayerCount(NoiseLayers.Count + 1);
     public void RemoveNoiseLayer()

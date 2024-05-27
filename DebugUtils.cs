@@ -68,6 +68,9 @@ public partial class DebugUtils
                     if (BetterContinents.Settings.HasForestmap)
                         reload.AddCommand("fom", "Forestmap", "Reloads the forestmap",
                             HeightmapCommand(_ => BetterContinents.Settings.ReloadForestmap()));
+                    if (BetterContinents.Settings.HasPaintmap)
+                        reload.AddCommand("pm", "Paintmap", "Reloads the paintmap",
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadPaintmap()));
                     if (BetterContinents.Settings.AnyImageMap)
                     {
                         reload.AddCommand("all", "All", "Reloads all image maps", HeightmapCommand(_ =>
@@ -78,6 +81,7 @@ public partial class DebugUtils
                             if (BetterContinents.Settings.HasBiomemap) BetterContinents.Settings.ReloadBiomemap();
                             if (BetterContinents.Settings.HasLocationmap) BetterContinents.Settings.ReloadLocationmap();
                             if (BetterContinents.Settings.HasForestmap) BetterContinents.Settings.ReloadForestmap();
+                            if (BetterContinents.Settings.HasPaintmap) BetterContinents.Settings.ReloadPaintmap();
                         }));
                     }
                 });
@@ -308,6 +312,28 @@ public partial class DebugUtils
                     }),
                     getter: () => BetterContinents.Settings.GetLocationPath());
             });
+
+            bc.AddGroup("p", "Paintmap", "Paintmap settings, get more info with 'bc param s help'", group =>
+            {
+                group.AddValue("fn", "Paintmap Filename",
+                    "Sets paintmap filename (full path including filename, or nothing to disable)",
+                    defaultValue: string.Empty,
+                    setter: SetHeightmapValue<string>(path =>
+                    {
+                        if (string.IsNullOrEmpty(path))
+                        {
+                            BetterContinents.Settings.DisablePaintmap();
+                            Console.instance.Print($"<color=#ffa500>Paintmap disabled!</color>");
+                        }
+                        else if (!File.Exists(CleanPath(path)))
+                            Console.instance.Print($"<color=#ff0000>ERROR: {path} doesn't exist</color>");
+                        else
+                        {
+                            BetterContinents.Settings.SetPaintPath(path);
+                        }
+                    }),
+                    getter: () => BetterContinents.Settings.GetLocationPath());
+            });
             bc.AddGroup("fo", "Forest", "Forest settings, get more info with 'bc param fo help'", group =>
             {
                 group.AddValue("sc", "Forest Scale", "Forest scale",
@@ -531,10 +557,6 @@ public partial class DebugUtils
                 hl =>
                 {
                     var baseNoise = BetterContinents.Settings.BaseHeightNoise;
-                    if (baseNoise == null)
-                    {
-                        return;
-                    }
                     // hl.AddValue<int>("n", "Number of Layers", "set number of layers",
                     //         defaultValue: 1, minValue: 1, maxValue: 5,
                     //         getter: () => baseNoise.NoiseLayers.Count,

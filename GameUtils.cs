@@ -12,11 +12,14 @@ namespace BetterContinents;
 
 public static class GameUtils
 {
-    private static Dictionary<ZDOID, ZDO> GetObjectsByID() => ZDOMan.instance.m_objectsByID;
-
     public static void Reset()
     {
         Console.instance.TryRunCommand(BetterContinents.ConfigDebugResetCommand.Value);
+        foreach (var hm in Heightmap.s_heightmaps)
+        {
+            hm.m_buildData = null;
+            hm.Poke(true);
+        }
         FastMinimapRegen();
     }
     private static int MinimapOrigTextureSize = 0;

@@ -70,7 +70,7 @@ public partial class BetterContinents
           break;
         default:
           // GetBaseHeightV3 doesn't work at all without heightmap which makes testing more difficult.
-          if (Settings.HasHeightmap || Settings.BaseHeightNoise != null)
+          if (Settings.HasHeightmap || Settings.BaseHeightNoise.NoiseLayers.Count > 0)
             patchVersion = 3;
           break;
       }
@@ -120,26 +120,133 @@ public partial class BetterContinents
     }
   }
 
-  private static bool GetBiomeHeightPatched = false;
+  // Three different patches for different cases.
+  private static bool GetBiomeHeightWithRoughPatched = false;
+  private static bool GetBiomeHeightWithRoughPaintPatched = false;
+  private static bool GetBiomeHeightWithHeightPatched = false;
+  private static bool GetBiomeHeightWithHeightPaintPatched = false;
+  private static bool GetBiomeHeightWithPaintPatched = false;
+
+
   private static void PatchGetBiomeHeight()
   {
-    var toPatch = Settings.EnabledForThisWorld && (Settings.ShouldHeightmapOverrideAll || Settings.HasRoughmap);
+    var toHeightPaintPatch = Settings.EnabledForThisWorld;
+    var toHeightPatch = Settings.EnabledForThisWorld;
+    var toRoughPaintPatch = Settings.EnabledForThisWorld;
+    var toRoughPatch = Settings.EnabledForThisWorld;
+    var toPaintPatch = Settings.EnabledForThisWorld;
+    if (Settings.HasPaintmap)
+    {
+      toHeightPatch = false;
+      toRoughPatch = false;
+    }
+    else
+    {
+      toHeightPaintPatch = false;
+      toRoughPaintPatch = false;
+      toPaintPatch = false;
+    }
+    if (Settings.ShouldHeightmapOverrideAll)
+    {
+      toRoughPaintPatch = false;
+      toRoughPatch = false;
+    }
+    else
+    {
+      toHeightPaintPatch = false;
+      toHeightPatch = false;
+    }
+    if (!Settings.HasRoughmap)
+    {
+      toRoughPaintPatch = false;
+      toRoughPatch = false;
+    }
+
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiomeHeight));
-    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightPostfix));
-    if (toPatch == GetBiomeHeightPatched)
-      return;
-    if (GetBiomeHeightPatched)
+    // 5 different patches depending what is needed.
+    // With height and paint, original function doesn't have to run so it's the only prefix.
+    var patchRough = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithRough));
+    var patchRoughPaint = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithRoughPaint));
+    var patchHeight = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithHeight));
+    var patchHeightPaint = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithHeightPaint));
+    var patchPeint = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithPaint));
+
+    if (toRoughPatch != GetBiomeHeightWithRoughPatched)
     {
-      Log("Unpatching WorldGenerator.GetBiomeHeight");
-      HarmonyInstance.Unpatch(method, patch);
-      GetBiomeHeightPatched = false;
+      if (GetBiomeHeightWithRoughPatched)
+      {
+        Log("Unpatching WorldGenerator.GetBiomeHeight with rough");
+        HarmonyInstance.Unpatch(method, patchRough);
+        GetBiomeHeightWithRoughPatched = false;
+      }
+      if (toRoughPatch)
+      {
+        Log("Patching WorldGenerator.GetBiomeHeight with rough");
+        HarmonyInstance.Patch(method, postfix: new(patchRough));
+        GetBiomeHeightWithRoughPatched = true;
+      }
     }
-    if (toPatch)
+    if (toRoughPaintPatch != GetBiomeHeightWithRoughPaintPatched)
     {
-      Log("Patching WorldGenerator.GetBiomeHeight");
-      HarmonyInstance.Patch(method, postfix: new(patch));
-      GetBiomeHeightPatched = true;
+      if (GetBiomeHeightWithRoughPaintPatched)
+      {
+        Log("Unpatching WorldGenerator.GetBiomeHeight with rough and paint");
+        HarmonyInstance.Unpatch(method, patchRoughPaint);
+        GetBiomeHeightWithRoughPaintPatched = false;
+      }
+      if (toRoughPaintPatch)
+      {
+        Log("Patching WorldGenerator.GetBiomeHeight with rough and paint");
+        HarmonyInstance.Patch(method, postfix: new(patchRoughPaint));
+        GetBiomeHeightWithRoughPaintPatched = true;
+      }
     }
+    if (toHeightPatch != GetBiomeHeightWithHeightPatched)
+    {
+      if (GetBiomeHeightWithHeightPatched)
+      {
+        Log("Unpatching WorldGenerator.GetBiomeHeight with height");
+        HarmonyInstance.Unpatch(method, patchHeight);
+        GetBiomeHeightWithHeightPatched = false;
+      }
+      if (toHeightPatch)
+      {
+        Log("Patching WorldGenerator.GetBiomeHeight with height");
+        HarmonyInstance.Patch(method, postfix: new(patchHeight));
+        GetBiomeHeightWithHeightPatched = true;
+      }
+    }
+    if (toHeightPaintPatch != GetBiomeHeightWithHeightPaintPatched)
+    {
+      if (GetBiomeHeightWithHeightPaintPatched)
+      {
+        Log("Unpatching WorldGenerator.GetBiomeHeight with height and paint");
+        HarmonyInstance.Unpatch(method, patchHeightPaint);
+        GetBiomeHeightWithHeightPaintPatched = false;
+      }
+      if (toHeightPaintPatch)
+      {
+        Log("Patching WorldGenerator.GetBiomeHeight with height and paint");
+        HarmonyInstance.Patch(method, prefix: new(patchHeightPaint));
+        GetBiomeHeightWithHeightPaintPatched = true;
+      }
+    }
+    if (toPaintPatch != GetBiomeHeightWithPaintPatched)
+    {
+      if (GetBiomeHeightWithPaintPatched)
+      {
+        Log("Unpatching WorldGenerator.GetBiomeHeight with paint");
+        HarmonyInstance.Unpatch(method, patchPeint);
+        GetBiomeHeightWithPaintPatched = false;
+      }
+      if (toPaintPatch)
+      {
+        Log("Patching WorldGenerator.GetBiomeHeight with paint");
+        HarmonyInstance.Patch(method, postfix: new(patchPeint));
+        GetBiomeHeightWithPaintPatched = true;
+      }
+    }
+
   }
   private static bool GetBiomePatched = false;
   private static void PatchGetBiome()

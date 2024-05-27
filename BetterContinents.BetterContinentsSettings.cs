@@ -10,7 +10,7 @@ public partial class BetterContinents
     // These are what are baked into the world when it is created
     public class BetterContinentsSettings
     {
-        public const int LatestVersion = 9;
+        public const int LatestVersion = 10;
 
         public int Version;
 
@@ -44,11 +44,13 @@ public partial class BetterContinents
         public bool ForestFactorOverrideAllTrees;
         public bool HeightmapOverrideAll;
         public float HeightmapMask;
-        public NoiseStackSettings? BaseHeightNoise;
+        public NoiseStackSettings BaseHeightNoise = new();
 
         // Non-serialized
         private ImageMapFloat? Heightmap;
         private ImageMapBiome? Biomemap;
+        private ImageMapColor? Paintmap;
+
         private ImageMapLocation? Locationmap;
         private ImageMapFloat? Roughmap;
         private ImageMapFloat? Flatmap;
@@ -60,13 +62,16 @@ public partial class BetterContinents
         public bool HasRoughmap => Roughmap != null;
         public bool HasFlatmap => Flatmap != null;
         public bool HasForestmap => Forestmap != null;
+        public bool HasPaintmap => Paintmap != null;
+
 
         public bool AnyImageMap => HasHeightmap
                                    || HasRoughmap
                                    || HasFlatmap
                                    || HasBiomemap
                                    || HasLocationmap
-                                   || HasForestmap;
+                                   || HasForestmap
+                                   || HasPaintmap;
         public bool ShouldHeightmapOverrideAll => HasHeightmap && HeightmapOverrideAll;
 
         public static BetterContinentsSettings Create(long worldUId)
@@ -99,18 +104,21 @@ public partial class BetterContinents
         private static readonly string LocationFile = "Locationmap.png";
         private static readonly string RoughFile = "Roughmap.png";
         private static readonly string ForestFile = "Forestmap.png";
+        private static readonly string PaintFile = "Paintmap.png";
 
         private static string HeightPath(string defaultFilename, string projectDir) => GetPath(projectDir, HeightFile, defaultFilename);
         private static string BiomePath(string defaultFilename, string projectDir) => GetPath(projectDir, BiomeFile, defaultFilename);
         private static string LocationPath(string defaultFilename, string projectDir) => GetPath(projectDir, LocationFile, defaultFilename);
         private static string RoughPath(string defaultFilename, string projectDir) => GetPath(projectDir, RoughFile, defaultFilename);
         private static string ForestPath(string defaultFilename, string projectDir) => GetPath(projectDir, ForestFile, defaultFilename);
+        private static string PaintPath(string defaultFilename, string projectDir) => GetPath(projectDir, PaintFile, defaultFilename);
 
         private static string HeightConfigPath => HeightPath(ConfigHeightFile.Value, ConfigMapSourceDir.Value);
         private static string BiomeConfigPath => BiomePath(ConfigBiomeFile.Value, ConfigMapSourceDir.Value);
         private static string LocationConfigPath => LocationPath(ConfigLocationFile.Value, ConfigMapSourceDir.Value);
         private static string RoughConfigPath => RoughPath(ConfigRoughFile.Value, ConfigMapSourceDir.Value);
         private static string ForestConfigPath => ForestPath(ConfigForestFile.Value, ConfigMapSourceDir.Value);
+        private static string PaintConfigPath => PaintPath(ConfigPaintFile.Value, ConfigMapSourceDir.Value);
 
 
         private void InitSettings(long worldUId, bool enabled)
@@ -142,7 +150,7 @@ public partial class BetterContinents
                         Heightmap = null;
                 }
 
-                BaseHeightNoise = NoiseStackSettings.Default();
+                BaseHeightNoise = new();
 
                 string biomemapPath = BiomeConfigPath;
                 if (!string.IsNullOrEmpty(biomemapPath))
@@ -192,6 +200,16 @@ public partial class BetterContinents
                     if (!Forestmap.LoadSourceImage() || !Forestmap.CreateMap())
                         Forestmap = null;
                 }
+
+
+                string paintmapPath = PaintConfigPath;
+                if (!string.IsNullOrEmpty(paintmapPath))
+                {
+                    Paintmap = new(paintmapPath);
+                    if (!Paintmap.LoadSourceImage() || !Paintmap.CreateMap())
+                        Forestmap = null;
+                }
+
 
                 MapEdgeDropoff = ConfigMapEdgeDropoff.Value;
                 MountainsAllowedAtCenter = ConfigMountainsAllowedAtCenter.Value;
@@ -317,6 +335,24 @@ public partial class BetterContinents
         }
         public string GetForestPath() => Forestmap?.FilePath ?? string.Empty;
         public void DisableForestmap() => Forestmap = null;
+
+
+        public void SetPaintPath(string path, string projectDir = "")
+        {
+            string finalPath = PaintPath(path, projectDir);
+            if (!string.IsNullOrEmpty(finalPath))
+            {
+                Paintmap = new(finalPath);
+                if (!Paintmap.LoadSourceImage() || !Paintmap.CreateMap())
+                    Paintmap = null;
+            }
+            else
+            {
+                Paintmap = null;
+            }
+        }
+        public string GetPaintPath() => Paintmap?.FilePath ?? string.Empty;
+        public void DisablePaintmap() => Paintmap = null;
         #endregion
 
         private static float FeatureScaleCurve(float x) => ScaleRange(Gamma(x, 0.726965071031f), 0.2f, 3f);
@@ -382,7 +418,7 @@ public partial class BetterContinents
                 else
                 {
                     output($"Base height noise stack:");
-                    BaseHeightNoise?.Dump(str => output($"    {str}"));
+                    BaseHeightNoise.Dump(str => output($"    {str}"));
                 }
 
                 if (Roughmap != null)
@@ -438,6 +474,16 @@ public partial class BetterContinents
                 if (OverrideStartPosition)
                 {
                     output($"StartPosition {StartPositionX}, {StartPositionY}");
+                }
+
+                if (Paintmap != null)
+                {
+                    output($"Paintmap file {Paintmap.FilePath}");
+                    output($"Paintmap size {Paintmap.Size}x{Paintmap.Size}");
+                }
+                else
+                {
+                    output($"Paintmap disabled");
                 }
             }
             else
@@ -549,11 +595,18 @@ public partial class BetterContinents
 
                 if (Version >= 7)
                 {
-                    BaseHeightNoise?.Serialize(pkg);
+                    BaseHeightNoise.Serialize(pkg);
                 }
                 if (Version >= 9)
                 {
                     pkg.Write(BiomePrecision);
+                }
+                if (Version >= 10)
+                {
+                    if (Paintmap == null)
+                        pkg.Write("");
+                    else
+                        Paintmap.Serialize(pkg, Version, network);
                 }
             }
         }
@@ -650,12 +703,12 @@ public partial class BetterContinents
                 OceanChannelsEnabled = pkg.ReadBool();
 
                 RiversEnabled = true;
-                ForestScale = 1;
+                ForestScale = 1f;
                 ForestAmountOffset = 0;
                 OverrideStartPosition = false;
                 StartPositionX = 0;
                 StartPositionY = 0;
-                BaseHeightNoise = null;
+                BaseHeightNoise = new();
                 HeightmapOverrideAll = false;
                 HeightmapMask = 0;
                 BiomePrecision = 0;
@@ -721,9 +774,15 @@ public partial class BetterContinents
                     BaseHeightNoise = NoiseStackSettings.Deserialize(pkg);
                 if (Version >= 9)
                     BiomePrecision = pkg.ReadInt();
+                if (Version >= 10)
+                    Paintmap = ImageMapColor.Load(pkg);
             }
         }
-
+        public Color ApplyPaintMap(float x, float y)
+        {
+            if (Paintmap == null) return Color.white;
+            return Paintmap.GetValue(x, y);
+        }
         public float ApplyHeightmap(float x, float y, float height)
         {
             if (Heightmap == null || (HeightmapBlend == 0 && HeightmapAdd == 0 && HeightmapMask == 0))
@@ -867,6 +926,19 @@ public partial class BetterContinents
                 if (!Forestmap.LoadSourceImage()) return;
             }
             Forestmap.CreateMap();
+        }
+
+        public void ReloadPaintmap()
+        {
+            if (Paintmap == null) return;
+            if (!Paintmap.LoadSourceImage())
+            {
+                if (!File.Exists(PaintConfigPath) || File.Exists(Paintmap.FilePath)) return;
+                LogWarning($"Cannot find image {Paintmap.FilePath}: Using default path from config.");
+                Paintmap.FilePath = PaintConfigPath;
+                if (!Paintmap.LoadSourceImage()) return;
+            }
+            Paintmap.CreateMap();
         }
     }
 }

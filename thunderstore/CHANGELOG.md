@@ -1,3 +1,8 @@
+- v0.7.20
+  - Adds a new map "paintmap" to set the default paint or lava.
+  - Fixes the world not loading with default settings (should be very close to vanilla now).
+  - Removes the Ashlands and Deep North ocean gap when the mod is enabled.
+
 - v0.7.19
   - Fixed for the new game version.
 

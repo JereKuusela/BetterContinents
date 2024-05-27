@@ -44,6 +44,7 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<string> ConfigLocationFile;
 
     public static ConfigEntry<string> ConfigSpawnFile;
+    public static ConfigEntry<string> ConfigPaintFile;
 
     public static ConfigEntry<string> ConfigRoughFile;
     public static ConfigEntry<float> ConfigRoughmapBlend;
@@ -227,6 +228,12 @@ public partial class BetterContinents : BaseUnityPlugin
                 groupBuilder.AddValue("Locationmap File")
                     .Description("Path to a locationmap file to use. See the description on Nexusmods.com for the specifications (it will fail if they are not met)")
                     .Default("").Bind(out ConfigLocationFile);
+            })
+            .AddGroup("BetterContinents.Paintmap", groupBuilder =>
+            {
+                groupBuilder.AddValue("Paintmap File")
+                    .Description("Path to a paintmap file to use.")
+                    .Default("").Bind(out ConfigPaintFile);
             });
         if (ConfigLocationFile.Value == "" && ConfigSpawnFile.Value != "")
         {
