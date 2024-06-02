@@ -339,5 +339,11 @@ public partial class BetterContinents
                 pos /= Settings.ForestScale;
             __result = Settings.ApplyForest(NormalizedX(pos.x), NormalizedY(pos.z), __result);
         }
+
+        public static bool GetAshlandsOceanGradientPrefix(float x, float y, ref float __result)
+        {
+            __result = Settings.ApplyHeatmap(NormalizedX(x), NormalizedY(y));
+            return false;
+        }
     }
 }

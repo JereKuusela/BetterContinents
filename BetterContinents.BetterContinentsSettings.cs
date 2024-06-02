@@ -41,6 +41,7 @@ public partial class BetterContinents
         public bool ForestFactorOverrideAllTrees;
         public bool HeightmapOverrideAll = true;
         public float HeightmapMask;
+        public float HeatMapScale = 10f;
         public NoiseStackSettings BaseHeightNoise = new();
 
         // Non-serialized
@@ -52,6 +53,7 @@ public partial class BetterContinents
         private ImageMapFloat? Roughmap;
         private ImageMapFloat? Flatmap;
         private ImageMapFloat? Forestmap;
+        private ImageMapFloat? Heatmap;
 
         public bool HasHeightmap => Heightmap != null;
         public bool HasBiomemap => Biomemap != null;
@@ -60,6 +62,7 @@ public partial class BetterContinents
         public bool HasFlatmap => Flatmap != null;
         public bool HasForestmap => Forestmap != null;
         public bool HasPaintmap => Paintmap != null;
+        public bool HasHeatmap => Heatmap != null;
 
 
         public bool AnyImageMap => HasHeightmap
@@ -68,7 +71,8 @@ public partial class BetterContinents
                                    || HasBiomemap
                                    || HasLocationmap
                                    || HasForestmap
-                                   || HasPaintmap;
+                                   || HasPaintmap
+                                   || HasHeatmap;
         public bool ShouldHeightmapOverrideAll => HasHeightmap && HeightmapOverrideAll;
 
         public static BetterContinentsSettings Create()
@@ -101,6 +105,7 @@ public partial class BetterContinents
         private static readonly string LocationFile = "Locationmap.png";
         private static readonly string RoughFile = "Roughmap.png";
         private static readonly string ForestFile = "Forestmap.png";
+        private static readonly string HeatFile = "Heatmap.png";
         private static readonly string PaintFile = "Paintmap.png";
 
         private static string HeightPath(string defaultFilename, string projectDir) => GetPath(projectDir, HeightFile, defaultFilename);
@@ -108,6 +113,7 @@ public partial class BetterContinents
         private static string LocationPath(string defaultFilename, string projectDir) => GetPath(projectDir, LocationFile, defaultFilename);
         private static string RoughPath(string defaultFilename, string projectDir) => GetPath(projectDir, RoughFile, defaultFilename);
         private static string ForestPath(string defaultFilename, string projectDir) => GetPath(projectDir, ForestFile, defaultFilename);
+        private static string HeatPath(string defaultFilename, string projectDir) => GetPath(projectDir, HeatFile, defaultFilename);
         private static string PaintPath(string defaultFilename, string projectDir) => GetPath(projectDir, PaintFile, defaultFilename);
 
         private static string HeightConfigPath => HeightPath(ConfigHeightFile.Value, ConfigMapSourceDir.Value);
@@ -115,6 +121,7 @@ public partial class BetterContinents
         private static string LocationConfigPath => LocationPath(ConfigLocationFile.Value, ConfigMapSourceDir.Value);
         private static string RoughConfigPath => RoughPath(ConfigRoughFile.Value, ConfigMapSourceDir.Value);
         private static string ForestConfigPath => ForestPath(ConfigForestFile.Value, ConfigMapSourceDir.Value);
+        private static string HeatConfigPath => HeatPath(ConfigHeatFile.Value, ConfigMapSourceDir.Value);
         private static string PaintConfigPath => PaintPath(ConfigPaintFile.Value, ConfigMapSourceDir.Value);
 
 
@@ -165,6 +172,11 @@ public partial class BetterContinents
                 MapEdgeDropoff = ConfigMapEdgeDropoff.Value;
                 MountainsAllowedAtCenter = ConfigMountainsAllowedAtCenter.Value;
                 BiomePrecision = ConfigBiomePrecision.Value;
+
+                Paintmap = ImageMapColor.Create(PaintConfigPath);
+
+                Heatmap = ImageMapFloat.Create(HeatConfigPath);
+                HeatMapScale = ConfigHeatScale.Value;
             }
             DynamicPatch();
         }
@@ -200,50 +212,54 @@ public partial class BetterContinents
             get => Mathf.InverseLerp(1, -1, ForestAmountOffset);
         }
 
-        public void SetHeightPath(string path, string projectDir = "")
-        {
-            Heightmap = ImageMapFloat.Create(HeightPath(path, projectDir));
-        }
-
+        public void SetHeightPath(string path) => Heightmap = ImageMapFloat.Create(path);
         public string GetHeightPath() => Heightmap?.FilePath ?? string.Empty;
 
-        public void DisableHeightmap() => Heightmap = null;
+        public string ResolveHeightPath(string path) => ResolvePath(path, HeightFile);
 
-        public void SetBiomePath(string path, string projectDir = "")
-        {
-            Biomemap = ImageMapBiome.Create(BiomePath(path, projectDir));
-        }
+        public void SetBiomePath(string path) => Biomemap = ImageMapBiome.Create(path);
         public string GetBiomePath() => Biomemap?.FilePath ?? string.Empty;
-        public void DisableBiomemap() => Biomemap = null;
+        public string ResolveBiomePath(string path) => ResolvePath(path, BiomeFile);
 
-        public void SetLocationPath(string path, string projectDir = "")
-        {
-            Locationmap = ImageMapLocation.Create(LocationPath(path, projectDir));
-        }
+        public void SetLocationPath(string path) => Locationmap = ImageMapLocation.Create(path);
         public string GetLocationPath() => Locationmap?.FilePath ?? string.Empty;
-        public void DisableLocationMap() => Locationmap = null;
+        public string ResolveLocationPath(string path) => ResolvePath(path, LocationFile);
 
-        public void SetRoughPath(string path, string projectDir = "")
-        {
-            Roughmap = ImageMapFloat.Create(RoughPath(path, projectDir));
-        }
+        public void SetRoughPath(string path) => Roughmap = ImageMapFloat.Create(path);
         public string GetRoughPath() => Roughmap?.FilePath ?? string.Empty;
-        public void DisableRoughmap() => Roughmap = null;
+        public string ResolveRoughPath(string path) => ResolvePath(path, RoughFile);
 
-        public void SetForestPath(string path, string projectDir = "")
-        {
-            Forestmap = ImageMapFloat.Create(ForestPath(path, projectDir));
-        }
+        public void SetForestPath(string path) => Forestmap = ImageMapFloat.Create(path);
         public string GetForestPath() => Forestmap?.FilePath ?? string.Empty;
-        public void DisableForestmap() => Forestmap = null;
+        public string ResolveForestPath(string path) => ResolvePath(path, ForestFile);
 
+        public void SetHeatPath(string path) => Heatmap = ImageMapFloat.Create(path);
+        public string GetHeatPath() => Heatmap?.FilePath ?? string.Empty;
+        public string ResolveHeatPath(string path) => ResolvePath(path, HeatFile);
 
-        public void SetPaintPath(string path, string projectDir = "")
-        {
-            Paintmap = ImageMapColor.Create(PaintPath(path, projectDir));
-        }
+        public void SetPaintPath(string path) => Paintmap = ImageMapColor.Create(path);
         public string GetPaintPath() => Paintmap?.FilePath ?? string.Empty;
-        public void DisablePaintmap() => Paintmap = null;
+
+        public string ResolvePaintPath(string path) => ResolvePath(path, PaintFile);
+        private string ResolvePath(string path, string defaultName)
+        {
+            path = CleanPath(path);
+            if (File.Exists(path))
+                return path;
+            if (string.IsNullOrEmpty(path))
+            {
+                if (File.Exists(Path.Combine(ConfigMapSourceDir.Value, defaultName)))
+                    return Path.Combine(ConfigMapSourceDir.Value, defaultName);
+                return "";
+            }
+            var name = Path.GetFileName(path);
+            var directory = Path.GetDirectoryName(path);
+            if (name != "" && File.Exists(Path.Combine(ConfigMapSourceDir.Value, name)))
+                return Path.Combine(ConfigMapSourceDir.Value, name);
+            if (directory != "" && File.Exists(Path.Combine(directory, defaultName)))
+                return Path.Combine(directory, defaultName);
+            return "";
+        }
         #endregion
 
         private static float FeatureScaleCurve(float x) => ScaleRange(Gamma(x, 0.726965071031f), 0.2f, 3f);
@@ -375,6 +391,17 @@ public partial class BetterContinents
                 {
                     output($"Paintmap disabled");
                 }
+
+                if (Heatmap != null)
+                {
+                    output($"Heatmap file {Heatmap.FilePath}");
+                    output($"Heatmap size {Heatmap.Size}x{Heatmap.Size}");
+                    output($"Heatmap scale {HeatMapScale}");
+                }
+                else
+                {
+                    output($"Heatmap disabled");
+                }
             }
             else
             {
@@ -481,6 +508,7 @@ public partial class BetterContinents
             float f = UseRoughInvertedAsFlat ? 1 - image.GetValue(x, y) : image.GetValue(x, y);
             return Mathf.Lerp(height, flatHeight, f * FlatmapBlend);
         }
+        public float ApplyHeatmap(float x, float y) => HeatMapScale * (Heatmap?.GetValue(x, y) ?? 0);
 
         public float ApplyForest(float x, float y, float forest)
         {
@@ -586,6 +614,18 @@ public partial class BetterContinents
                 if (!Forestmap.LoadSourceImage()) return;
             }
             Forestmap.CreateMap();
+        }
+        public void ReloadHeatmap()
+        {
+            if (Heatmap == null) return;
+            if (!Heatmap.LoadSourceImage())
+            {
+                if (!File.Exists(HeatConfigPath) || File.Exists(Heatmap.FilePath)) return;
+                LogWarning($"Cannot find image {Heatmap.FilePath}: Using default path from config.");
+                Heatmap.FilePath = ForestConfigPath;
+                if (!Heatmap.LoadSourceImage()) return;
+            }
+            Heatmap.CreateMap();
         }
 
         public void ReloadPaintmap()

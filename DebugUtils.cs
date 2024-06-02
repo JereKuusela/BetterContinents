@@ -71,6 +71,9 @@ public partial class DebugUtils
                     if (BetterContinents.Settings.HasPaintmap)
                         reload.AddCommand("pm", "Paintmap", "Reloads the paintmap",
                             HeightmapCommand(_ => BetterContinents.Settings.ReloadPaintmap()));
+                    if (BetterContinents.Settings.HasHeatmap)
+                        reload.AddCommand("heat", "Heatmap", "Reloads the heatmap",
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadHeatmap()));
                     if (BetterContinents.Settings.AnyImageMap)
                     {
                         reload.AddCommand("all", "All", "Reloads all image maps", HeightmapCommand(_ =>
@@ -82,6 +85,7 @@ public partial class DebugUtils
                             if (BetterContinents.Settings.HasLocationmap) BetterContinents.Settings.ReloadLocationmap();
                             if (BetterContinents.Settings.HasForestmap) BetterContinents.Settings.ReloadForestmap();
                             if (BetterContinents.Settings.HasPaintmap) BetterContinents.Settings.ReloadPaintmap();
+                            if (BetterContinents.Settings.HasHeatmap) BetterContinents.Settings.ReloadHeatmap();
                         }));
                     }
                 });
@@ -200,15 +204,14 @@ public partial class DebugUtils
                         defaultValue: string.Empty,
                         setter: SetHeightmapValue<string>(path =>
                         {
-                            if (string.IsNullOrEmpty(path))
-                            {
-                                BetterContinents.Settings.DisableHeightmap();
-                                Console.instance.Print($"<color=#ffa500>Heightmap disabled!</color>");
-                            }
-                            else if (!File.Exists(CleanPath(path)))
-                                Console.instance.Print($"<color=#ff0000>ERROR: {path} doesn't exist</color>");
+                            var fullPath = BetterContinents.Settings.ResolveHeightPath(path);
+                            BetterContinents.Settings.SetHeightPath(fullPath);
+                            if (BetterContinents.Settings.HasHeightmap)
+                                Console.instance.Print($"<color=#ffa500>Heightmap enabled!</color>");
+                            else if (string.IsNullOrEmpty(path))
+                                Console.instance.Print($"<color=#ff0000>Heightmap disabled!</color>");
                             else
-                                BetterContinents.Settings.SetHeightPath(path);
+                                Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
                         }),
                         getter: () => BetterContinents.Settings.GetHeightPath());
                     group.AddValue("ov", "Heightmap Override All",
@@ -243,15 +246,14 @@ public partial class DebugUtils
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
-                        if (string.IsNullOrEmpty(path))
-                        {
-                            BetterContinents.Settings.DisableRoughmap();
-                            Console.instance.Print($"<color=#ffa500>Roughmap disabled!</color>");
-                        }
-                        else if (!File.Exists(CleanPath(path)))
-                            Console.instance.Print($"<color=#ff0000>ERROR: {path} doesn't exist</color>");
+                        var fullPath = BetterContinents.Settings.ResolveRoughPath(path);
+                        BetterContinents.Settings.SetRoughPath(fullPath);
+                        if (BetterContinents.Settings.HasRoughmap)
+                            Console.instance.Print($"<color=#ffa500>Roughmap enabled!</color>");
+                        else if (string.IsNullOrEmpty(path))
+                            Console.instance.Print($"<color=#ff0000>Roughmap disabled!</color>");
                         else
-                            BetterContinents.Settings.SetRoughPath(path);
+                            Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
                     }),
                     getter: () => BetterContinents.Settings.GetRoughPath());
                 group.AddValue("bl", "Roughmap Blend", "Roughmap blend",
@@ -266,15 +268,14 @@ public partial class DebugUtils
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
-                        if (string.IsNullOrEmpty(path))
-                        {
-                            BetterContinents.Settings.DisableBiomemap();
-                            Console.instance.Print($"<color=#ffa500>Biomemap disabled!</color>");
-                        }
-                        else if (!File.Exists(CleanPath(path)))
-                            Console.instance.Print($"<color=#ff0000>ERROR: {path} doesn't exist</color>");
+                        var fullPath = BetterContinents.Settings.ResolveBiomePath(path);
+                        BetterContinents.Settings.SetBiomePath(fullPath);
+                        if (BetterContinents.Settings.HasBiomemap)
+                            Console.instance.Print($"<color=#ffa500>Biomemap enabled!</color>");
+                        else if (string.IsNullOrEmpty(path))
+                            Console.instance.Print($"<color=#ff0000>Biomemap disabled!</color>");
                         else
-                            BetterContinents.Settings.SetBiomePath(path);
+                            Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
                     }),
                     getter: () => BetterContinents.Settings.GetBiomePath());
 
@@ -290,21 +291,14 @@ public partial class DebugUtils
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
-                        if (string.IsNullOrEmpty(path))
-                        {
-                            BetterContinents.Settings.DisableLocationMap();
-                            Console.instance.Print($"<color=#ffa500>Locationmap disabled!</color>");
-                            Console.instance.Print(
-                                $"<color=#ffa500>INFO: Use 'bc regenloc' to update the location spawns in the world</color>");
-                        }
-                        else if (!File.Exists(CleanPath(path)))
-                            Console.instance.Print($"<color=#ff0000>ERROR: {path} doesn't exist</color>");
+                        var fullPath = BetterContinents.Settings.ResolveLocationPath(path);
+                        BetterContinents.Settings.SetLocationPath(fullPath);
+                        if (BetterContinents.Settings.HasLocationmap)
+                            Console.instance.Print($"<color=#ffa500>Locationmap enabled!</color>");
+                        else if (string.IsNullOrEmpty(path))
+                            Console.instance.Print($"<color=#ff0000>Locationmap disabled!</color>");
                         else
-                        {
-                            BetterContinents.Settings.SetLocationPath(path);
-                            Console.instance.Print(
-                                $"<color=#ffa500>INFO: Use 'bc regenloc' to update the location spawns in the world</color>");
-                        }
+                            Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
                     }),
                     getter: () => BetterContinents.Settings.GetLocationPath());
             });
@@ -316,19 +310,39 @@ public partial class DebugUtils
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
-                        if (string.IsNullOrEmpty(path))
-                        {
-                            BetterContinents.Settings.DisablePaintmap();
-                            Console.instance.Print($"<color=#ffa500>Paintmap disabled!</color>");
-                        }
-                        else if (!File.Exists(CleanPath(path)))
-                            Console.instance.Print($"<color=#ff0000>ERROR: {path} doesn't exist</color>");
+                        var fullPath = BetterContinents.Settings.ResolvePaintPath(path);
+                        BetterContinents.Settings.SetPaintPath(fullPath);
+                        if (BetterContinents.Settings.HasPaintmap)
+                            Console.instance.Print($"<color=#ffa500>Paintmap enabled!</color>");
+                        else if (string.IsNullOrEmpty(path))
+                            Console.instance.Print($"<color=#ff0000>Paintmap disabled!</color>");
                         else
-                        {
-                            BetterContinents.Settings.SetPaintPath(path);
-                        }
+                            Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
                     }),
                     getter: () => BetterContinents.Settings.GetPaintPath());
+            });
+            bc.AddGroup("heat", "Heatmap", "Heatmap settings, get more info with 'bc param s help'", group =>
+            {
+                group.AddValue("fn", "Heatmap Filename",
+                    "Sets heatmap filename (full path including filename, or nothing to disable)",
+                    defaultValue: string.Empty,
+                    setter: SetHeightmapValue<string>(path =>
+                    {
+                        var fullPath = BetterContinents.Settings.ResolveHeatPath(path);
+                        BetterContinents.Settings.SetHeatPath(fullPath);
+                        if (BetterContinents.Settings.HasHeatmap)
+                            Console.instance.Print($"<color=#ffa500>Heatmap enabled!</color>");
+                        else if (string.IsNullOrEmpty(path))
+                            Console.instance.Print($"<color=#ff0000>Heatmap disabled!</color>");
+                        else
+                            Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
+                    }),
+                    getter: () => BetterContinents.Settings.GetHeatPath());
+
+                group.AddValue("sc", "Heatmap Scale", "Heatmap scale",
+                    defaultValue: 10f, minValue: 0f, maxValue: 100f,
+                    setter: SetHeightmapValue<float>(value => BetterContinents.Settings.HeatMapScale = value),
+                    getter: () => BetterContinents.Settings.HeatMapScale);
             });
             bc.AddGroup("fo", "Forest", "Forest settings, get more info with 'bc param fo help'", group =>
             {
@@ -353,15 +367,14 @@ public partial class DebugUtils
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
-                        if (string.IsNullOrEmpty(path))
-                        {
-                            BetterContinents.Settings.DisableForestmap();
-                            Console.instance.Print($"<color=#ffa500>Forestmap disabled!</color>");
-                        }
-                        else if (!File.Exists(BetterContinents.CleanPath(path)))
-                            Console.instance.Print($"<color=#ff0000>ERROR: {path} doesn't exist</color>");
+                        var fullPath = BetterContinents.Settings.ResolveForestPath(path);
+                        BetterContinents.Settings.SetForestPath(fullPath);
+                        if (BetterContinents.Settings.HasForestmap)
+                            Console.instance.Print($"<color=#ffa500>Forestmap enabled!</color>");
+                        else if (string.IsNullOrEmpty(path))
+                            Console.instance.Print($"<color=#ff0000>Forestmap disabled!</color>");
                         else
-                            BetterContinents.Settings.SetForestPath(path);
+                            Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
                     }),
                     getter: () => BetterContinents.Settings.GetForestPath());
                 group.AddValue("mu", "Forestmap Multiply", "Forestmap multiply",
@@ -396,8 +409,6 @@ public partial class DebugUtils
                         setter: SetHeightmapValue<float>(value =>
                         {
                             BetterContinents.Settings.StartPositionX = value;
-                            Console.instance.Print(
-                                $"<color=#ffa500>INFO: Use 'bc regenloc' to update the location spawns in the world (including the start location)</color>");
                         }),
                         getter: () => BetterContinents.Settings.StartPositionX);
                     group.AddValue("y", "Start Position Y", "Start position y",
@@ -405,8 +416,6 @@ public partial class DebugUtils
                         setter: SetHeightmapValue<float>(value =>
                         {
                             BetterContinents.Settings.StartPositionY = value;
-                            Console.instance.Print(
-                                $"<color=#ffa500>INFO: Use 'bc regenloc' to update the location spawns in the world (including the start location)</color>");
                         }),
                         getter: () => BetterContinents.Settings.StartPositionY);
                 });

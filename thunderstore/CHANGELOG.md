@@ -1,6 +1,8 @@
 - v0.7.20
   - Adds a new map "paintmap" to set the default paint or lava.
+  - Adds a new map "heatmap" to set the water heat.
   - Adds a new setting to override the save version.
+  - Adds better file path resolving when setting map file paths.
   - Fixes the world not loading with default settings (should be very close to vanilla now).
   - Overhauls the save file format to make development easier.
   - Removes excess data from the save file.

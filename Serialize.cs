@@ -48,6 +48,9 @@ public partial class BetterContinents
     BiomePrecision,
     Paintmap,
     PaintmapPath,
+    Heatmap,
+    HeatmapPath,
+    HeatmapScale,
   }
   public partial class BetterContinentsSettings
   {
@@ -269,6 +272,23 @@ public partial class BetterContinents
         }
       }
 
+      if (Heatmap != null)
+      {
+        pkg.Write((int)DataKey.Heatmap);
+        pkg.Write(Heatmap.SourceData);
+        if (!network)
+        {
+          pkg.Write((int)DataKey.HeatmapPath);
+          pkg.Write(Heatmap.FilePath);
+        }
+
+        if (HeatMapScale != 10f)
+        {
+          pkg.Write((int)DataKey.HeatmapScale);
+          pkg.Write(HeatMapScale);
+        }
+      }
+
     }
 
     private void Deserialize(ZPackage pkg)
@@ -430,6 +450,17 @@ public partial class BetterContinents
             path = pkg.ReadString();
             if (Paintmap != null)
               Paintmap.FilePath = path;
+            break;
+          case DataKey.Heatmap:
+            Heatmap = ImageMapFloat.Create(pkg.ReadByteArray());
+            break;
+          case DataKey.HeatmapPath:
+            path = pkg.ReadString();
+            if (Heatmap != null)
+              Heatmap.FilePath = path;
+            break;
+          case DataKey.HeatmapScale:
+            HeatMapScale = pkg.ReadSingle();
             break;
           default:
             LogError("Failed to load the save file. Unknown feature: " + key);

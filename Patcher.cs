@@ -13,6 +13,7 @@ public partial class BetterContinents
     PatchAddRivers();
     PatchForestFactorPrefix();
     PatchForestFactorPostfix();
+    PatchHeatPrefix();
   }
   private static int HeightmapGetBiomePatched = 0;
   private static void PatchHeightmap()
@@ -330,6 +331,28 @@ public partial class BetterContinents
       Log("Patching WorldGenerator.GetForestFactor postfix");
       HarmonyInstance.Patch(method, postfix: new(patch));
       ForestFactorPostfixPatched = true;
+    }
+  }
+
+  private static bool HeatPrefixPatched = false;
+  private static void PatchHeatPrefix()
+  {
+    var toPatch = Settings.EnabledForThisWorld && Settings.HasHeatmap && Settings.HeatMapScale > 0f;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetAshlandsOceanGradient), [typeof(float), typeof(float)]);
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetAshlandsOceanGradientPrefix));
+    if (toPatch == HeatPrefixPatched)
+      return;
+    if (HeatPrefixPatched)
+    {
+      Log("Unpatching WorldGenerator.GetAshlandsOceanGradient prefix");
+      HarmonyInstance.Unpatch(method, patch);
+      HeatPrefixPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching WorldGenerator.GetAshlandsOceanGradient prefix");
+      HarmonyInstance.Patch(method, prefix: new(patch));
+      HeatPrefixPatched = true;
     }
   }
 }

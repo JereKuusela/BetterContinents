@@ -44,6 +44,7 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<string> ConfigLocationFile;
 
     public static ConfigEntry<string> ConfigSpawnFile;
+
     public static ConfigEntry<string> ConfigPaintFile;
 
     public static ConfigEntry<string> ConfigRoughFile;
@@ -64,6 +65,10 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<bool> ConfigDebugSkipDefaultLocationPlacement;
     public static ConfigEntry<string> ConfigDebugResetCommand;
     public static ConfigEntry<string> ConfigOverrideVersion;
+
+
+    public static ConfigEntry<float> ConfigHeatScale;
+    public static ConfigEntry<string> ConfigHeatFile;
 
     public static BetterContinents instance;
 #nullable enable
@@ -238,6 +243,15 @@ public partial class BetterContinents : BaseUnityPlugin
                 groupBuilder.AddValue("Paintmap File")
                     .Description("Path to a paintmap file to use.")
                     .Default("").Bind(out ConfigPaintFile);
+            })
+            .AddGroup("BetterContinents.Heatmap", groupBuilder =>
+            {
+                groupBuilder.AddValue("Heatmap File")
+                    .Description("Path to a heatmap file to use.")
+                    .Default("").Bind(out ConfigHeatFile);
+                groupBuilder.AddValue("Heatmap Scale")
+                    .Description("Multiplies the heatmap color value. Most heat effects cap at 1 value.")
+                    .Default(10f).Range(0f, 100f).Bind(out ConfigHeatScale);
             });
         if (ConfigLocationFile.Value == "" && ConfigSpawnFile.Value != "")
         {
