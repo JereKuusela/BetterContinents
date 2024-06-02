@@ -200,7 +200,7 @@ public partial class DebugUtils
                 group =>
                 {
                     group.AddValue("fn", "Heightmap filename",
-                        "Set heightmap filename (full path including filename, or nothing to disable)",
+                        "Set heightmap filename (full path, directory or file name)",
                         defaultValue: string.Empty,
                         setter: SetHeightmapValue<string>(path =>
                         {
@@ -242,7 +242,7 @@ public partial class DebugUtils
             bc.AddGroup("r", "Roughmap", "Roughmap settings, get more info with 'bc param r help'", group =>
             {
                 group.AddValue("fn", "Roughmap Filename",
-                    "Sets roughmap filename (full path including filename, or nothing to disable)",
+                    "Sets roughmap filename (full path, directory or file name)",
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
@@ -264,7 +264,7 @@ public partial class DebugUtils
             bc.AddGroup("b", "Biomemap", "Biomemap settings, get more info with 'bc param b help'", group =>
             {
                 group.AddValue("fn", "Biomemap Filename",
-                    "Sets biomemap filename (full path including filename, or nothing to disable)",
+                    "Sets biomemap filename (full path, directory or file name)",
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
@@ -287,7 +287,7 @@ public partial class DebugUtils
             bc.AddGroup("l", "Locationmap", "Locationmap settings, get more info with 'bc param s help'", group =>
             {
                 group.AddValue("fn", "Locationmap Filename",
-                    "Sets locationmap filename (full path including filename, or nothing to disable)",
+                    "Sets locationmap filename (full path, directory or file name)",
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
@@ -306,7 +306,7 @@ public partial class DebugUtils
             bc.AddGroup("p", "Paintmap", "Paintmap settings, get more info with 'bc param s help'", group =>
             {
                 group.AddValue("fn", "Paintmap Filename",
-                    "Sets paintmap filename (full path including filename, or nothing to disable)",
+                    "Sets paintmap filename (full path, directory or file name)",
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
@@ -324,7 +324,7 @@ public partial class DebugUtils
             bc.AddGroup("heat", "Heatmap", "Heatmap settings, get more info with 'bc param s help'", group =>
             {
                 group.AddValue("fn", "Heatmap Filename",
-                    "Sets heatmap filename (full path including filename, or nothing to disable)",
+                    "Sets heatmap filename (full path, directory or file name)",
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
@@ -363,7 +363,7 @@ public partial class DebugUtils
                     }),
                     getter: () => BetterContinents.Settings.ForestFactorOverrideAllTrees);
                 group.AddValue("fn", "Forestmap Filename",
-                    "Sets forestmap filename (full path including filename, or nothing to disable)",
+                    "Sets forestmap filename (full path, directory or file name)",
                     defaultValue: string.Empty,
                     setter: SetHeightmapValue<string>(path =>
                     {
