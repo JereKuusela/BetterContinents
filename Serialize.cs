@@ -431,6 +431,10 @@ public partial class BetterContinents
             if (Paintmap != null)
               Paintmap.FilePath = path;
             break;
+          default:
+            LogError("Failed to load the save file. Unknown feature: " + key);
+            EnabledForThisWorld = false;
+            return;
         }
 
       }
@@ -565,11 +569,9 @@ public partial class BetterContinents
       RidgeBlendSigmoidXOffset = pkg.ReadSingle();
 
       string heightmapFilePath = pkg.ReadString();
-      Log("Loading heightmap");
       if (!string.IsNullOrEmpty(heightmapFilePath))
       {
         Heightmap = ImageMapFloat.Create(pkg.ReadByteArray(), heightmapFilePath, Version <= 4);
-        Log("Loaded heightmap");
         HeightmapAmount = pkg.ReadSingle();
         HeightmapBlend = pkg.ReadSingle();
         HeightmapAdd = pkg.ReadSingle();
@@ -590,9 +592,7 @@ public partial class BetterContinents
       if (Version >= 2)
       {
         RiversEnabled = pkg.ReadBool();
-        Log("Loading biomemap");
         Biomemap = ImageMapBiome.LoadLegacy(pkg, Version);
-        Log("Loaded biomemap");
 
         ForestScale = pkg.ReadSingle();
         ForestAmountOffset = pkg.ReadSingle();
@@ -601,7 +601,6 @@ public partial class BetterContinents
         StartPositionX = pkg.ReadSingle();
         StartPositionY = pkg.ReadSingle();
       }
-      Log("Loading locationmap");
       if (Version >= 3)
         Locationmap = ImageMapLocation.LoadLegacy(pkg, Version);
       if (Version >= 5)
@@ -635,7 +634,6 @@ public partial class BetterContinents
         MountainsAllowedAtCenter = pkg.ReadBool();
         ForestFactorOverrideAllTrees = pkg.ReadBool();
       }
-      Log("Loading locationma2p");
       if (Version >= 6)
       {
         HeightmapOverrideAll = pkg.ReadBool();
