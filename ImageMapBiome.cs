@@ -9,8 +9,50 @@ using UnityEngine;
 
 namespace BetterContinents;
 
-internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
+internal class ImageMapBiome() : ImageMapBase
 {
+    public static ImageMapBiome? Create(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return null;
+        ImageMapBiome map = new()
+        {
+            FilePath = path
+        };
+        if (!map.LoadSourceImage())
+            return null;
+        if (!map.CreateMap())
+            return null;
+        return map;
+    }
+    public static ImageMapBiome? Create(byte[] data)
+    {
+        ImageMapBiome map = new()
+        {
+            Map = data.Select(b => ByteToBiome[b]).ToArray()
+        };
+        return map;
+    }
+    public static ImageMapBiome? Create(byte[] data, string colors, string path)
+    {
+        ImageMapBiome map = new()
+        {
+            SourceData = data,
+            FilePath = path,
+            Colors = ParseColors(colors)
+        };
+        if (!map.CreateMap())
+            return null;
+        return map;
+    }
+    private static readonly Heightmap.Biome[] ByteToBiome = new int[32].Select((_, i) => i == 0 ? 0 : (Heightmap.Biome)(1 << (i - 1))).ToArray();
+    public byte[] Serialize() =>
+        Map.Select(b =>
+        {
+            var idx = Array.IndexOf(ByteToBiome, b);
+            return idx < 0 ? (byte)0 : (byte)idx;
+        }).ToArray();
+
     private Heightmap.Biome[] Map = [];
     private Dictionary<Heightmap.Biome, Color32> Colors = [];
     public override bool LoadSourceImage()
@@ -82,6 +124,9 @@ internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
         return true;
     }
 
+    private readonly float[] biomeWeights = new float[4];
+    private readonly Heightmap.Biome[] biomes = new Heightmap.Biome[4];
+    private int topBiomeIdx = 0;
     public Heightmap.Biome GetValue(float x, float y)
     {
         float xa = x * (Size - 1);
@@ -93,36 +138,8 @@ internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
         float xd = xa - xi;
         float yd = ya - yi;
 
-        // "Interpolate" the 4 corners (sum the weights of the biomes at the four corners)
-        Heightmap.Biome GetBiome(int _x, int _y) => Map[Mathf.Clamp(_y, 0, Size - 1) * Size + Mathf.Clamp(_x, 0, Size - 1)];
-
-        var biomes = new Heightmap.Biome[4];
-        var biomeWeights = new float[4];
-        int numBiomes = 0;
-        int topBiomeIdx = 0;
-        void SampleBiomeWeighted(int xs, int ys, float weight)
-        {
-            var biome = GetBiome(xs, ys);
-            int i = 0;
-            for (; i < numBiomes; ++i)
-            {
-                if (biomes[i] == biome)
-                {
-                    if (biomeWeights[i] + weight > biomeWeights[topBiomeIdx])
-                        topBiomeIdx = i;
-                    biomeWeights[i] += weight;
-                    return;
-                }
-            }
-
-            if (i == numBiomes)
-            {
-                if (biomeWeights[numBiomes] + weight > biomeWeights[topBiomeIdx])
-                    topBiomeIdx = numBiomes;
-                biomes[numBiomes] = biome;
-                biomeWeights[numBiomes++] = weight;
-            }
-        }
+        biomes[0] = biomes[1] = biomes[2] = biomes[3] = Heightmap.Biome.None;
+        biomeWeights[0] = biomeWeights[1] = biomeWeights[2] = biomeWeights[3] = 0;
         SampleBiomeWeighted(xi + 0, yi + 0, (1 - xd) * (1 - yd));
         SampleBiomeWeighted(xi + 1, yi + 0, xd * (1 - yd));
         SampleBiomeWeighted(xi + 0, yi + 1, (1 - xd) * yd);
@@ -131,30 +148,50 @@ internal class ImageMapBiome(string filePath) : ImageMapBase(filePath)
         return biomes[topBiomeIdx];
     }
 
-    public override void Serialize(ZPackage pkg, int version, bool network)
+    // "Interpolate" the 4 corners (sum the weights of the biomes at the four corners)
+    private Heightmap.Biome GetBiome(int _x, int _y) => Map[Mathf.Clamp(_y, 0, Size - 1) * Size + Mathf.Clamp(_x, 0, Size - 1)];
+
+    private void SampleBiomeWeighted(int xs, int ys, float weight)
     {
-        base.Serialize(pkg, version, network);
+        int numBiomes = 0;
+        var biome = GetBiome(xs, ys);
+        int i = 0;
+        for (; i < numBiomes; ++i)
+        {
+            if (biomes[i] == biome)
+            {
+                if (biomeWeights[i] + weight > biomeWeights[topBiomeIdx])
+                    topBiomeIdx = i;
+                biomeWeights[i] += weight;
+                return;
+            }
+        }
+
+        if (i == numBiomes)
+        {
+            if (biomeWeights[numBiomes] + weight > biomeWeights[topBiomeIdx])
+                topBiomeIdx = numBiomes;
+            biomes[numBiomes] = biome;
+            biomeWeights[numBiomes++] = weight;
+        }
+    }
+
+    public override void SerializeLegacy(ZPackage pkg, int version, bool network)
+    {
+        base.SerializeLegacy(pkg, version, network);
         if (version >= 8)
         {
             var colors = Colors.Select(d => $"{d.Key}:{d.Value.r},{d.Value.g},{d.Value.b},{d.Value.a}");
             pkg.Write(string.Join("|", colors));
         }
     }
-    public static ImageMapBiome? Load(ZPackage pkg, int version)
+    public static ImageMapBiome? LoadLegacy(ZPackage pkg, int version)
     {
         var path = pkg.ReadString();
         if (string.IsNullOrEmpty(path))
             return null;
-        var map = new ImageMapBiome(path);
-        map.Deserialize(pkg, version);
-        return map.CreateMap() ? map : null;
-    }
-    public void Deserialize(ZPackage pkg, int version)
-    {
-        SourceData = pkg.ReadByteArray();
-        if (version >= 8)
-            Colors = ParseColors(pkg.ReadString());
-        else
-            Colors = ParseColors(DefaultColors);
+        var data = pkg.ReadByteArray();
+        var colors = version >= 8 ? pkg.ReadString() : DefaultColors;
+        return Create(data, colors, path);
     }
 }

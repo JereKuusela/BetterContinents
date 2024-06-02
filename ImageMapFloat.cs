@@ -7,11 +7,51 @@ namespace BetterContinents;
 
 internal class ImageMapFloat : ImageMapBase
 {
+    public static ImageMapFloat? Create(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return null;
+        ImageMapFloat map = new()
+        {
+            FilePath = path
+        };
+        if (!map.LoadSourceImage())
+            return null;
+        if (!map.CreateMap())
+            return null;
+        return map;
+    }
+    public static ImageMapFloat? Create(byte[] data, string path, bool legacy = false)
+    {
+        ImageMapFloat map = new()
+        {
+            FilePath = path,
+            SourceData = data
+        };
+        if (legacy)
+        {
+            if (!map.CreateMapLegacy())
+                return null;
+        }
+        else
+        {
+            if (!map.CreateMap())
+                return null;
+        }
+        return map;
+    }
+    public static ImageMapFloat? Create(byte[] data)
+    {
+        ImageMapFloat map = new()
+        {
+            SourceData = data
+        };
+        if (!map.CreateMap())
+            return null;
+        return map;
+    }
     private float[] Map = [];
 
-    public ImageMapFloat(string filePath) : base(filePath) { }
-
-    public ImageMapFloat(string filePath, byte[] sourceData) : base(filePath, sourceData) { }
     public bool CreateMap() => CreateMap<L16>();
     public bool CreateMapLegacy() => CreateMap<Rgba32>();
     protected override bool LoadTextureToMap<T>(Image<T> image)

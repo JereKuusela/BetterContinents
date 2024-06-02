@@ -85,13 +85,18 @@ public partial class BetterContinents
             {
                 // World is being created, so bake our settings from the preset
                 Log($"[Saving][{__instance.m_name}] bWorldBeingCreated flag set, first time save of {__instance.m_name}, applying selected preset '{ConfigSelectedPreset.Value}'");
-                settingsToSave = Presets.LoadActivePreset(__instance.m_uid);
+                settingsToSave = Presets.LoadActivePreset();
                 bWorldBeingCreated = false;
             }
             else
             {
                 Log($"[Saving][{__instance.m_name}] bWorldBeingCreated flag NOT set, saving active world settings");
                 settingsToSave = Settings;
+            }
+            if (!settingsToSave.EnabledForThisWorld)
+            {
+                Log($"[Saving][{__instance.m_name}] BC is disabled for this world, skipping save");
+                return;
             }
             settingsToSave.Dump();
 

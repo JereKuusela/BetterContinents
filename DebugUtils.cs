@@ -190,10 +190,6 @@ public partial class DebugUtils
                         setter: SetHeightmapValue<bool>(value =>
                             BetterContinents.Settings.MountainsAllowedAtCenter = value),
                         getter: () => BetterContinents.Settings.MountainsAllowedAtCenter);
-                    group.AddValue("v", "Version", "Save file version",
-                        defaultValue: 0, minValue: 0, maxValue: BetterContinentsSettings.LatestVersion,
-                        setter: value => BetterContinents.Settings.Version = value,
-                        getter: () => BetterContinents.Settings.Version);
                 });
 
             bc.AddGroup("h", "Heightmap", "Heightmap settings, get more info with 'bc param h help'",
@@ -332,7 +328,7 @@ public partial class DebugUtils
                             BetterContinents.Settings.SetPaintPath(path);
                         }
                     }),
-                    getter: () => BetterContinents.Settings.GetLocationPath());
+                    getter: () => BetterContinents.Settings.GetPaintPath());
             });
             bc.AddGroup("fo", "Forest", "Forest settings, get more info with 'bc param fo help'", group =>
             {

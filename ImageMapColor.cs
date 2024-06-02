@@ -6,8 +6,34 @@ using UnityEngine;
 
 namespace BetterContinents;
 
-internal class ImageMapColor(string filePath) : ImageMapBase(filePath)
+internal class ImageMapColor() : ImageMapBase()
 {
+    public static ImageMapColor? Create(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return null;
+        ImageMapColor map = new()
+        {
+            FilePath = path
+        };
+        if (!map.LoadSourceImage())
+            return null;
+        if (!map.CreateMap())
+            return null;
+        return map;
+    }
+    public static ImageMapColor? Create(byte[] data, string path)
+    {
+        ImageMapColor map = new()
+        {
+            FilePath = path,
+            SourceData = data
+        };
+        if (!map.CreateMap())
+            return null;
+        return map;
+    }
+    public static ImageMapColor? Create(byte[] data) => Create(data, "");
     private UnityEngine.Color[] Map = [];
 
     public bool CreateMap() => CreateMap<Rgba32>();
@@ -25,19 +51,14 @@ internal class ImageMapColor(string filePath) : ImageMapBase(filePath)
     }
 
 
-    public static ImageMapColor? Load(ZPackage pkg)
+    public static ImageMapColor? LoadLegacy(ZPackage pkg)
     {
         var path = pkg.ReadString();
         if (string.IsNullOrEmpty(path))
             return null;
-        var map = new ImageMapColor(path);
-        map.Deserialize(pkg);
-        return map.CreateMap() ? map : null;
+        return Create(pkg.ReadByteArray(), path);
     }
-    public void Deserialize(ZPackage pkg)
-    {
-        SourceData = pkg.ReadByteArray();
-    }
+
 
     public UnityEngine.Color GetValue(float x, float y)
     {

@@ -63,6 +63,7 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<bool> ConfigDebugModeEnabled;
     public static ConfigEntry<bool> ConfigDebugSkipDefaultLocationPlacement;
     public static ConfigEntry<string> ConfigDebugResetCommand;
+    public static ConfigEntry<string> ConfigOverrideVersion;
 
     public static BetterContinents instance;
 #nullable enable
@@ -104,6 +105,9 @@ public partial class BetterContinents : BaseUnityPlugin
                 groupBuilder.AddValue("Enabled")
                     .Description("Whether this mod is enabled")
                     .Default(true).Bind(out ConfigEnabled);
+                groupBuilder.AddValue("Override version")
+                    .Description("Override the save version")
+                    .Default("").Bind(out ConfigOverrideVersion);
                 groupBuilder.AddValue("Continent Size")
                     .Description("Continent size")
                     .Default(0.5f).Range(0f, 1f).Bind(out ConfigContinentSize);
@@ -172,7 +176,7 @@ public partial class BetterContinents : BaseUnityPlugin
             {
                 groupBuilder.AddValue("Forest Scale")
                     .Description("Scales forested/cleared area size")
-                    .Default(0.5f).Range(0f, 1f).Bind(out ConfigForestScale);
+                    .Default(1f).Range(0f, 10f).Bind(out ConfigForestScale);
                 groupBuilder.AddValue("Forest Amount")
                     .Description("Adjusts how much forest there is, relative to clearings")
                     .Default(0.5f).Range(0f, 1f).Bind(out ConfigForestAmount);

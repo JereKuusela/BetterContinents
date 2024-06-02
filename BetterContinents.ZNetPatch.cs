@@ -61,18 +61,12 @@ public partial class BetterContinents
                 try
                 {
                     Log($"Attempting to load settings from {settingsPath}, applying settings");
-                    var newSettings = BetterContinentsSettings.LoadFromSource(settingsPath, world.m_fileSource);
-                    if (newSettings.WorldUId != world.m_uid)
-                    {
-                        Log($"ID in saved settings for {world.m_name} didn't match: old id is {newSettings.WorldUId}, new id will be {world.m_uid}. This is expected if you are creating a new world from a template. Otherwise it means the .BetterContinents file that has been loaded is from another world and could have bad consequences for your save!");
-                        newSettings.WorldUId = world.m_uid;
-                    }
-                    Settings = newSettings;
+                    Settings = BetterContinentsSettings.LoadFromSource(settingsPath, world.m_fileSource);
                 }
                 catch
                 {
                     Log($"Couldn't find loaded settings for world {world.m_name} at {settingsPath}, mod is disabled for this World");
-                    Settings = BetterContinentsSettings.Disabled(world.m_uid);
+                    Settings = BetterContinentsSettings.Disabled();
                 }
                 Settings.Dump();
             }
@@ -280,7 +274,7 @@ public partial class BetterContinents
 
         private static IEnumerator LoadFromCache(ZNetPeer peer, string id)
         {
-            var loadTask = Task.Run<BetterContinentsSettings?>(() =>
+            var loadTask = Task.Run(() =>
             {
                 var package = WorldCache.LoadCacheItem(id);
                 // Recalculate the id again to confirm it really matches

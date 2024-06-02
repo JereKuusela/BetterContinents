@@ -142,34 +142,32 @@ public class Presets
         UpdatePreview();
     }
 
-    public static BetterContinents.BetterContinentsSettings LoadActivePreset(long worldId)
+    public static BetterContinents.BetterContinentsSettings LoadActivePreset()
     {
         if (DisabledPreset)
         {
-            return BetterContinents.BetterContinentsSettings.Disabled(worldId);
+            return BetterContinents.BetterContinentsSettings.Disabled();
         }
 
         if (ConfigPreset)
         {
-            return BetterContinents.BetterContinentsSettings.Create(worldId);
+            return BetterContinents.BetterContinentsSettings.Create();
         }
 
         if (!File.Exists(BetterContinents.ConfigSelectedPreset.Value))
         {
             BetterContinents.LogError($"Selected preset path {BetterContinents.ConfigSelectedPreset.Value} doesn't exist, BC is disabled for this world!");
-            return BetterContinents.BetterContinentsSettings.Disabled(worldId);
+            return BetterContinents.BetterContinentsSettings.Disabled();
         }
 
         try
         {
-            var settings = BetterContinents.BetterContinentsSettings.Load(BetterContinents.ConfigSelectedPreset.Value);
-            settings.WorldUId = worldId;
-            return settings;
+            return BetterContinents.BetterContinentsSettings.Load(BetterContinents.ConfigSelectedPreset.Value);
         }
         catch (Exception ex)
         {
             BetterContinents.Log($"Couldn't load preset {BetterContinents.ConfigSelectedPreset.Value} ({ex.Message}), BC is disabled for this world!");
-            return BetterContinents.BetterContinentsSettings.Disabled(worldId);
+            return BetterContinents.BetterContinentsSettings.Disabled();
         }
     }
 
