@@ -46,6 +46,9 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<string> ConfigSpawnFile;
 
     public static ConfigEntry<string> ConfigPaintFile;
+    public static ConfigEntry<string> ConfigLavaFile;
+    public static ConfigEntry<string> ConfigMossFile;
+
 
     public static ConfigEntry<string> ConfigRoughFile;
     public static ConfigEntry<float> ConfigRoughmapBlend;
@@ -243,6 +246,18 @@ public partial class BetterContinents : BaseUnityPlugin
                 groupBuilder.AddValue("Paintmap File")
                     .Description("Path to a paintmap file to use.")
                     .Default("").Bind(out ConfigPaintFile);
+            })
+            .AddGroup("BetterContinents.Lavamap", groupBuilder =>
+            {
+                groupBuilder.AddValue("Lavamap File")
+                    .Description("Path to a lavamap file to use.")
+                    .Default("").Bind(out ConfigLavaFile);
+            })
+            .AddGroup("BetterContinents.Mossmap", groupBuilder =>
+            {
+                groupBuilder.AddValue("Mossmap File")
+                    .Description("Path to a mossmap file to use.")
+                    .Default("").Bind(out ConfigMossFile);
             })
             .AddGroup("BetterContinents.Heatmap", groupBuilder =>
             {

@@ -21,6 +21,9 @@ public partial class BetterContinents
     var precision = Settings.EnabledForThisWorld ? Settings.BiomePrecision : 0;
     if (precision == HeightmapGetBiomePatched)
       return;
+    Log($"Note: Biome precision feature doesn't work at the moment.");
+    return;
+    /*
     var method1 = AccessTools.Method(typeof(Heightmap), nameof(Heightmap.GetBiome));
     var patch1 = AccessTools.Method(typeof(BetterContinents), nameof(GetBiomePatch));
     var method2 = AccessTools.Method(typeof(HeightmapBuilder), nameof(HeightmapBuilder.Build));
@@ -49,7 +52,7 @@ public partial class BetterContinents
       hm.Regenerate();
     }
     ClutterSystem.instance?.ClearAll();
-
+    */
   }
   private static int GetBaseHeightPatched = 0;
   private static void PatchGetBaseHeight()
@@ -71,7 +74,7 @@ public partial class BetterContinents
           break;
         default:
           // GetBaseHeightV3 doesn't work at all without heightmap which makes testing more difficult.
-          if (Settings.HasHeightmap || Settings.BaseHeightNoise.NoiseLayers.Count > 0)
+          if (Settings.HasHeightMap || Settings.BaseHeightNoise.NoiseLayers.Count > 0)
             patchVersion = 3;
           break;
       }
@@ -136,7 +139,7 @@ public partial class BetterContinents
     var toRoughPaintPatch = Settings.EnabledForThisWorld;
     var toRoughPatch = Settings.EnabledForThisWorld;
     var toPaintPatch = Settings.EnabledForThisWorld;
-    if (Settings.HasPaintmap)
+    if (Settings.HasPaintMap || Settings.HasLavaMap || Settings.HasMossMap)
     {
       toHeightPatch = false;
       toRoughPatch = false;
@@ -147,7 +150,7 @@ public partial class BetterContinents
       toRoughPaintPatch = false;
       toPaintPatch = false;
     }
-    if (Settings.ShouldHeightmapOverrideAll)
+    if (Settings.ShouldHeightMapOverrideAll)
     {
       toRoughPaintPatch = false;
       toRoughPatch = false;
@@ -157,7 +160,7 @@ public partial class BetterContinents
       toHeightPaintPatch = false;
       toHeightPatch = false;
     }
-    if (!Settings.HasRoughmap)
+    if (!Settings.HasRoughMap)
     {
       toRoughPaintPatch = false;
       toRoughPatch = false;
@@ -165,7 +168,6 @@ public partial class BetterContinents
 
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiomeHeight));
     // 5 different patches depending what is needed.
-    // With height and paint, original function doesn't have to run so it's the only prefix.
     var patchRough = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithRough));
     var patchRoughPaint = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithRoughPaint));
     var patchHeight = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithHeight));
@@ -228,7 +230,7 @@ public partial class BetterContinents
       if (toHeightPaintPatch)
       {
         Log("Patching WorldGenerator.GetBiomeHeight with height and paint");
-        HarmonyInstance.Patch(method, prefix: new(patchHeightPaint));
+        HarmonyInstance.Patch(method, postfix: new(patchHeightPaint));
         GetBiomeHeightWithHeightPaintPatched = true;
       }
     }
@@ -252,7 +254,7 @@ public partial class BetterContinents
   private static bool GetBiomePatched = false;
   private static void PatchGetBiome()
   {
-    var toPatch = Settings.EnabledForThisWorld && Settings.HasBiomemap;
+    var toPatch = Settings.EnabledForThisWorld && Settings.HasBiomeMap;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiome), [typeof(float), typeof(float), typeof(float), typeof(bool)]);
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomePrefix));
     if (toPatch == GetBiomePatched)
@@ -315,7 +317,7 @@ public partial class BetterContinents
   private static bool ForestFactorPostfixPatched = false;
   private static void PatchForestFactorPostfix()
   {
-    var toPatch = Settings.EnabledForThisWorld && (Settings.HasForestmap || Settings.ForestAmountOffset != 0f);
+    var toPatch = Settings.EnabledForThisWorld && (Settings.HasForestMap || Settings.ForestAmountOffset != 0f);
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetForestFactor));
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetForestFactorPostfix));
     if (toPatch == ForestFactorPostfixPatched)
@@ -337,7 +339,7 @@ public partial class BetterContinents
   private static bool HeatPrefixPatched = false;
   private static void PatchHeatPrefix()
   {
-    var toPatch = Settings.EnabledForThisWorld && Settings.HasHeatmap && Settings.HeatMapScale > 0f;
+    var toPatch = Settings.EnabledForThisWorld && Settings.HasHeatMap && Settings.HeatMapScale > 0f;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetAshlandsOceanGradient), [typeof(float), typeof(float)]);
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetAshlandsOceanGradientPrefix));
     if (toPatch == HeatPrefixPatched)

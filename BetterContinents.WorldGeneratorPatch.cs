@@ -97,22 +97,21 @@ public partial class BetterContinents
         }
 
 
-        public static bool GetBiomeHeightWithHeightPaint(WorldGenerator __instance, float wx, float wy, out Color mask, ref float __result)
-        {
-            __result = __instance.GetBaseHeight(wx, wy, false) * 200f;
-            mask = Settings.ApplyPaintMap(wx, wy);
-            return false;
-        }
 #pragma warning disable IDE0060
+        public static float GetBiomeHeightWithHeightPaint(float result, WorldGenerator __instance, Heightmap.Biome biome, ref Color mask, float wx, float wy)
+        {
+            Settings.ApplyPaintMap(wx, wy, biome, ref mask);
+            return __instance.GetBaseHeight(wx, wy, false) * 200f;
+        }
         public static float GetBiomeHeightWithHeight(float result, WorldGenerator __instance, float wx, float wy)
         {
             return __instance.GetBaseHeight(wx, wy, false) * 200f;
         }
 #pragma warning restore IDE0060
-        public static float GetBiomeHeightWithRoughPaint(float result, WorldGenerator __instance, ref Color mask, float wx, float wy)
+        public static float GetBiomeHeightWithRoughPaint(float result, WorldGenerator __instance, Heightmap.Biome biome, ref Color mask, float wx, float wy)
         {
             var smoothHeight = __instance.GetBaseHeight(wx, wy, false) * 200f;
-            mask = Settings.ApplyPaintMap(wx, wy);
+            Settings.ApplyPaintMap(wx, wy, biome, ref mask);
             return Settings.ApplyRoughmap(NormalizedX(wx), NormalizedY(wy), smoothHeight, result);
         }
         public static float GetBiomeHeightWithRough(float result, WorldGenerator __instance, ref Color mask, float wx, float wy)
@@ -120,9 +119,9 @@ public partial class BetterContinents
             var smoothHeight = __instance.GetBaseHeight(wx, wy, false) * 200f;
             return Settings.ApplyRoughmap(NormalizedX(wx), NormalizedY(wy), smoothHeight, result);
         }
-        public static void GetBiomeHeightWithPaint(ref Color mask, float wx, float wy)
+        public static void GetBiomeHeightWithPaint(ref Color mask, Heightmap.Biome biome, float wx, float wy)
         {
-            mask = Settings.ApplyPaintMap(wx, wy);
+            Settings.ApplyPaintMap(wx, wy, biome, ref mask);
         }
 
         private static float GetBaseHeightV1(float wx, float wy, float ___m_offset0, float ___m_offset1, float ___m_minMountainDistance)
@@ -150,7 +149,7 @@ public partial class BetterContinents
 
             // https://www.desmos.com/calculator/uq8wmu6dy7
             float SigmoidActivation(float x, float a, float b) => 1 / (1 + Mathf.Exp(a + b * x));
-            float lerp = Settings.ShouldHeightmapOverrideAll
+            float lerp = Settings.ShouldHeightMapOverrideAll
                 ? 0
                 : Mathf.Clamp01(SigmoidActivation(Mathf.PerlinNoise(wx * 0.005f - 10000, wy * 0.005f - 5000) - Settings.RidgeBlendSigmoidXOffset, 0, Settings.RidgeBlendSigmoidB));
 
@@ -170,7 +169,7 @@ public partial class BetterContinents
 
             finalHeight += Settings.SeaLevelAdjustment;
 
-            if (Settings.OceanChannelsEnabled && !Settings.ShouldHeightmapOverrideAll)
+            if (Settings.OceanChannelsEnabled && !Settings.ShouldHeightMapOverrideAll)
             {
                 float v = Mathf.Abs(
                     Mathf.PerlinNoise(wx * 0.002f * 0.25f + 0.123f, wy * 0.002f * 0.25f + 0.15123f) -
@@ -192,7 +191,7 @@ public partial class BetterContinents
                     finalHeight = Mathf.Lerp(finalHeight, -2f, t2);
                 }
             }
-            if (distance < ___m_minMountainDistance && finalHeight > 0.28f && !Settings.ShouldHeightmapOverrideAll)
+            if (distance < ___m_minMountainDistance && finalHeight > 0.28f && !Settings.ShouldHeightMapOverrideAll)
             {
                 float t3 = Mathf.Clamp01((finalHeight - 0.28f) / 0.099999994f);
                 finalHeight = Mathf.Lerp(Mathf.Lerp(0.28f, 0.38f, t3), finalHeight, Utils.LerpStep(___m_minMountainDistance - 400f, ___m_minMountainDistance, distance));

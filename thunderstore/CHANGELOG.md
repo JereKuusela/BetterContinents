@@ -1,8 +1,11 @@
 - v0.7.20
-  - Adds a new map "paintmap" to set the default paint or lava.
+  - Adds a new map "paintmap" to set the default paint.
+  - Adds a new map "lavamap" to set the Ashlands lava.
+  - Adds a new map "mossmap" to set the Mistlands moss.
   - Adds a new map "heatmap" to set the water heat.
   - Adds a new setting to override the save version.
   - Adds better file path resolving when setting map file paths.
+  - Disables the "Biome precision" feature as it's not working correctly.
   - Fixes the world not loading with default settings (should be very close to vanilla now).
   - Overhauls the save file format to make development easier.
   - Removes excess data from the save file.

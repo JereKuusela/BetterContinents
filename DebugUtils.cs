@@ -50,42 +50,50 @@ public partial class DebugUtils
             {
                 bc.AddGroup("reload", "Reload", "Reloads and reapplies one or more of the image maps", reload =>
                 {
-                    if (BetterContinents.Settings.HasHeightmap)
+                    if (BetterContinents.Settings.HasHeightMap)
                         reload.AddCommand("hm", "Heightmap", "Reloads the heightmap",
-                            HeightmapCommand(_ => BetterContinents.Settings.ReloadHeightmap()));
-                    if (BetterContinents.Settings.HasRoughmap)
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadHeightMap()));
+                    if (BetterContinents.Settings.HasRoughMap)
                         reload.AddCommand("rm", "Roughmap", "Reloads the roughmap",
-                            HeightmapCommand(_ => BetterContinents.Settings.ReloadRoughmap()));
-                    if (BetterContinents.Settings.HasFlatmap)
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadRoughMap()));
+                    if (BetterContinents.Settings.HasFlatMap)
                         reload.AddCommand("fm", "Flatmap", "Reloads the flatmap",
-                            HeightmapCommand(_ => BetterContinents.Settings.ReloadFlatmap()));
-                    if (BetterContinents.Settings.HasBiomemap)
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadFlatMap()));
+                    if (BetterContinents.Settings.HasBiomeMap)
                         reload.AddCommand("bm", "Biomemap", "Reloads the biomemap",
-                            HeightmapCommand(_ => BetterContinents.Settings.ReloadBiomemap()));
-                    if (BetterContinents.Settings.HasLocationmap)
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadBiomeMap()));
+                    if (BetterContinents.Settings.HasLocationMap)
                         reload.AddCommand("lm", "Locationmap", "Reloads the locationmap",
-                            HeightmapCommand(_ => BetterContinents.Settings.ReloadLocationmap()));
-                    if (BetterContinents.Settings.HasForestmap)
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadLocationMap()));
+                    if (BetterContinents.Settings.HasForestMap)
                         reload.AddCommand("fom", "Forestmap", "Reloads the forestmap",
-                            HeightmapCommand(_ => BetterContinents.Settings.ReloadForestmap()));
-                    if (BetterContinents.Settings.HasPaintmap)
-                        reload.AddCommand("pm", "Paintmap", "Reloads the paintmap",
-                            HeightmapCommand(_ => BetterContinents.Settings.ReloadPaintmap()));
-                    if (BetterContinents.Settings.HasHeatmap)
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadForestMap()));
+                    if (BetterContinents.Settings.HasPaintMap)
+                        reload.AddCommand("paint", "Paintmap", "Reloads the paintmap",
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadPaintMap()));
+                    if (BetterContinents.Settings.HasLavaMap)
+                        reload.AddCommand("lava", "Lavamap", "Reloads the lavamap",
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadLavaMap()));
+                    if (BetterContinents.Settings.HasMossMap)
+                        reload.AddCommand("moss", "Mossmap", "Reloads the mossmap",
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadMossMap()));
+                    if (BetterContinents.Settings.HasHeatMap)
                         reload.AddCommand("heat", "Heatmap", "Reloads the heatmap",
-                            HeightmapCommand(_ => BetterContinents.Settings.ReloadHeatmap()));
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadHeatMap()));
                     if (BetterContinents.Settings.AnyImageMap)
                     {
                         reload.AddCommand("all", "All", "Reloads all image maps", HeightmapCommand(_ =>
                         {
-                            if (BetterContinents.Settings.HasHeightmap) BetterContinents.Settings.ReloadHeightmap();
-                            if (BetterContinents.Settings.HasRoughmap) BetterContinents.Settings.ReloadRoughmap();
-                            if (BetterContinents.Settings.HasFlatmap) BetterContinents.Settings.ReloadFlatmap();
-                            if (BetterContinents.Settings.HasBiomemap) BetterContinents.Settings.ReloadBiomemap();
-                            if (BetterContinents.Settings.HasLocationmap) BetterContinents.Settings.ReloadLocationmap();
-                            if (BetterContinents.Settings.HasForestmap) BetterContinents.Settings.ReloadForestmap();
-                            if (BetterContinents.Settings.HasPaintmap) BetterContinents.Settings.ReloadPaintmap();
-                            if (BetterContinents.Settings.HasHeatmap) BetterContinents.Settings.ReloadHeatmap();
+                            if (BetterContinents.Settings.HasHeightMap) BetterContinents.Settings.ReloadHeightMap();
+                            if (BetterContinents.Settings.HasRoughMap) BetterContinents.Settings.ReloadRoughMap();
+                            if (BetterContinents.Settings.HasFlatMap) BetterContinents.Settings.ReloadFlatMap();
+                            if (BetterContinents.Settings.HasBiomeMap) BetterContinents.Settings.ReloadBiomeMap();
+                            if (BetterContinents.Settings.HasLocationMap) BetterContinents.Settings.ReloadLocationMap();
+                            if (BetterContinents.Settings.HasForestMap) BetterContinents.Settings.ReloadForestMap();
+                            if (BetterContinents.Settings.HasPaintMap) BetterContinents.Settings.ReloadPaintMap();
+                            if (BetterContinents.Settings.HasLavaMap) BetterContinents.Settings.ReloadLavaMap();
+                            if (BetterContinents.Settings.HasMossMap) BetterContinents.Settings.ReloadMossMap();
+                            if (BetterContinents.Settings.HasHeatMap) BetterContinents.Settings.ReloadHeatMap();
                         }));
                     }
                 });
@@ -206,7 +214,7 @@ public partial class DebugUtils
                         {
                             var fullPath = BetterContinents.Settings.ResolveHeightPath(path);
                             BetterContinents.Settings.SetHeightPath(fullPath);
-                            if (BetterContinents.Settings.HasHeightmap)
+                            if (BetterContinents.Settings.HasHeightMap)
                                 Console.instance.Print($"<color=#ffa500>Heightmap enabled!</color>");
                             else if (string.IsNullOrEmpty(path))
                                 Console.instance.Print($"<color=#ff0000>Heightmap disabled!</color>");
@@ -248,7 +256,7 @@ public partial class DebugUtils
                     {
                         var fullPath = BetterContinents.Settings.ResolveRoughPath(path);
                         BetterContinents.Settings.SetRoughPath(fullPath);
-                        if (BetterContinents.Settings.HasRoughmap)
+                        if (BetterContinents.Settings.HasRoughMap)
                             Console.instance.Print($"<color=#ffa500>Roughmap enabled!</color>");
                         else if (string.IsNullOrEmpty(path))
                             Console.instance.Print($"<color=#ff0000>Roughmap disabled!</color>");
@@ -270,7 +278,7 @@ public partial class DebugUtils
                     {
                         var fullPath = BetterContinents.Settings.ResolveBiomePath(path);
                         BetterContinents.Settings.SetBiomePath(fullPath);
-                        if (BetterContinents.Settings.HasBiomemap)
+                        if (BetterContinents.Settings.HasBiomeMap)
                             Console.instance.Print($"<color=#ffa500>Biomemap enabled!</color>");
                         else if (string.IsNullOrEmpty(path))
                             Console.instance.Print($"<color=#ff0000>Biomemap disabled!</color>");
@@ -293,7 +301,7 @@ public partial class DebugUtils
                     {
                         var fullPath = BetterContinents.Settings.ResolveLocationPath(path);
                         BetterContinents.Settings.SetLocationPath(fullPath);
-                        if (BetterContinents.Settings.HasLocationmap)
+                        if (BetterContinents.Settings.HasLocationMap)
                             Console.instance.Print($"<color=#ffa500>Locationmap enabled!</color>");
                         else if (string.IsNullOrEmpty(path))
                             Console.instance.Print($"<color=#ff0000>Locationmap disabled!</color>");
@@ -303,7 +311,7 @@ public partial class DebugUtils
                     getter: () => BetterContinents.Settings.GetLocationPath());
             });
 
-            bc.AddGroup("p", "Paintmap", "Paintmap settings, get more info with 'bc param s help'", group =>
+            bc.AddGroup("paint", "Paintmap", "Paintmap settings, get more info with 'bc param s help'", group =>
             {
                 group.AddValue("fn", "Paintmap Filename",
                     "Sets paintmap filename (full path, directory or file name)",
@@ -312,7 +320,7 @@ public partial class DebugUtils
                     {
                         var fullPath = BetterContinents.Settings.ResolvePaintPath(path);
                         BetterContinents.Settings.SetPaintPath(fullPath);
-                        if (BetterContinents.Settings.HasPaintmap)
+                        if (BetterContinents.Settings.HasPaintMap)
                             Console.instance.Print($"<color=#ffa500>Paintmap enabled!</color>");
                         else if (string.IsNullOrEmpty(path))
                             Console.instance.Print($"<color=#ff0000>Paintmap disabled!</color>");
@@ -320,6 +328,42 @@ public partial class DebugUtils
                             Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
                     }),
                     getter: () => BetterContinents.Settings.GetPaintPath());
+            });
+            bc.AddGroup("lava", "Lavamap", "Lavamap settings, get more info with 'bc param s help'", group =>
+            {
+                group.AddValue("fn", "Lavamap Filename",
+                    "Sets lavamap filename (full path, directory or file name)",
+                    defaultValue: string.Empty,
+                    setter: SetHeightmapValue<string>(path =>
+                    {
+                        var fullPath = BetterContinents.Settings.ResolveLavaPath(path);
+                        BetterContinents.Settings.SetLavaPath(fullPath);
+                        if (BetterContinents.Settings.HasLavaMap)
+                            Console.instance.Print($"<color=#ffa500>Lavamap enabled!</color>");
+                        else if (string.IsNullOrEmpty(path))
+                            Console.instance.Print($"<color=#ff0000>Lavamap disabled!</color>");
+                        else
+                            Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
+                    }),
+                    getter: () => BetterContinents.Settings.GetLavaPath());
+            });
+            bc.AddGroup("moss", "Mossmap", "Mossmap settings, get more info with 'bc param s help'", group =>
+            {
+                group.AddValue("fn", "Mossmap Filename",
+                    "Sets mossmap filename (full path, directory or file name)",
+                    defaultValue: string.Empty,
+                    setter: SetHeightmapValue<string>(path =>
+                    {
+                        var fullPath = BetterContinents.Settings.ResolveMossPath(path);
+                        BetterContinents.Settings.SetMossPath(fullPath);
+                        if (BetterContinents.Settings.HasMossMap)
+                            Console.instance.Print($"<color=#ffa500>Mossmap enabled!</color>");
+                        else if (string.IsNullOrEmpty(path))
+                            Console.instance.Print($"<color=#ff0000>Mossmap disabled!</color>");
+                        else
+                            Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
+                    }),
+                    getter: () => BetterContinents.Settings.GetMossPath());
             });
             bc.AddGroup("heat", "Heatmap", "Heatmap settings, get more info with 'bc param s help'", group =>
             {
@@ -330,7 +374,7 @@ public partial class DebugUtils
                     {
                         var fullPath = BetterContinents.Settings.ResolveHeatPath(path);
                         BetterContinents.Settings.SetHeatPath(fullPath);
-                        if (BetterContinents.Settings.HasHeatmap)
+                        if (BetterContinents.Settings.HasHeatMap)
                             Console.instance.Print($"<color=#ffa500>Heatmap enabled!</color>");
                         else if (string.IsNullOrEmpty(path))
                             Console.instance.Print($"<color=#ff0000>Heatmap disabled!</color>");
@@ -369,7 +413,7 @@ public partial class DebugUtils
                     {
                         var fullPath = BetterContinents.Settings.ResolveForestPath(path);
                         BetterContinents.Settings.SetForestPath(fullPath);
-                        if (BetterContinents.Settings.HasForestmap)
+                        if (BetterContinents.Settings.HasForestMap)
                             Console.instance.Print($"<color=#ffa500>Forestmap enabled!</color>");
                         else if (string.IsNullOrEmpty(path))
                             Console.instance.Print($"<color=#ff0000>Forestmap disabled!</color>");

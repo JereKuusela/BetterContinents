@@ -14,43 +14,47 @@ public partial class BetterContinents
     RidgeScale,
     RidgeBlendSigmoidB,
     RidgeBlendSigmoidXOffset,
-    Heightmap,
-    HeightmapPath,
-    HeightmapAmount,
-    HeightmapBlend,
-    HeightmapAdd,
+    HeightMap,
+    HeightMapPath,
+    HeightMapAmount,
+    HeightMapBlend,
+    HeightMapAdd,
     OceanChannelsEnabled,
     RiversEnabled,
-    Biomemap,
-    BiomemapPath,
+    BiomeMap,
+    BiomeMapPath,
     ForestScale,
     ForestAmountOffset,
     OverrideStartPosition,
-    Locationmap,
-    LocationmapPath,
-    Roughmap,
-    RoughmapPath,
-    RoughmapBlend,
+    LocationMap,
+    LocationMapPath,
+    RoughMap,
+    RoughMapPath,
+    RoughMapBlend,
     UseRoughInvertedAsFlat,
-    FlatmapBlend,
-    Flatmap,
-    FlatmapPath,
-    Forestmap,
-    ForestmapPath,
-    ForestmapMultiply,
-    ForestmapAdd,
+    FlatMapBlend,
+    FlatMap,
+    FlatMapPath,
+    ForestMap,
+    ForestMapPath,
+    ForestMapMultiply,
+    ForestMapAdd,
     DisableMapEdgeDropoff,
     MountainsAllowedAtCenter,
     ForestFactorOverrideAllTrees,
-    HeightmapOverrideAll,
-    HeightmapMask,
+    HeightMapOverrideAll,
+    HeightMapMask,
     BaseHeightNoise,
     BiomePrecision,
-    Paintmap,
-    PaintmapPath,
-    Heatmap,
-    HeatmapPath,
-    HeatmapScale,
+    PaintMap,
+    PaintMapPath,
+    HeatMap,
+    HeatMapPath,
+    HeatMapScale,
+    LavaMap,
+    LavaMapPath,
+    MossMap,
+    MossMapPath,
   }
   public partial class BetterContinentsSettings
   {
@@ -109,28 +113,28 @@ public partial class BetterContinents
       if (!OceanChannelsEnabled)
         pkg.Write((int)DataKey.OceanChannelsEnabled);
 
-      if (Heightmap != null)
+      if (HeightMap != null)
       {
-        pkg.Write((int)DataKey.Heightmap);
-        pkg.Write(Heightmap.SourceData);
+        pkg.Write((int)DataKey.HeightMap);
+        pkg.Write(HeightMap.SourceData);
         if (!network)
         {
-          pkg.Write((int)DataKey.HeightmapPath);
-          pkg.Write(Heightmap.FilePath);
+          pkg.Write((int)DataKey.HeightMapPath);
+          pkg.Write(HeightMap.FilePath);
         }
         if (HeightmapAmount != 1f)
         {
-          pkg.Write((int)DataKey.HeightmapAmount);
+          pkg.Write((int)DataKey.HeightMapAmount);
           pkg.Write(HeightmapAmount);
         }
         if (HeightmapBlend != 1f)
         {
-          pkg.Write((int)DataKey.HeightmapBlend);
+          pkg.Write((int)DataKey.HeightMapBlend);
           pkg.Write(HeightmapBlend);
         }
         if (HeightmapAdd != 0f)
         {
-          pkg.Write((int)DataKey.HeightmapAdd);
+          pkg.Write((int)DataKey.HeightMapAdd);
           pkg.Write(HeightmapAdd);
         }
       }
@@ -138,15 +142,15 @@ public partial class BetterContinents
       if (!RiversEnabled)
         pkg.Write((int)DataKey.RiversEnabled);
 
-      if (Biomemap != null)
+      if (BiomeMap != null)
       {
-        pkg.Write((int)DataKey.Biomemap);
-        pkg.Write(Biomemap.Serialize());
+        pkg.Write((int)DataKey.BiomeMap);
+        pkg.Write(BiomeMap.Serialize());
 
         if (!network)
         {
-          pkg.Write((int)DataKey.BiomemapPath);
-          pkg.Write(Biomemap.FilePath);
+          pkg.Write((int)DataKey.BiomeMapPath);
+          pkg.Write(BiomeMap.FilePath);
         }
       }
       if (ForestScale != 1f)
@@ -167,29 +171,29 @@ public partial class BetterContinents
         pkg.Write(StartPositionY);
       }
 
-      if (Locationmap != null)
+      if (LocationMap != null)
       {
-        pkg.Write((int)DataKey.Locationmap);
-        Locationmap.Serialize(pkg);
+        pkg.Write((int)DataKey.LocationMap);
+        LocationMap.Serialize(pkg);
         if (!network)
         {
-          pkg.Write((int)DataKey.LocationmapPath);
-          pkg.Write(Locationmap.FilePath);
+          pkg.Write((int)DataKey.LocationMapPath);
+          pkg.Write(LocationMap.FilePath);
         }
       }
 
-      if (Roughmap != null)
+      if (RoughMap != null)
       {
-        pkg.Write((int)DataKey.Roughmap);
-        pkg.Write(Roughmap.SourceData);
+        pkg.Write((int)DataKey.RoughMap);
+        pkg.Write(RoughMap.SourceData);
         if (!network)
         {
-          pkg.Write((int)DataKey.RoughmapPath);
-          pkg.Write(Roughmap.FilePath);
+          pkg.Write((int)DataKey.RoughMapPath);
+          pkg.Write(RoughMap.FilePath);
         }
         if (RoughmapBlend != 1f)
         {
-          pkg.Write((int)DataKey.RoughmapBlend);
+          pkg.Write((int)DataKey.RoughMapBlend);
           pkg.Write(RoughmapBlend);
         }
       }
@@ -198,38 +202,38 @@ public partial class BetterContinents
         pkg.Write((int)DataKey.UseRoughInvertedAsFlat);
       if (FlatmapBlend != 0f)
       {
-        pkg.Write((int)DataKey.FlatmapBlend);
+        pkg.Write((int)DataKey.FlatMapBlend);
         pkg.Write(FlatmapBlend);
       }
-      if (!UseRoughInvertedAsFlat && Flatmap != null)
+      if (!UseRoughInvertedAsFlat && FlatMap != null)
       {
-        pkg.Write((int)DataKey.Flatmap);
-        pkg.Write(Flatmap.SourceData);
+        pkg.Write((int)DataKey.FlatMap);
+        pkg.Write(FlatMap.SourceData);
         if (!network)
         {
-          pkg.Write((int)DataKey.FlatmapPath);
-          pkg.Write(Flatmap.FilePath);
+          pkg.Write((int)DataKey.FlatMapPath);
+          pkg.Write(FlatMap.FilePath);
         }
       }
 
-      if (Forestmap != null)
+      if (ForestMap != null)
       {
-        pkg.Write((int)DataKey.Forestmap);
-        pkg.Write(Forestmap.SourceData);
+        pkg.Write((int)DataKey.ForestMap);
+        pkg.Write(ForestMap.SourceData);
         if (!network)
         {
-          pkg.Write((int)DataKey.ForestmapPath);
-          pkg.Write(Forestmap.FilePath);
+          pkg.Write((int)DataKey.ForestMapPath);
+          pkg.Write(ForestMap.FilePath);
         }
 
         if (ForestmapMultiply != 1f)
         {
-          pkg.Write((int)DataKey.ForestmapMultiply);
+          pkg.Write((int)DataKey.ForestMapMultiply);
           pkg.Write(ForestmapMultiply);
         }
         if (ForestmapAdd != 1f)
         {
-          pkg.Write((int)DataKey.ForestmapAdd);
+          pkg.Write((int)DataKey.ForestMapAdd);
           pkg.Write(ForestmapAdd);
         }
       }
@@ -242,10 +246,10 @@ public partial class BetterContinents
         pkg.Write((int)DataKey.ForestFactorOverrideAllTrees);
 
       if (!HeightmapOverrideAll)
-        pkg.Write((int)DataKey.HeightmapOverrideAll);
+        pkg.Write((int)DataKey.HeightMapOverrideAll);
       if (HeightmapMask > 0f)
       {
-        pkg.Write((int)DataKey.HeightmapMask);
+        pkg.Write((int)DataKey.HeightMapMask);
         pkg.Write(HeightmapMask);
       }
 
@@ -261,30 +265,51 @@ public partial class BetterContinents
         pkg.Write(BiomePrecision);
       }
 
-      if (Paintmap != null)
+      if (PaintMap != null)
       {
-        pkg.Write((int)DataKey.Paintmap);
-        pkg.Write(Paintmap.SourceData);
+        pkg.Write((int)DataKey.PaintMap);
+        pkg.Write(PaintMap.SourceData);
         if (!network)
         {
-          pkg.Write((int)DataKey.PaintmapPath);
-          pkg.Write(Paintmap.FilePath);
+          pkg.Write((int)DataKey.PaintMapPath);
+          pkg.Write(PaintMap.FilePath);
+        }
+      }
+      if (LavaMap != null)
+      {
+        pkg.Write((int)DataKey.LavaMap);
+        pkg.Write(LavaMap.SourceData);
+        if (!network)
+        {
+          pkg.Write((int)DataKey.LavaMapPath);
+          pkg.Write(LavaMap.FilePath);
         }
       }
 
-      if (Heatmap != null)
+      if (MossMap != null)
       {
-        pkg.Write((int)DataKey.Heatmap);
-        pkg.Write(Heatmap.SourceData);
+        pkg.Write((int)DataKey.MossMap);
+        pkg.Write(MossMap.SourceData);
         if (!network)
         {
-          pkg.Write((int)DataKey.HeatmapPath);
-          pkg.Write(Heatmap.FilePath);
+          pkg.Write((int)DataKey.MossMapPath);
+          pkg.Write(MossMap.FilePath);
+        }
+      }
+
+      if (HeatMap != null)
+      {
+        pkg.Write((int)DataKey.HeatMap);
+        pkg.Write(HeatMap.SourceData);
+        if (!network)
+        {
+          pkg.Write((int)DataKey.HeatMapPath);
+          pkg.Write(HeatMap.FilePath);
         }
 
         if (HeatMapScale != 10f)
         {
-          pkg.Write((int)DataKey.HeatmapScale);
+          pkg.Write((int)DataKey.HeatMapScale);
           pkg.Write(HeatMapScale);
         }
       }
@@ -333,21 +358,21 @@ public partial class BetterContinents
           case DataKey.RidgeBlendSigmoidXOffset:
             RidgeBlendSigmoidXOffset = pkg.ReadSingle();
             break;
-          case DataKey.Heightmap:
-            Heightmap = ImageMapFloat.Create(pkg.ReadByteArray());
+          case DataKey.HeightMap:
+            HeightMap = ImageMapFloat.Create(pkg.ReadByteArray());
             break;
-          case DataKey.HeightmapPath:
+          case DataKey.HeightMapPath:
             path = pkg.ReadString();
-            if (Heightmap != null)
-              Heightmap.FilePath = path;
+            if (HeightMap != null)
+              HeightMap.FilePath = path;
             break;
-          case DataKey.HeightmapAmount:
+          case DataKey.HeightMapAmount:
             HeightmapAmount = pkg.ReadSingle();
             break;
-          case DataKey.HeightmapBlend:
+          case DataKey.HeightMapBlend:
             HeightmapBlend = pkg.ReadSingle();
             break;
-          case DataKey.HeightmapAdd:
+          case DataKey.HeightMapAdd:
             HeightmapAdd = pkg.ReadSingle();
             break;
           case DataKey.OceanChannelsEnabled:
@@ -356,13 +381,13 @@ public partial class BetterContinents
           case DataKey.RiversEnabled:
             RiversEnabled = false;
             break;
-          case DataKey.Biomemap:
-            Biomemap = ImageMapBiome.Create(pkg.ReadByteArray());
+          case DataKey.BiomeMap:
+            BiomeMap = ImageMapBiome.Create(pkg.ReadByteArray());
             break;
-          case DataKey.BiomemapPath:
+          case DataKey.BiomeMapPath:
             path = pkg.ReadString();
-            if (Biomemap != null)
-              Biomemap.FilePath = path;
+            if (BiomeMap != null)
+              BiomeMap.FilePath = path;
             break;
           case DataKey.ForestScale:
             ForestScale = pkg.ReadSingle();
@@ -375,51 +400,51 @@ public partial class BetterContinents
             StartPositionX = pkg.ReadSingle();
             StartPositionY = pkg.ReadSingle();
             break;
-          case DataKey.Locationmap:
-            Locationmap = ImageMapLocation.Create(pkg);
+          case DataKey.LocationMap:
+            LocationMap = ImageMapLocation.Create(pkg);
             break;
-          case DataKey.LocationmapPath:
+          case DataKey.LocationMapPath:
             path = pkg.ReadString();
-            if (Locationmap != null)
-              Locationmap.FilePath = path;
+            if (LocationMap != null)
+              LocationMap.FilePath = path;
             break;
-          case DataKey.Roughmap:
-            Roughmap = ImageMapFloat.Create(pkg.ReadByteArray());
+          case DataKey.RoughMap:
+            RoughMap = ImageMapFloat.Create(pkg.ReadByteArray());
             break;
-          case DataKey.RoughmapPath:
+          case DataKey.RoughMapPath:
             path = pkg.ReadString();
-            if (Roughmap != null)
-              Roughmap.FilePath = path;
+            if (RoughMap != null)
+              RoughMap.FilePath = path;
             break;
-          case DataKey.RoughmapBlend:
+          case DataKey.RoughMapBlend:
             RoughmapBlend = pkg.ReadSingle();
             break;
           case DataKey.UseRoughInvertedAsFlat:
             UseRoughInvertedAsFlat = true;
             break;
-          case DataKey.FlatmapBlend:
+          case DataKey.FlatMapBlend:
             FlatmapBlend = pkg.ReadSingle();
             break;
-          case DataKey.Flatmap:
-            Flatmap = ImageMapFloat.Create(pkg.ReadByteArray());
+          case DataKey.FlatMap:
+            FlatMap = ImageMapFloat.Create(pkg.ReadByteArray());
             break;
-          case DataKey.FlatmapPath:
+          case DataKey.FlatMapPath:
             path = pkg.ReadString();
-            if (Flatmap != null)
-              Flatmap.FilePath = path;
+            if (FlatMap != null)
+              FlatMap.FilePath = path;
             break;
-          case DataKey.Forestmap:
-            Forestmap = ImageMapFloat.Create(pkg.ReadByteArray());
+          case DataKey.ForestMap:
+            ForestMap = ImageMapFloat.Create(pkg.ReadByteArray());
             break;
-          case DataKey.ForestmapPath:
+          case DataKey.ForestMapPath:
             path = pkg.ReadString();
-            if (Forestmap != null)
-              Forestmap.FilePath = path;
+            if (ForestMap != null)
+              ForestMap.FilePath = path;
             break;
-          case DataKey.ForestmapMultiply:
+          case DataKey.ForestMapMultiply:
             ForestmapMultiply = pkg.ReadSingle();
             break;
-          case DataKey.ForestmapAdd:
+          case DataKey.ForestMapAdd:
             ForestmapAdd = pkg.ReadSingle();
             break;
           case DataKey.DisableMapEdgeDropoff:
@@ -431,10 +456,10 @@ public partial class BetterContinents
           case DataKey.ForestFactorOverrideAllTrees:
             ForestFactorOverrideAllTrees = true;
             break;
-          case DataKey.HeightmapOverrideAll:
+          case DataKey.HeightMapOverrideAll:
             HeightmapOverrideAll = false;
             break;
-          case DataKey.HeightmapMask:
+          case DataKey.HeightMapMask:
             HeightmapMask = pkg.ReadSingle();
             break;
           case DataKey.BaseHeightNoise:
@@ -443,23 +468,39 @@ public partial class BetterContinents
           case DataKey.BiomePrecision:
             BiomePrecision = pkg.ReadInt();
             break;
-          case DataKey.Paintmap:
-            Paintmap = ImageMapColor.Create(pkg.ReadByteArray());
+          case DataKey.PaintMap:
+            PaintMap = ImageMapColor.Create(pkg.ReadByteArray());
             break;
-          case DataKey.PaintmapPath:
+          case DataKey.PaintMapPath:
             path = pkg.ReadString();
-            if (Paintmap != null)
-              Paintmap.FilePath = path;
+            if (PaintMap != null)
+              PaintMap.FilePath = path;
             break;
-          case DataKey.Heatmap:
-            Heatmap = ImageMapFloat.Create(pkg.ReadByteArray());
+          case DataKey.LavaMap:
+            LavaMap = ImageMapFloat.Create(pkg.ReadByteArray());
             break;
-          case DataKey.HeatmapPath:
+          case DataKey.LavaMapPath:
             path = pkg.ReadString();
-            if (Heatmap != null)
-              Heatmap.FilePath = path;
+            if (LavaMap != null)
+              LavaMap.FilePath = path;
             break;
-          case DataKey.HeatmapScale:
+          case DataKey.MossMap:
+            MossMap = ImageMapFloat.Create(pkg.ReadByteArray());
+            break;
+          case DataKey.MossMapPath:
+            path = pkg.ReadString();
+            if (MossMap != null)
+              MossMap.FilePath = path;
+            break;
+          case DataKey.HeatMap:
+            HeatMap = ImageMapFloat.Create(pkg.ReadByteArray());
+            break;
+          case DataKey.HeatMapPath:
+            path = pkg.ReadString();
+            if (HeatMap != null)
+              HeatMap.FilePath = path;
+            break;
+          case DataKey.HeatMapScale:
             HeatMapScale = pkg.ReadSingle();
             break;
           default:
@@ -487,11 +528,11 @@ public partial class BetterContinents
         pkg.Write(RidgeBlendSigmoidB);
         pkg.Write(RidgeBlendSigmoidXOffset);
 
-        if (Heightmap == null)
+        if (HeightMap == null)
           pkg.Write(string.Empty);
         else
         {
-          Heightmap.SerializeLegacy(pkg, version, network);
+          HeightMap.SerializeLegacy(pkg, version, network);
           pkg.Write(HeightmapAmount);
           pkg.Write(HeightmapBlend);
           pkg.Write(HeightmapAdd);
@@ -502,10 +543,10 @@ public partial class BetterContinents
         {
           pkg.Write(RiversEnabled);
 
-          if (Biomemap == null)
+          if (BiomeMap == null)
             pkg.Write("");
           else
-            Biomemap.SerializeLegacy(pkg, version, network);
+            BiomeMap.SerializeLegacy(pkg, version, network);
           pkg.Write(ForestScale);
           pkg.Write(ForestAmountOffset);
 
@@ -516,19 +557,19 @@ public partial class BetterContinents
 
         if (version >= 3)
         {
-          if (Locationmap == null)
+          if (LocationMap == null)
             pkg.Write("");
           else
-            Locationmap.SerializeLegacy(pkg, version, network);
+            LocationMap.SerializeLegacy(pkg, version, network);
         }
 
         if (version >= 5)
         {
-          if (Roughmap == null)
+          if (RoughMap == null)
             pkg.Write("");
           else
           {
-            Roughmap.SerializeLegacy(pkg, version, network);
+            RoughMap.SerializeLegacy(pkg, version, network);
             pkg.Write(RoughmapBlend);
           }
 
@@ -536,17 +577,17 @@ public partial class BetterContinents
           pkg.Write(FlatmapBlend);
           if (!UseRoughInvertedAsFlat)
           {
-            if (Flatmap == null)
+            if (FlatMap == null)
               pkg.Write("");
             else
-              Flatmap.SerializeLegacy(pkg, version, network);
+              FlatMap.SerializeLegacy(pkg, version, network);
           }
 
-          if (Forestmap == null)
+          if (ForestMap == null)
             pkg.Write("");
           else
           {
-            Forestmap.SerializeLegacy(pkg, version, network);
+            ForestMap.SerializeLegacy(pkg, version, network);
             pkg.Write(ForestmapMultiply);
             pkg.Write(ForestmapAdd);
           }
@@ -572,10 +613,10 @@ public partial class BetterContinents
         }
         if (version >= 10)
         {
-          if (Paintmap == null)
+          if (PaintMap == null)
             pkg.Write("");
           else
-            Paintmap.SerializeLegacy(pkg, version, network);
+            PaintMap.SerializeLegacy(pkg, version, network);
         }
       }
     }
@@ -602,7 +643,7 @@ public partial class BetterContinents
       string heightmapFilePath = pkg.ReadString();
       if (!string.IsNullOrEmpty(heightmapFilePath))
       {
-        Heightmap = ImageMapFloat.Create(pkg.ReadByteArray(), heightmapFilePath, Version <= 4);
+        HeightMap = ImageMapFloat.Create(pkg.ReadByteArray(), heightmapFilePath, Version <= 4);
         HeightmapAmount = pkg.ReadSingle();
         HeightmapBlend = pkg.ReadSingle();
         HeightmapAdd = pkg.ReadSingle();
@@ -623,7 +664,7 @@ public partial class BetterContinents
       if (Version >= 2)
       {
         RiversEnabled = pkg.ReadBool();
-        Biomemap = ImageMapBiome.LoadLegacy(pkg, Version);
+        BiomeMap = ImageMapBiome.LoadLegacy(pkg, Version);
 
         ForestScale = pkg.ReadSingle();
         ForestAmountOffset = pkg.ReadSingle();
@@ -633,13 +674,13 @@ public partial class BetterContinents
         StartPositionY = pkg.ReadSingle();
       }
       if (Version >= 3)
-        Locationmap = ImageMapLocation.LoadLegacy(pkg, Version);
+        LocationMap = ImageMapLocation.LoadLegacy(pkg, Version);
       if (Version >= 5)
       {
         string roughmapFilePath = pkg.ReadString();
         if (!string.IsNullOrEmpty(roughmapFilePath))
         {
-          Roughmap = ImageMapFloat.Create(pkg.ReadByteArray(), roughmapFilePath);
+          RoughMap = ImageMapFloat.Create(pkg.ReadByteArray(), roughmapFilePath);
           RoughmapBlend = pkg.ReadSingle();
         }
 
@@ -650,13 +691,13 @@ public partial class BetterContinents
           string flatmapFilePath = pkg.ReadString();
           if (!string.IsNullOrEmpty(flatmapFilePath))
           {
-            Flatmap = ImageMapFloat.Create(pkg.ReadByteArray(), flatmapFilePath);
+            FlatMap = ImageMapFloat.Create(pkg.ReadByteArray(), flatmapFilePath);
           }
         }
         string forestmapFilePath = pkg.ReadString();
         if (!string.IsNullOrEmpty(forestmapFilePath))
         {
-          Forestmap = ImageMapFloat.Create(pkg.ReadByteArray(), forestmapFilePath);
+          ForestMap = ImageMapFloat.Create(pkg.ReadByteArray(), forestmapFilePath);
           ForestmapMultiply = pkg.ReadSingle();
           ForestmapAdd = pkg.ReadSingle();
         }
@@ -675,7 +716,7 @@ public partial class BetterContinents
       if (Version >= 9)
         BiomePrecision = pkg.ReadInt();
       if (Version >= 10)
-        Paintmap = ImageMapColor.LoadLegacy(pkg);
+        PaintMap = ImageMapColor.LoadLegacy(pkg);
     }
   }
 }
