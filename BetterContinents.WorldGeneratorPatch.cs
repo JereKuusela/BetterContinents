@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
 using HarmonyLib;
@@ -309,6 +310,16 @@ public partial class BetterContinents
                 finalHeight = Mathf.Lerp(Mathf.Lerp(0.28f, 0.38f, t3), finalHeight, Utils.LerpStep(___m_minMountainDistance - 400f, ___m_minMountainDistance, distance));
             }
             return finalHeight;
+        }
+
+        public static IEnumerable<CodeInstruction> GetBiomeHeightTranspiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var matcher = new CodeMatcher(instructions);
+            matcher = matcher.MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, -2f)).Advance(-5).
+                SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop).
+                SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop).
+                SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop);
+            return matcher.Instructions();
         }
 
         public static bool GetBiomePrefix(float wx, float wy, ref Heightmap.Biome __result, World ___m_world)

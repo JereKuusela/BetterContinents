@@ -14,6 +14,7 @@ public partial class BetterContinents
     PatchForestFactorPrefix();
     PatchForestFactorPostfix();
     PatchHeatPrefix();
+    PatchMapDropOff();
   }
   private static int HeightmapGetBiomePatched = 0;
   private static void PatchHeightmap()
@@ -250,6 +251,30 @@ public partial class BetterContinents
       }
     }
 
+  }
+
+  private static bool MapDropOffPatched = false;
+
+
+  private static void PatchMapDropOff()
+  {
+    var toPatch = Settings.EnabledForThisWorld && Settings.DisableMapEdgeDropoff;
+    if (toPatch == MapDropOffPatched)
+      return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiomeHeight));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightTranspiler));
+    if (MapDropOffPatched)
+    {
+      Log("Unpatching WorldGenerator.GetBiomeHeight (map dropoff)");
+      HarmonyInstance.Unpatch(method, patch);
+      MapDropOffPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching WorldGenerator.GetBiomeHeight (map dropoff)");
+      HarmonyInstance.Patch(method, transpiler: new(patch));
+      MapDropOffPatched = true;
+    }
   }
   private static bool GetBiomePatched = false;
   private static void PatchGetBiome()

@@ -29,7 +29,8 @@ internal class ImageMapBiome() : ImageMapBase
     {
         ImageMapBiome map = new()
         {
-            Map = data.Select(b => ByteToBiome[b]).ToArray()
+            Map = data.Select(b => ByteToBiome[b]).ToArray(),
+            Size = (int)Math.Sqrt(data.Length)
         };
         return map;
     }
@@ -124,11 +125,10 @@ internal class ImageMapBiome() : ImageMapBase
         return true;
     }
 
-    private readonly float[] biomeWeights = new float[4];
-    private readonly Heightmap.Biome[] biomes = new Heightmap.Biome[4];
-    private int topBiomeIdx = 0;
     public Heightmap.Biome GetValue(float x, float y)
     {
+        int topBiomeIdx = 0;
+        int numBiomes = 0;
         float xa = x * (Size - 1);
         float ya = y * (Size - 1);
 
@@ -138,23 +138,19 @@ internal class ImageMapBiome() : ImageMapBase
         float xd = xa - xi;
         float yd = ya - yi;
 
-        biomes[0] = biomes[1] = biomes[2] = biomes[3] = Heightmap.Biome.None;
-        biomeWeights[0] = biomeWeights[1] = biomeWeights[2] = biomeWeights[3] = 0;
-        SampleBiomeWeighted(xi + 0, yi + 0, (1 - xd) * (1 - yd));
-        SampleBiomeWeighted(xi + 1, yi + 0, xd * (1 - yd));
-        SampleBiomeWeighted(xi + 0, yi + 1, (1 - xd) * yd);
-        SampleBiomeWeighted(xi + 1, yi + 1, xd * yd);
+        var biomes = new Heightmap.Biome[4];
+        var biomeWeights = new float[4];
+        SampleBiomeWeighted(xi + 0, yi + 0, (1 - xd) * (1 - yd), biomeWeights, biomes, ref numBiomes, ref topBiomeIdx);
+        SampleBiomeWeighted(xi + 1, yi + 0, xd * (1 - yd), biomeWeights, biomes, ref numBiomes, ref topBiomeIdx);
+        SampleBiomeWeighted(xi + 0, yi + 1, (1 - xd) * yd, biomeWeights, biomes, ref numBiomes, ref topBiomeIdx);
+        SampleBiomeWeighted(xi + 1, yi + 1, xd * yd, biomeWeights, biomes, ref numBiomes, ref topBiomeIdx);
 
         return biomes[topBiomeIdx];
     }
 
-    // "Interpolate" the 4 corners (sum the weights of the biomes at the four corners)
-    private Heightmap.Biome GetBiome(int _x, int _y) => Map[Mathf.Clamp(_y, 0, Size - 1) * Size + Mathf.Clamp(_x, 0, Size - 1)];
-
-    private void SampleBiomeWeighted(int xs, int ys, float weight)
+    private void SampleBiomeWeighted(int xs, int ys, float weight, float[] biomeWeights, Heightmap.Biome[] biomes, ref int numBiomes, ref int topBiomeIdx)
     {
-        int numBiomes = 0;
-        var biome = GetBiome(xs, ys);
+        var biome = Map[Mathf.Clamp(ys, 0, Size - 1) * Size + Mathf.Clamp(xs, 0, Size - 1)];
         int i = 0;
         for (; i < numBiomes; ++i)
         {
