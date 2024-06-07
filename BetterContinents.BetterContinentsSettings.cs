@@ -24,6 +24,8 @@ public partial class BetterContinents
         public float HeightmapBlend = 1f;
         public float HeightmapAdd;
         public bool OceanChannelsEnabled = true;
+        public bool AshlandsGapEnabled = false;
+        public bool DeepNorthGapEnabled = false;
         public bool RiversEnabled = true;
         public float ForestScale = 1f;
         public float ForestAmountOffset;
@@ -303,6 +305,8 @@ public partial class BetterContinents
                 output($"Mountains amount {MountainsAmount}");
                 output($"Sea level adjustment {SeaLevel}");
                 output($"Ocean channels enabled {OceanChannelsEnabled}");
+                output($"Ashlands gap enabled {AshlandsGapEnabled}");
+                output($"Deep North gap enabled {DeepNorthGapEnabled}");
                 output($"Rivers enabled {RiversEnabled}");
 
                 output($"Map edge dropoff {MapEdgeDropoff}");

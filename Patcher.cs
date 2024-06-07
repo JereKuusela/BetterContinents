@@ -15,6 +15,8 @@ public partial class BetterContinents
     PatchForestFactorPostfix();
     PatchHeatPrefix();
     PatchMapDropOff();
+    PatchAshlandGap();
+    PatchDeepNorthGap();
   }
   private static int HeightmapGetBiomePatched = 0;
   private static void PatchHeightmap()
@@ -380,6 +382,50 @@ public partial class BetterContinents
       Log("Patching WorldGenerator.GetAshlandsOceanGradient prefix");
       HarmonyInstance.Patch(method, prefix: new(patch));
       HeatPrefixPatched = true;
+    }
+  }
+  private static bool AshlandsGapPatched = false;
+
+  private static void PatchAshlandGap()
+  {
+    var toPatch = Settings.EnabledForThisWorld && !Settings.AshlandsGapEnabled;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.CreateAshlandsGap));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.DisableGap));
+    if (toPatch == AshlandsGapPatched)
+      return;
+    if (AshlandsGapPatched)
+    {
+      Log("Unpatching WorldGenerator.CreateAshlandsGap");
+      HarmonyInstance.Unpatch(method, patch);
+      AshlandsGapPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching WorldGenerator.CreateAshlandsGap");
+      HarmonyInstance.Patch(method, prefix: new(patch));
+      AshlandsGapPatched = true;
+    }
+  }
+
+  private static bool DeepNorthGapPatched = false;
+  private static void PatchDeepNorthGap()
+  {
+    var toPatch = Settings.EnabledForThisWorld && !Settings.DeepNorthGapEnabled;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.CreateDeepNorthGap));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.DisableGap));
+    if (toPatch == DeepNorthGapPatched)
+      return;
+    if (DeepNorthGapPatched)
+    {
+      Log("Unpatching WorldGenerator.CreateDeepNorthGap");
+      HarmonyInstance.Unpatch(method, patch);
+      DeepNorthGapPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching WorldGenerator.CreateDeepNorthGap");
+      HarmonyInstance.Patch(method, prefix: new(patch));
+      DeepNorthGapPatched = true;
     }
   }
 }

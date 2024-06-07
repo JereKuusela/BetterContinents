@@ -192,6 +192,14 @@ public partial class DebugUtils
                         defaultValue: true,
                         setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.RiversEnabled = value),
                         getter: () => BetterContinents.Settings.RiversEnabled);
+                    group.AddValue("ag", "Ashlands Gap", "Whether The Ashlands ocean gap is enabled",
+                        defaultValue: false,
+                        setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.AshlandsGapEnabled = value),
+                        getter: () => BetterContinents.Settings.AshlandsGapEnabled);
+                    group.AddValue("ng", "Deep North Gap", "Whether The Deep North ocean gap is enabled",
+                        defaultValue: false,
+                        setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.DeepNorthGapEnabled = value),
+                        getter: () => BetterContinents.Settings.DeepNorthGapEnabled);
                     group.AddValue("me", "Map edge drop off", "Whether the map drops away at the boundary",
                         defaultValue: true,
                         setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.MapEdgeDropoff = value),

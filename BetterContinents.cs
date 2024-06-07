@@ -25,6 +25,10 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<float> ConfigContinentSize;
     public static ConfigEntry<float> ConfigSeaLevelAdjustment;
     public static ConfigEntry<bool> ConfigOceanChannelsEnabled;
+    public static ConfigEntry<bool> ConfigAshlandsGapEnabled;
+
+    public static ConfigEntry<bool> ConfigDeepNorthGapEnabled;
+
     public static ConfigEntry<bool> ConfigRiversEnabled;
     public static ConfigEntry<bool> ConfigMapEdgeDropoff;
     public static ConfigEntry<bool> ConfigMountainsAllowedAtCenter;
@@ -125,6 +129,12 @@ public partial class BetterContinents : BaseUnityPlugin
                 groupBuilder.AddValue("Ocean Channels")
                     .Description("Whether ocean channels should be enabled or not (useful to disable when using height map for instance)")
                     .Default(true).Bind(out ConfigOceanChannelsEnabled);
+                groupBuilder.AddValue("Ashlands Gap")
+                    .Description("Whether to add the Ashlands ocean gap (usually custom maps don't need this)")
+                    .Default(false).Bind(out ConfigAshlandsGapEnabled);
+                groupBuilder.AddValue("Deep North Gap")
+                    .Description("Whether to add the Deep North ocean gap (usually custom maps don't need this)")
+                    .Default(false).Bind(out ConfigDeepNorthGapEnabled);
                 groupBuilder.AddValue("Rivers")
                     .Description("Whether rivers should be enabled or not")
                     .Default(true).Bind(out ConfigRiversEnabled);

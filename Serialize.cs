@@ -55,6 +55,8 @@ public partial class BetterContinents
     LavaMapPath,
     MossMap,
     MossMapPath,
+    AshlandGapEnabled,
+    DeepNorthGapEnabled,
   }
   public partial class BetterContinentsSettings
   {
@@ -314,6 +316,10 @@ public partial class BetterContinents
         }
       }
 
+      if (Settings.AshlandsGapEnabled)
+        pkg.Write((int)DataKey.AshlandGapEnabled);
+      if (Settings.DeepNorthGapEnabled)
+        pkg.Write((int)DataKey.DeepNorthGapEnabled);
     }
 
     private void Deserialize(ZPackage pkg)
@@ -502,6 +508,12 @@ public partial class BetterContinents
             break;
           case DataKey.HeatMapScale:
             HeatMapScale = pkg.ReadSingle();
+            break;
+          case DataKey.AshlandGapEnabled:
+            Settings.AshlandsGapEnabled = true;
+            break;
+          case DataKey.DeepNorthGapEnabled:
+            Settings.DeepNorthGapEnabled = true;
             break;
           default:
             LogError("Failed to load the save file. Unknown feature: " + key);

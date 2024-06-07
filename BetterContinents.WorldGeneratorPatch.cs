@@ -35,17 +35,10 @@ public partial class BetterContinents
         private static int currentSeed;
 
         // Hardcoded gaps don't work well with the mod when often the whole world layout is changed.
-        [HarmonyPrefix, HarmonyPatch(nameof(WorldGenerator.CreateAshlandsGap))]
-        private static bool CreateAshlandsGap(ref double __result)
+        public static bool DisableGap(ref double __result)
         {
-            if (Settings.EnabledForThisWorld) __result = 1d;
-            return !Settings.EnabledForThisWorld;
-        }
-        [HarmonyPrefix, HarmonyPatch(nameof(WorldGenerator.CreateDeepNorthGap))]
-        private static bool CreateDeepNorthGap(ref double __result)
-        {
-            if (Settings.EnabledForThisWorld) __result = 1d;
-            return !Settings.EnabledForThisWorld;
+            __result = 1d;
+            return false;
         }
 
         //private static Noise 

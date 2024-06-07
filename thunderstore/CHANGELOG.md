@@ -1,3 +1,6 @@
+- v0.7.21
+  - Adds new settings to enable the Ashlands and Deep North ocean gaps.
+
 - v0.7.20
   - Adds a new map "paintmap" to set the default paint.
   - Adds a new map "lavamap" to set the Ashlands lava.
