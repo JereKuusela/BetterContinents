@@ -2,8 +2,8 @@
 
 Mod originally created by billw2012.
 
-- [Full Documentation](https://billw2012.github.io/BetterContinents-Docs/introduction.html)
-- [Installation Guide](https://billw2012.github.io/BetterContinents-Docs/setup-guide.html)
+- [Full Documentation](https://jerekuusela.github.io/BetterContinents-Docs/introduction.html)
+- [Installation Guide](https://jerekuusela.github.io/BetterContinents-Docs/setup-guide.html)
 - [Discord](https://discord.gg/3XW8ZntYzN)
 
 ## Introduction
@@ -27,17 +27,17 @@ These generated worlds can be shared with others (who have this mod installed) b
 
 ## Features
 
-- Use image files as [base heightmap](https://billw2012.github.io/BetterContinents-Docs/settings/heightmap.html#heightmap-file) layer, [detail heightmap](https://billw2012.github.io/BetterContinents-Docs/settings/flatmap.html#flatmap-file) layer, and [biome specific heightmap](https://billw2012.github.io/BetterContinents-Docs/settings/roughmap.html#roughmap-file) layer, with blending options for each
+- Use image files as [base heightmap](https://jerekuusela.github.io/BetterContinents-Docs/settings/heightmap.html#heightmap-file) layer, [detail heightmap](https://jerekuusela.github.io/BetterContinents-Docs/settings/flatmap.html#flatmap-file) layer, and [biome specific heightmap](https://jerekuusela.github.io/BetterContinents-Docs/settings/roughmap.html#roughmap-file) layer, with blending options for each
 - A comprehensive layer based noise system based on [FastNoiseLite](https://github.com/Auburn/FastNoise), including support for any number of layers of noise with separate settings, each with its own distortion and mask
 - A preset system with a few inbuilt defaults, allowing easy selection and sharing of world configs (anyone can make and share their own presets)
 - An in game UI for designing your world, with visualisation for the layer system, and fast updating of the terrain and map
 - An extensive console command system matching the UI, for those who prefer it
-- Use an [image file to specify biomes](https://billw2012.github.io/BetterContinents-Docs/settings/biomemap.html#biomemap-file)
-- Use an [image file to specify spawning positions](https://billw2012.github.io/BetterContinents-Docs/settings/spawnmap.html#spawnmap-file) for locations, including player start, bosses, and trader
-- Use an [image file to specify forest coverage](https://billw2012.github.io/BetterContinents-Docs/settings/forest.html#forestmap-file), including in [biomes that normally are totally forested](https://billw2012.github.io/BetterContinents-Docs/settings/forest.html#forest-factor-overrides-all-trees) (Swamp, Mistlands, Dark Forest, Mountains)
-- Change [global scale](https://billw2012.github.io/BetterContinents-Docs/settings/global.html#continent-size) – changes continent sizes
-- Adjust [sea level](https://billw2012.github.io/BetterContinents-Docs/settings/global.html#sea-level-adjustment)
-- Adjust [forest scaling](https://billw2012.github.io/BetterContinents-Docs/settings/forest.html#forest-scale) (how big the contiguous areas of forest/clearings are), and amount
-- Specify [starting position](https://billw2012.github.io/BetterContinents-Docs/settings/start-position.html) explicitly
+- Use an [image file to specify biomes](https://jerekuusela.github.io/BetterContinents-Docs/settings/biomemap.html#biomemap-file)
+- Use an [image file to specify spawning positions](https://jerekuusela.github.io/BetterContinents-Docs/settings/spawnmap.html#spawnmap-file) for locations, including player start, bosses, and trader
+- Use an [image file to specify forest coverage](https://jerekuusela.github.io/BetterContinents-Docs/settings/forest.html#forestmap-file), including in [biomes that normally are totally forested](https://jerekuusela.github.io/BetterContinents-Docs/settings/forest.html#forest-factor-overrides-all-trees) (Swamp, Mistlands, Dark Forest, Mountains)
+- Change [global scale](https://jerekuusela.github.io/BetterContinents-Docs/settings/global.html#continent-size) – changes continent sizes
+- Adjust [sea level](https://jerekuusela.github.io/BetterContinents-Docs/settings/global.html#sea-level-adjustment)
+- Adjust [forest scaling](https://jerekuusela.github.io/BetterContinents-Docs/settings/forest.html#forest-scale) (how big the contiguous areas of forest/clearings are), and amount
+- Specify [starting position](https://jerekuusela.github.io/BetterContinents-Docs/settings/start-position.html) explicitly
 - Still allows loading vanilla maps, without needing to adjust any settings or disable the mod
 - Export full map to png at any resolution
