@@ -162,6 +162,8 @@ public partial class BetterContinents
                 BiomeMap = ImageMapBiome.Create(BiomeConfigPath);
 
                 OceanChannelsEnabled = ConfigOceanChannelsEnabled.Value;
+                AshlandsGapEnabled = ConfigAshlandsGapEnabled.Value;
+                DeepNorthGapEnabled = ConfigDeepNorthGapEnabled.Value;
                 RiversEnabled = ConfigRiversEnabled.Value;
 
                 ForestScaleFactor = ConfigForestScale.Value;
