@@ -1,3 +1,6 @@
+- v0.7.22
+  - Fixes the ocean gap settings not saving.
+
 - v0.7.21
   - Adds new settings to enable the Ashlands and Deep North ocean gaps.
 

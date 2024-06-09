@@ -316,9 +316,9 @@ public partial class BetterContinents
         }
       }
 
-      if (Settings.AshlandsGapEnabled)
+      if (AshlandsGapEnabled)
         pkg.Write((int)DataKey.AshlandGapEnabled);
-      if (Settings.DeepNorthGapEnabled)
+      if (DeepNorthGapEnabled)
         pkg.Write((int)DataKey.DeepNorthGapEnabled);
     }
 
@@ -510,10 +510,10 @@ public partial class BetterContinents
             HeatMapScale = pkg.ReadSingle();
             break;
           case DataKey.AshlandGapEnabled:
-            Settings.AshlandsGapEnabled = true;
+            AshlandsGapEnabled = true;
             break;
           case DataKey.DeepNorthGapEnabled:
-            Settings.DeepNorthGapEnabled = true;
+            DeepNorthGapEnabled = true;
             break;
           default:
             LogError("Failed to load the save file. Unknown feature: " + key);
