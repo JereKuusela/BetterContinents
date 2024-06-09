@@ -1,4 +1,5 @@
 - v0.7.22
+  - Adds a new map "terrainmap" to set the terrain color.
   - Fixes the ocean gap settings not saving.
 
 - v0.7.21

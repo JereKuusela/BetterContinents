@@ -7,6 +7,7 @@ public partial class BetterContinents
   public static void DynamicPatch()
   {
     PatchHeightmap();
+    PatchBiomeColor();
     PatchGetBaseHeight();
     PatchGetBiomeHeight();
     PatchGetBiome();
@@ -57,6 +58,29 @@ public partial class BetterContinents
     ClutterSystem.instance?.ClearAll();
     */
   }
+
+  private static bool BiomeColorPatched = false;
+  private static void PatchBiomeColor()
+  {
+    var toPatch = Settings.EnabledForThisWorld && Settings.HasTerrainMap;
+    var method = AccessTools.Method(typeof(Heightmap), nameof(Heightmap.GetBiomeColor), [typeof(float), typeof(float)]);
+    var patch = AccessTools.Method(typeof(BetterContinents), nameof(GetBiomeColorPatch));
+    if (toPatch == BiomeColorPatched)
+      return;
+    if (BiomeColorPatched)
+    {
+      Log("Unpatching Heightmap.GetBiomeColor");
+      HarmonyInstance.Unpatch(method, patch);
+      BiomeColorPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching Heightmap.GetBiomeColor");
+      HarmonyInstance.Patch(method, prefix: new(patch));
+      BiomeColorPatched = true;
+    }
+  }
+
   private static int GetBaseHeightPatched = 0;
   private static void PatchGetBaseHeight()
   {

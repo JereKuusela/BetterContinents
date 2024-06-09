@@ -5,6 +5,13 @@ namespace BetterContinents;
 
 public partial class BetterContinents
 {
+  public static bool GetBiomeColorPatch(Heightmap __instance, float ix, float iy, ref Color __result)
+  {
+    var x = __instance.transform.position.x + (ix - __instance.m_width / 2) * __instance.m_scale;
+    var y = __instance.transform.position.z + (iy - __instance.m_width / 2) * __instance.m_scale;
+    return Settings.ApplyTerrainMap(x, y, ref __result) == false;
+  }
+
   private static bool GetBiomePatch(Heightmap __instance, Vector3 point, ref Heightmap.Biome __result)
   {
     if (__instance.m_isDistantLod) return true;
@@ -62,11 +69,6 @@ public partial class BetterContinents
     return Heightmap.s_indexToBiome[num];
   }
 
-  private static bool GetBiomeColorPatch(Heightmap __instance, float ix, float iy, ref Color __result)
-  {
-    __result = GetBiomeColor(__instance, ix, iy);
-    return false;
-  }
   private static Color GetBiomeColor(Heightmap obj, float ix, float iy)
   {
     if (obj.m_cornerBiomes[0] == obj.m_cornerBiomes[1] && obj.m_cornerBiomes[0] == obj.m_cornerBiomes[2] && obj.m_cornerBiomes[0] == obj.m_cornerBiomes[3])

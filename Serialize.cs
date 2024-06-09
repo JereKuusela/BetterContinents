@@ -57,6 +57,10 @@ public partial class BetterContinents
     MossMapPath,
     AshlandGapEnabled,
     DeepNorthGapEnabled,
+    TerrainMap,
+    TerrainMapPath,
+    TerrainMapColor,
+
   }
   public partial class BetterContinentsSettings
   {
@@ -267,6 +271,24 @@ public partial class BetterContinents
         pkg.Write(BiomePrecision);
       }
 
+      if (TerrainMap != null)
+      {
+        if (DefaultTerrainColor != DefaultDefaultTerrainColor)
+        {
+          pkg.Write((int)DataKey.TerrainMapColor);
+          pkg.Write(DefaultTerrainColor.R);
+          pkg.Write(DefaultTerrainColor.G);
+          pkg.Write(DefaultTerrainColor.B);
+          pkg.Write(DefaultTerrainColor.A);
+        }
+        pkg.Write((int)DataKey.TerrainMap);
+        pkg.Write(TerrainMap.SourceData);
+        if (!network)
+        {
+          pkg.Write((int)DataKey.TerrainMapPath);
+          pkg.Write(TerrainMap.FilePath);
+        }
+      }
       if (PaintMap != null)
       {
         pkg.Write((int)DataKey.PaintMap);
@@ -474,8 +496,19 @@ public partial class BetterContinents
           case DataKey.BiomePrecision:
             BiomePrecision = pkg.ReadInt();
             break;
+          case DataKey.TerrainMapColor:
+            DefaultTerrainColor = new(pkg.ReadByte(), pkg.ReadByte(), pkg.ReadByte(), pkg.ReadByte());
+            break;
+          case DataKey.TerrainMap:
+            TerrainMap = ImageMapColor.Create(pkg.ReadByteArray(), DefaultTerrainColor);
+            break;
+          case DataKey.TerrainMapPath:
+            path = pkg.ReadString();
+            if (TerrainMap != null)
+              TerrainMap.FilePath = path;
+            break;
           case DataKey.PaintMap:
-            PaintMap = ImageMapColor.Create(pkg.ReadByteArray());
+            PaintMap = ImageMapColor.Create(pkg.ReadByteArray(), null);
             break;
           case DataKey.PaintMapPath:
             path = pkg.ReadString();

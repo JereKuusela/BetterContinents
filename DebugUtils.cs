@@ -62,6 +62,9 @@ public partial class DebugUtils
                     if (BetterContinents.Settings.HasBiomeMap)
                         reload.AddCommand("bm", "Biomemap", "Reloads the biomemap",
                             HeightmapCommand(_ => BetterContinents.Settings.ReloadBiomeMap()));
+                    if (BetterContinents.Settings.HasTerrainMap)
+                        reload.AddCommand("terrain", "Terrainmap", "Reloads the terrainmap",
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadTerrainMap()));
                     if (BetterContinents.Settings.HasLocationMap)
                         reload.AddCommand("lm", "Locationmap", "Reloads the locationmap",
                             HeightmapCommand(_ => BetterContinents.Settings.ReloadLocationMap()));
@@ -88,6 +91,7 @@ public partial class DebugUtils
                             if (BetterContinents.Settings.HasRoughMap) BetterContinents.Settings.ReloadRoughMap();
                             if (BetterContinents.Settings.HasFlatMap) BetterContinents.Settings.ReloadFlatMap();
                             if (BetterContinents.Settings.HasBiomeMap) BetterContinents.Settings.ReloadBiomeMap();
+                            if (BetterContinents.Settings.HasTerrainMap) BetterContinents.Settings.ReloadTerrainMap();
                             if (BetterContinents.Settings.HasLocationMap) BetterContinents.Settings.ReloadLocationMap();
                             if (BetterContinents.Settings.HasForestMap) BetterContinents.Settings.ReloadForestMap();
                             if (BetterContinents.Settings.HasPaintMap) BetterContinents.Settings.ReloadPaintMap();
@@ -300,6 +304,29 @@ public partial class DebugUtils
                     setter: SetHeightmapValue<int>(value => BetterContinents.Settings.BiomePrecision = value),
                     getter: () => BetterContinents.Settings.BiomePrecision);
             });
+            bc.AddGroup("terrain", "Terrainmap", "Terrainmap settings, get more info with 'bc param terrain help'",
+                group =>
+                {
+                    group.AddValue("fn", "Terrainmap Filename",
+                        "Sets terrainmap filename (full path, directory or file name)",
+                        defaultValue: string.Empty,
+                        setter: SetHeightmapValue<string>(path =>
+                        {
+                            var fullPath = BetterContinents.Settings.ResolveTerrainPath(path);
+                            BetterContinents.Settings.SetTerrainPath(fullPath);
+                            if (BetterContinents.Settings.HasTerrainMap)
+                                Console.instance.Print($"<color=#ffa500>Terrainmap enabled!</color>");
+                            else if (string.IsNullOrEmpty(path))
+                                Console.instance.Print($"<color=#ff0000>Terrainmap disabled!</color>");
+                            else
+                                Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
+                        }),
+                        getter: () => BetterContinents.Settings.GetTerrainPath());
+                    group.AddValue("dc", "Terrainmap default color", "Terrainmap default color",
+                        defaultValue: "#808080ff",
+                        setter: SetDefaultTerrainColor,
+                        getter: () => BetterContinents.Settings.DefaultTerrainColor.ToHex());
+                });
             bc.AddGroup("l", "Locationmap", "Locationmap settings, get more info with 'bc param s help'", group =>
             {
                 group.AddValue("fn", "Locationmap Filename",
@@ -844,7 +871,13 @@ public partial class DebugUtils
     {
         rootCommand.Run(text);
     }
-
+    private static void SetDefaultTerrainColor(string value)
+    {
+        if (SixLabors.ImageSharp.Color.TryParseHex(value, out var color))
+            BetterContinents.Settings.DefaultTerrainColor = color;
+        else
+            Console.instance.Print($"<color=#ff0000>ERROR: Could not parse color {value}!</color>");
+    }
     private static Action<string> HeightmapCommand(Action<string> command) =>
         value =>
         {

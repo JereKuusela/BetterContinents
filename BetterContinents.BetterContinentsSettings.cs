@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using SixLabors.ImageSharp.PixelFormats;
 using UnityEngine;
 
 namespace BetterContinents;
@@ -45,10 +46,13 @@ public partial class BetterContinents
         public float HeightmapMask;
         public float HeatMapScale = 10f;
         public NoiseStackSettings BaseHeightNoise = new();
+        public static Rgba32 DefaultDefaultTerrainColor = new(128, 128, 128, byte.MaxValue);
+        public Rgba32 DefaultTerrainColor = DefaultDefaultTerrainColor;
 
         // Non-serialized
         private ImageMapFloat? HeightMap;
         private ImageMapBiome? BiomeMap;
+        private ImageMapColor? TerrainMap;
         private ImageMapColor? PaintMap;
         private ImageMapFloat? LavaMap;
         private ImageMapFloat? MossMap;
@@ -65,6 +69,7 @@ public partial class BetterContinents
         public bool HasRoughMap => RoughMap != null;
         public bool HasFlatMap => FlatMap != null;
         public bool HasForestMap => ForestMap != null;
+        public bool HasTerrainMap => TerrainMap != null;
         public bool HasPaintMap => PaintMap != null;
         public bool HasLavaMap => LavaMap != null;
         public bool HasMossMap => MossMap != null;
@@ -114,6 +119,7 @@ public partial class BetterContinents
         private static readonly string RoughFile = "Roughmap.png";
         private static readonly string ForestFile = "Forestmap.png";
         private static readonly string HeatFile = "Heatmap.png";
+        private static readonly string TerrainFile = "Terrainmap.png";
         private static readonly string PaintFile = "Paintmap.png";
         private static readonly string LavaFile = "Lavamap.png";
         private static readonly string MossFile = "Mossmmap.png";
@@ -124,6 +130,7 @@ public partial class BetterContinents
         private static string RoughPath(string defaultFilename, string projectDir) => GetPath(projectDir, RoughFile, defaultFilename);
         private static string ForestPath(string defaultFilename, string projectDir) => GetPath(projectDir, ForestFile, defaultFilename);
         private static string HeatPath(string defaultFilename, string projectDir) => GetPath(projectDir, HeatFile, defaultFilename);
+        private static string TerrainPath(string defaultFilename, string projectDir) => GetPath(projectDir, TerrainFile, defaultFilename);
         private static string PaintPath(string defaultFilename, string projectDir) => GetPath(projectDir, PaintFile, defaultFilename);
         private static string LavaPath(string defaultFilename, string projectDir) => GetPath(projectDir, LavaFile, defaultFilename);
         private static string MossPath(string defaultFilename, string projectDir) => GetPath(projectDir, MossFile, defaultFilename);
@@ -134,6 +141,7 @@ public partial class BetterContinents
         private static string RoughConfigPath => RoughPath(ConfigRoughFile.Value, ConfigMapSourceDir.Value);
         private static string ForestConfigPath => ForestPath(ConfigForestFile.Value, ConfigMapSourceDir.Value);
         private static string HeatConfigPath => HeatPath(ConfigHeatFile.Value, ConfigMapSourceDir.Value);
+        private static string TerrainConfigPath => TerrainPath(ConfigTerrainFile.Value, ConfigMapSourceDir.Value);
         private static string PaintConfigPath => PaintPath(ConfigPaintFile.Value, ConfigMapSourceDir.Value);
         private static string LavaConfigPath => LavaPath(ConfigLavaFile.Value, ConfigMapSourceDir.Value);
         private static string MossConfigPath => MossPath(ConfigMossFile.Value, ConfigMapSourceDir.Value);
@@ -186,8 +194,10 @@ public partial class BetterContinents
                 MountainsAllowedAtCenter = ConfigMountainsAllowedAtCenter.Value;
                 BiomePrecision = ConfigBiomePrecision.Value;
 
+                DefaultTerrainColor = SixLabors.ImageSharp.Color.ParseHex(ConfigDefaultTerrainColor.Value);
+                TerrainMap = ImageMapColor.Create(TerrainConfigPath, DefaultTerrainColor);
 
-                PaintMap = ImageMapColor.Create(PaintConfigPath);
+                PaintMap = ImageMapColor.Create(PaintConfigPath, null);
                 LavaMap = ImageMapFloat.Create(LavaConfigPath);
                 MossMap = ImageMapFloat.Create(MossConfigPath);
 
@@ -237,6 +247,10 @@ public partial class BetterContinents
         public string GetBiomePath() => BiomeMap?.FilePath ?? string.Empty;
         public string ResolveBiomePath(string path) => ResolvePath(path, BiomeFile);
 
+        public void SetTerrainPath(string path) => TerrainMap = ImageMapColor.Create(path, DefaultTerrainColor);
+        public string GetTerrainPath() => TerrainMap?.FilePath ?? string.Empty;
+        public string ResolveTerrainPath(string path) => ResolvePath(path, TerrainFile);
+
         public void SetLocationPath(string path) => LocationMap = ImageMapLocation.Create(path);
         public string GetLocationPath() => LocationMap?.FilePath ?? string.Empty;
         public string ResolveLocationPath(string path) => ResolvePath(path, LocationFile);
@@ -253,7 +267,7 @@ public partial class BetterContinents
         public string GetHeatPath() => HeatMap?.FilePath ?? string.Empty;
         public string ResolveHeatPath(string path) => ResolvePath(path, HeatFile);
 
-        public void SetPaintPath(string path) => PaintMap = ImageMapColor.Create(path);
+        public void SetPaintPath(string path) => PaintMap = ImageMapColor.Create(path, null);
         public string GetPaintPath() => PaintMap?.FilePath ?? string.Empty;
         public string ResolvePaintPath(string path) => ResolvePath(path, PaintFile);
 
@@ -364,6 +378,14 @@ public partial class BetterContinents
                         output($"Biome precision {BiomePrecision}");
                 }
                 else output($"Biomemap disabled");
+
+                if (TerrainMap != null)
+                {
+                    output($"Terrainmap file ({TerrainMap.Size}) {TerrainMap.FilePath}");
+                    output($"Default terrain map color {DefaultTerrainColor.ToHex()}");
+                }
+                else output($"Terrainmap disabled");
+
                 output($"Forest scale {ForestScaleFactor}");
                 output($"Forest amount {ForestAmount}");
                 if (ForestMap != null)
@@ -465,6 +487,13 @@ public partial class BetterContinents
             fileWriter.m_binary.Write(binaryData.Length);
             fileWriter.m_binary.Write(binaryData);
             fileWriter.Finish();
+        }
+
+        public bool ApplyTerrainMap(float x, float y, ref Color color)
+        {
+            if (TerrainMap == null) return false;
+            var normalized = WorldToNormalized(x, y);
+            return TerrainMap.TryGetValue(normalized.x, normalized.y, ref color);
         }
 
         public void ApplyPaintMap(float x, float y, Heightmap.Biome biome, ref Color mask)
@@ -641,6 +670,19 @@ public partial class BetterContinents
                 if (!HeatMap.LoadSourceImage()) return;
             }
             HeatMap.CreateMap();
+        }
+
+        public void ReloadTerrainMap()
+        {
+            if (TerrainMap == null) return;
+            if (!TerrainMap.LoadSourceImage())
+            {
+                if (!File.Exists(TerrainConfigPath) || File.Exists(TerrainMap.FilePath)) return;
+                LogWarning($"Cannot find image {TerrainMap.FilePath}: Using default path from config.");
+                TerrainMap.FilePath = TerrainConfigPath;
+                if (!TerrainMap.LoadSourceImage()) return;
+            }
+            TerrainMap.CreateMap();
         }
 
         public void ReloadPaintMap()
