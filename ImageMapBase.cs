@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -112,5 +113,38 @@ internal abstract class ImageMapBase()
         // File path may contain sensitive imformation so its removed from network serialization.
         pkg.Write(network ? "?" : FilePath);
         pkg.Write(SourceData);
+    }
+
+    protected static Color32 ParseColor32(string color)
+    {
+        var rgba = ParseRGBA(color);
+        return new Color32(rgba.R, rgba.G, rgba.B, rgba.A);
+    }
+    protected static UnityEngine.Color? ParseColor(string color)
+    {
+        var rgba = ParseRGBA(color);
+        return new UnityEngine.Color(rgba.R / 255f, rgba.G / 255f, rgba.B / 255f, rgba.A / 255f);
+    }
+    protected static Rgba32 ParseRGBA(string color)
+    {
+        color = color.Trim();
+        var split = color.Split(',').ToArray();
+        if (split.Length == 1)
+        {
+            if (SixLabors.ImageSharp.Color.TryParseHex(color, out var c))
+                return c;
+            else
+            {
+                BetterContinents.LogWarning($"Cannot parse color {color}");
+                return new Rgba32(0, 0, 0, 0);
+            }
+        }
+        if (split.Length < 3)
+        {
+            BetterContinents.LogWarning($"Cannot parse color {color}");
+            return new Rgba32(0, 0, 0, 0);
+        }
+        var a = split.Length == 3 ? "255" : split[3];
+        return new Rgba32(byte.Parse(split[0]), byte.Parse(split[1]), byte.Parse(split[2]), byte.Parse(a));
     }
 }

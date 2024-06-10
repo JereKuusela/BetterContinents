@@ -58,12 +58,20 @@ public partial class BetterContinents
 
                 // Load in our settings for this world
                 string settingsPath = GetBCFile(world.GetMetaPath());
-                try
+                if (File.Exists(settingsPath))
                 {
-                    Log($"Attempting to load settings from {settingsPath}, applying settings");
-                    Settings = BetterContinentsSettings.LoadFromSource(settingsPath, world.m_fileSource);
+                    try
+                    {
+                        Log($"Attempting to load settings from {settingsPath}, applying settings");
+                        Settings = BetterContinentsSettings.LoadFromSource(settingsPath, world.m_fileSource);
+                    }
+                    catch (Exception e)
+                    {
+                        LogError($"Failed to load settings from {settingsPath}: {e.Message}");
+                        Settings = BetterContinentsSettings.Disabled();
+                    }
                 }
-                catch
+                else
                 {
                     Log($"Couldn't find loaded settings for world {world.m_name} at {settingsPath}, mod is disabled for this World");
                     Settings = BetterContinentsSettings.Disabled();

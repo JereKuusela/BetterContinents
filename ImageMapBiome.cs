@@ -83,17 +83,10 @@ internal class ImageMapBiome() : ImageMapBase
         .Select(s => s.Trim().Split(':')).Where(s => s.Length == 2)
         .ToDictionary(
             s => Enum.TryParse<Heightmap.Biome>(s[0].Trim(), true, out var biome) ? biome : throw new Exception($"Invalid biome name {s[0]}"),
-            s =>
-            {
-                var split = s[1].Trim().Split(',').Select(s => s.Trim()).ToArray();
-                if (split.Length < 3)
-                    throw new Exception($"Invalid biome color {s[1]}");
-                var a = split.Length == 3 ? "255" : split[3];
-                return new Color32(byte.Parse(split[0]), byte.Parse(split[1]), byte.Parse(split[2]), byte.Parse(a));
-            }
+            s => ParseColor32(s[1])
         );
 
-    private static readonly string DefaultColors = "None: 0,0,0|Meadows: 0,255,0|BlackForest: 0,127,0|Swamp: 127,127,0|Mountain: 255,255,255|Plains: 255,255,0|Mistlands: 127,127,127|AshLands: 255,0,0|DeepNorth: 0,255,255|Ocean: 0,0,255";
+    private static readonly string DefaultColors = "None: 000000|Meadows: 00FF00|BlackForest: 007F00|Swamp: 7F7F00|Mountain: FFFFFF|Plains: FFFF00|Mistlands: 7F7F7F|AshLands: FF0000|DeepNorth: 00FFFF|Ocean: 0000FF";
     public bool CreateMap() => CreateMap<Rgba32>();
     protected override bool LoadTextureToMap<T>(Image<T> image)
     {

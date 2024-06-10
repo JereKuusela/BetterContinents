@@ -322,10 +322,6 @@ public partial class DebugUtils
                                 Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
                         }),
                         getter: () => BetterContinents.Settings.GetTerrainPath());
-                    group.AddValue("dc", "Terrainmap default color", "Terrainmap default color",
-                        defaultValue: "#808080ff",
-                        setter: SetDefaultTerrainColor,
-                        getter: () => BetterContinents.Settings.DefaultTerrainColor.ToHex());
                 });
             bc.AddGroup("l", "Locationmap", "Locationmap settings, get more info with 'bc param s help'", group =>
             {
@@ -870,13 +866,6 @@ public partial class DebugUtils
     public static void RunConsoleCommand(string text)
     {
         rootCommand.Run(text);
-    }
-    private static void SetDefaultTerrainColor(string value)
-    {
-        if (SixLabors.ImageSharp.Color.TryParseHex(value, out var color))
-            BetterContinents.Settings.DefaultTerrainColor = color;
-        else
-            Console.instance.Print($"<color=#ff0000>ERROR: Could not parse color {value}!</color>");
     }
     private static Action<string> HeightmapCommand(Action<string> command) =>
         value =>

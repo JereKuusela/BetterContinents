@@ -50,7 +50,6 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<string> ConfigSpawnFile;
 
     public static ConfigEntry<string> ConfigTerrainFile;
-    public static ConfigEntry<string> ConfigDefaultTerrainColor;
     public static ConfigEntry<string> ConfigPaintFile;
     public static ConfigEntry<string> ConfigLavaFile;
     public static ConfigEntry<string> ConfigMossFile;
@@ -197,9 +196,6 @@ public partial class BetterContinents : BaseUnityPlugin
                 groupBuilder.AddValue("Terrainmap file")
                     .Description("Path to a terrainmap file to use. See thea description on Nexusmods.com for the specifications (it will fail if they are not met)")
                     .Default("").Bind(out ConfigTerrainFile);
-                groupBuilder.AddValue("Default Terrain Color")
-                    .Description("Terrainmap color that uses the default terrain generation")
-                    .Default("#808080").Bind(out ConfigDefaultTerrainColor);
             })
             .AddGroup("BetterContinents.Forest", groupBuilder =>
             {

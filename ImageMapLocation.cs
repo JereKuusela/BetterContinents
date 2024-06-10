@@ -79,14 +79,7 @@ internal class ImageMapLocation() : ImageMapBase()
         .Select(s => s.Trim().Split(':')).Where(s => s.Length == 2)
         .ToDictionary(
             s => s[0].Trim(),
-            s =>
-            {
-                var split = s[1].Trim().Split(',').Select(s => s.Trim()).ToArray();
-                if (split.Length < 3)
-                    throw new Exception($"Invalid biome color {s[1]}");
-                var a = split.Length == 3 ? "255" : split[3];
-                return new Color32(byte.Parse(split[0]), byte.Parse(split[1]), byte.Parse(split[2]), byte.Parse(a));
-            }
+            s => ParseColor32(s[1].Trim())
         );
 
     public override void SerializeLegacy(ZPackage pkg, int version, bool network)

@@ -1,3 +1,8 @@
+- v0.7.23
+  - Adds color remapping to terrain and paint maps.
+  - Adds hex support to the biome color mapping.
+  - Removes the "Default terrain color" setting as obsolete.
+
 - v0.7.22
   - Adds a new map "terrainmap" to set the terrain color.
   - Fixes the ocean gap settings not saving.

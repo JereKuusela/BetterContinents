@@ -46,7 +46,7 @@ public partial class BetterContinents
     HeightMapMask,
     BaseHeightNoise,
     BiomePrecision,
-    PaintMap,
+    PaintMapLegacy, // Obsolete with color mapping, only used recently so might be able to remove this after some time.
     PaintMapPath,
     HeatMap,
     HeatMapPath,
@@ -57,9 +57,12 @@ public partial class BetterContinents
     MossMapPath,
     AshlandGapEnabled,
     DeepNorthGapEnabled,
-    TerrainMap,
+    TerrainMapLegacy, // Obsolete with color mapping, only used in test version so can be removed in the future.
     TerrainMapPath,
-    TerrainMapColor,
+    TerrainMapColorLegacy, // Obsolete with color mapping, only used in test version so can be removed in the future.
+    TerrainMap,
+    PaintMap,
+
 
   }
   public partial class BetterContinentsSettings
@@ -273,15 +276,8 @@ public partial class BetterContinents
 
       if (TerrainMap != null)
       {
-        if (DefaultTerrainColor != DefaultDefaultTerrainColor)
-        {
-          pkg.Write((int)DataKey.TerrainMapColor);
-          pkg.Write(DefaultTerrainColor.R);
-          pkg.Write(DefaultTerrainColor.G);
-          pkg.Write(DefaultTerrainColor.B);
-          pkg.Write(DefaultTerrainColor.A);
-        }
         pkg.Write((int)DataKey.TerrainMap);
+        pkg.Write(TerrainMap.SourceColors);
         pkg.Write(TerrainMap.SourceData);
         if (!network)
         {
@@ -292,6 +288,7 @@ public partial class BetterContinents
       if (PaintMap != null)
       {
         pkg.Write((int)DataKey.PaintMap);
+        pkg.Write(PaintMap.SourceColors);
         pkg.Write(PaintMap.SourceData);
         if (!network)
         {
@@ -496,19 +493,31 @@ public partial class BetterContinents
           case DataKey.BiomePrecision:
             BiomePrecision = pkg.ReadInt();
             break;
-          case DataKey.TerrainMapColor:
-            DefaultTerrainColor = new(pkg.ReadByte(), pkg.ReadByte(), pkg.ReadByte(), pkg.ReadByte());
+          case DataKey.TerrainMapColorLegacy:
+            // Obsolete with color mapping, only used in test version so can be removed in the future.
+            pkg.ReadByte();
+            pkg.ReadByte();
+            pkg.ReadByte();
+            pkg.ReadByte();
+            break;
+          case DataKey.TerrainMapLegacy:
+            TerrainMap = ImageMapTerrain.Create(pkg.ReadByteArray(), "");
             break;
           case DataKey.TerrainMap:
-            TerrainMap = ImageMapColor.Create(pkg.ReadByteArray(), DefaultTerrainColor);
+            var colors = pkg.ReadString();
+            TerrainMap = ImageMapTerrain.Create(pkg.ReadByteArray(), colors);
             break;
           case DataKey.TerrainMapPath:
             path = pkg.ReadString();
             if (TerrainMap != null)
               TerrainMap.FilePath = path;
             break;
+          case DataKey.PaintMapLegacy:
+            PaintMap = ImageMapPaint.Create(pkg.ReadByteArray(), "");
+            break;
           case DataKey.PaintMap:
-            PaintMap = ImageMapColor.Create(pkg.ReadByteArray(), null);
+            colors = pkg.ReadString();
+            PaintMap = ImageMapPaint.Create(pkg.ReadByteArray(), colors);
             break;
           case DataKey.PaintMapPath:
             path = pkg.ReadString();
@@ -761,7 +770,7 @@ public partial class BetterContinents
       if (Version >= 9)
         BiomePrecision = pkg.ReadInt();
       if (Version >= 10)
-        PaintMap = ImageMapColor.LoadLegacy(pkg);
+        PaintMap = ImageMapPaint.LoadLegacy(pkg);
     }
   }
 }
