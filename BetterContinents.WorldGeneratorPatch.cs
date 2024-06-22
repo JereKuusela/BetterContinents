@@ -345,7 +345,8 @@ public partial class BetterContinents
 
         public static bool GetAshlandsOceanGradientPrefix(float x, float y, ref float __result)
         {
-            __result = Settings.ApplyHeatmap(NormalizedX(x), NormalizedY(y));
+            // Ships take damage even with 0 heat, so the small subtraction is needed to turn zero to slightly negative.
+            __result = Settings.ApplyHeatmap(NormalizedX(x), NormalizedY(y)) - 0.00001f;
             return false;
         }
     }

@@ -1,6 +1,7 @@
 - v0.7.23
   - Adds color remapping to terrain and paint maps.
-  - Adds hex support to the biome color mapping.
+  - Adds support for hex format to the biome color mapping.
+  - Fixes the heat map causing ship damage everywhere in the world.
   - Removes the "Default terrain color" setting as obsolete.
 
 - v0.7.22
