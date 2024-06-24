@@ -465,12 +465,27 @@ public partial class BetterContinents
 
         public static BetterContinentsSettings LoadFromSource(string path, FileHelpers.FileSource fileSource)
         {
-            var fileReader = new FileReader(path, fileSource);
+            FileReader fileReader;
+            try
+            {
+                fileReader = new FileReader(path, fileSource);
+            }
+            catch
+            {
+                Log($"Couldn't find loaded settings for this world at {path}, mod is disabled.");
+                return Disabled();
+            }
+
             try
             {
                 var binaryReader = (BinaryReader)fileReader;
                 int count = binaryReader.ReadInt32();
                 return Load(new ZPackage(binaryReader.ReadBytes(count)));
+            }
+            catch (Exception e)
+            {
+                LogError($"Failed to load settings from {path}: {e.Message}");
+                return Disabled();
             }
             finally
             {

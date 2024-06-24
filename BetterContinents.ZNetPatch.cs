@@ -54,34 +54,12 @@ public partial class BetterContinents
         {
             if (server)
             {
-                Log($"Selected world {world.m_name}, applying settings");
-
-                // Load in our settings for this world
-                string settingsPath = GetBCFile(world.GetMetaPath());
-                if (File.Exists(settingsPath))
-                {
-                    try
-                    {
-                        Log($"Attempting to load settings from {settingsPath}, applying settings");
-                        Settings = BetterContinentsSettings.LoadFromSource(settingsPath, world.m_fileSource);
-                    }
-                    catch (Exception e)
-                    {
-                        LogError($"Failed to load settings from {settingsPath}: {e.Message}");
-                        Settings = BetterContinentsSettings.Disabled();
-                    }
-                }
-                else
-                {
-                    Log($"Couldn't find loaded settings for world {world.m_name} at {settingsPath}, mod is disabled for this World");
-                    Settings = BetterContinentsSettings.Disabled();
-                }
+                var settingsPath = GetBCFile(world.GetMetaPath());
+                Settings = BetterContinentsSettings.LoadFromSource(settingsPath, world.m_fileSource);
                 Settings.Dump();
             }
             else
             {
-                // Disable the mod so we don't end up breaking if the server doesn't use it
-                Log($"Joining a server, so disabling local settings");
                 Settings = BetterContinentsSettings.Disabled();
             }
             DynamicPatch();

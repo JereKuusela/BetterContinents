@@ -1,3 +1,6 @@
+- v0.7.24
+  - Fixes cloud save not working.
+
 - v0.7.23
   - Adds color remapping to terrain and paint maps.
   - Adds support for hex format to the biome color mapping.
