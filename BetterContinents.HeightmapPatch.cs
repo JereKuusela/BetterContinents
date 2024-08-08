@@ -7,8 +7,8 @@ public partial class BetterContinents
 {
   public static bool GetBiomeColorPatch(Heightmap __instance, float ix, float iy, ref Color __result)
   {
-    var x = __instance.transform.position.x + (ix - __instance.m_width / 2) * __instance.m_scale;
-    var y = __instance.transform.position.z + (iy - __instance.m_width / 2) * __instance.m_scale;
+    var x = __instance.transform.position.x + ix * 64f - 32f;
+    var y = __instance.transform.position.z + iy * 64f - 32f;
     return Settings.ApplyTerrainMap(x, y, ref __result) == false;
   }
 

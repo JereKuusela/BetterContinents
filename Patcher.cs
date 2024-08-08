@@ -18,6 +18,7 @@ public partial class BetterContinents
     PatchMapDropOff();
     PatchAshlandGap();
     PatchDeepNorthGap();
+    PatchIsAshlands();
   }
   private static int HeightmapGetBiomePatched = 0;
   private static void PatchHeightmap()
@@ -450,6 +451,28 @@ public partial class BetterContinents
       Log("Patching WorldGenerator.CreateDeepNorthGap");
       HarmonyInstance.Patch(method, prefix: new(patch));
       DeepNorthGapPatched = true;
+    }
+  }
+
+  private static bool IsAshlandsPatched = false;
+  private static void PatchIsAshlands()
+  {
+    var toPatch = Settings.EnabledForThisWorld && Settings.HasHeatMap && Settings.HeatMapScale > 0f;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.IsAshlands));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.IsAshlandsPrefix));
+    if (toPatch == IsAshlandsPatched)
+      return;
+    if (IsAshlandsPatched)
+    {
+      Log("Unpatching WorldGenerator.IsAshlands");
+      HarmonyInstance.Unpatch(method, patch);
+      IsAshlandsPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching WorldGenerator.IsAshlands");
+      HarmonyInstance.Patch(method, prefix: new(patch, Priority.VeryHigh));
+      IsAshlandsPatched = true;
     }
   }
 }

@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Emit;
-using System.Threading;
-using System.Threading.Tasks;
 using HarmonyLib;
 using UnityEngine;
 
@@ -69,7 +66,7 @@ public partial class BetterContinents
 
         public static void ApplyNoiseSettings()
         {
-            BaseHeightNoise = new NoiseStack(currentSeed, Settings.BaseHeightNoise);
+            BaseHeightNoise = new NoiseStack(TotalSize, currentSeed, Settings.BaseHeightNoise);
         }
 
         // wx, wy are [-10500, 10500]
@@ -131,8 +128,8 @@ public partial class BetterContinents
 
             float WarpScale = 0.001f * Settings.RidgeScale;
 
-            float warpX = (Mathf.PerlinNoise(wx * WarpScale, wy * WarpScale) - 0.5f) * WorldSize;
-            float warpY = (Mathf.PerlinNoise(wx * WarpScale + 2f, wy * WarpScale + 3f) - 0.5f) * WorldSize;
+            float warpX = (Mathf.PerlinNoise(wx * WarpScale, wy * WarpScale) - 0.5f) * TotalRadius;
+            float warpY = (Mathf.PerlinNoise(wx * WarpScale + 2f, wy * WarpScale + 3f) - 0.5f) * TotalRadius;
 
             wx += 100000f + ___m_offset0;
             wy += 100000f + ___m_offset1;
@@ -173,15 +170,14 @@ public partial class BetterContinents
             }
 
             // Edge of the world
-            var size = WorldSize - EdgeSize;
-            if (distance > size)
+            if (distance > WorldRadius)
             {
-                float t = Utils.LerpStep(size, WorldSize, distance);
+                float t = Utils.LerpStep(WorldRadius, TotalRadius, distance);
                 finalHeight = Mathf.Lerp(finalHeight, -0.2f, t);
-                var edge = WorldSize - 10;
+                var edge = TotalRadius - 10;
                 if (distance > edge)
                 {
-                    float t2 = Utils.LerpStep(edge, WorldSize, distance);
+                    float t2 = Utils.LerpStep(edge, TotalRadius, distance);
                     finalHeight = Mathf.Lerp(finalHeight, -2f, t2);
                 }
             }
@@ -206,8 +202,8 @@ public partial class BetterContinents
 
             float WarpScale = 0.001f * Settings.RidgeScale;
 
-            float warpX = (Mathf.PerlinNoise(wx * WarpScale, wy * WarpScale) - 0.5f) * WorldSize;
-            float warpY = (Mathf.PerlinNoise(wx * WarpScale + 2f, wy * WarpScale + 3f) - 0.5f) * WorldSize;
+            float warpX = (Mathf.PerlinNoise(wx * WarpScale, wy * WarpScale) - 0.5f) * TotalRadius;
+            float warpY = (Mathf.PerlinNoise(wx * WarpScale + 2f, wy * WarpScale + 3f) - 0.5f) * TotalRadius;
 
             wx += 100000f + ___m_offset0;
             wy += 100000f + ___m_offset1;
@@ -247,15 +243,14 @@ public partial class BetterContinents
             }
 
             // Edge of the world
-            var size = WorldSize - EdgeSize;
-            if (!Settings.DisableMapEdgeDropoff && distance > size)
+            if (!Settings.DisableMapEdgeDropoff && distance > WorldRadius)
             {
-                float t = Utils.LerpStep(size, WorldSize, distance);
+                float t = Utils.LerpStep(WorldRadius, TotalRadius, distance);
                 finalHeight = Mathf.Lerp(finalHeight, -0.2f, t);
-                var edge = WorldSize - 10;
+                var edge = TotalRadius - 10;
                 if (distance > edge)
                 {
-                    float t2 = Utils.LerpStep(edge, WorldSize, distance);
+                    float t2 = Utils.LerpStep(edge, TotalRadius, distance);
                     finalHeight = Mathf.Lerp(finalHeight, -2f, t2);
                 }
             }
@@ -283,15 +278,14 @@ public partial class BetterContinents
             finalHeight += Settings.SeaLevelAdjustment;
 
             // Edge of the world
-            var size = WorldSize - EdgeSize;
-            if (!Settings.DisableMapEdgeDropoff && distance > size)
+            if (!Settings.DisableMapEdgeDropoff && distance > WorldRadius)
             {
-                float t = Utils.LerpStep(size, WorldSize, distance);
+                float t = Utils.LerpStep(WorldRadius, TotalRadius, distance);
                 finalHeight = Mathf.Lerp(finalHeight, -0.2f, t);
-                var edge = WorldSize - 10;
+                var edge = TotalRadius - 10;
                 if (distance > edge)
                 {
-                    float t2 = Utils.LerpStep(edge, WorldSize, distance);
+                    float t2 = Utils.LerpStep(edge, TotalRadius, distance);
                     finalHeight = Mathf.Lerp(finalHeight, -2f, t2);
                 }
             }
@@ -347,6 +341,13 @@ public partial class BetterContinents
         {
             // Ships take damage even with 0 heat, so the small subtraction is needed to turn zero to slightly negative.
             __result = Settings.ApplyHeatmap(NormalizedX(x), NormalizedY(y)) - 0.00001f;
+            return false;
+        }
+
+        public static bool IsAshlandsPrefix(float x, float y, ref bool __result)
+        {
+            var heat = Settings.ApplyHeatmap(NormalizedX(x), NormalizedY(y));
+            __result = heat > 0f;
             return false;
         }
     }

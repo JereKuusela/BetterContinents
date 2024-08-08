@@ -881,8 +881,8 @@ public partial class DebugUtils
         value =>
         {
             setValue(value);
-            DynamicPatch();
             WorldGeneratorPatch.ApplyNoiseSettings();
+            DynamicPatch();
             noisePreviewTextures = null;
             maskPreviewTextures = null;
             GameUtils.Reset();
@@ -923,10 +923,10 @@ public partial class DebugUtils
         var pixels = new Color32[size * size];
         GameUtils.SimpleParallelFor(4, 0, size, y =>
         {
-            float yp = 2f * (y / (float)size - 0.5f) * BetterContinents.WorldSize;
+            float yp = 2f * (y / (float)size - 0.5f) * BetterContinents.TotalRadius;
             for (int x = 0; x < size; ++x)
             {
-                float xp = 2f * (x / (float)size - 0.5f) * BetterContinents.WorldSize;
+                float xp = 2f * (x / (float)size - 0.5f) * BetterContinents.TotalRadius;
                 byte val = (byte)Mathf.Clamp((int)(noiseFn(xp, yp) * 255f), 0, 255);
                 pixels[y * size + x] = new Color32(val, val, val, byte.MaxValue);
             }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Target Name="ILRepacker" AfterTargets="Build">
+        <ItemGroup>
+          <InputAssemblies Include="$(TargetPath)" />
+          <InputAssemblies Include="$(TargetDir)SixLabors.ImageSharp.dll" />
+          <InputAssemblies Include="$(TargetDir)System.Buffers.dll" />
+          <InputAssemblies Include="$(TargetDir)System.Memory.dll" />
+          <InputAssemblies Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
+          <InputAssemblies Include="$(TargetDir)System.Numerics.Vectors.dll" />
+        </ItemGroup>
+        <ILRepack Parallel="true" DebugInfo="false" Internalize="true" InputAssemblies="@(InputAssemblies)" OutputFile="$(TargetPath)" TargetKind="SameAsPrimaryAssembly" LibraryPath="$(OutputPath)" />
+    </Target>
+</Project>

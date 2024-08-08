@@ -4,19 +4,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>
     <nullable>enable</nullable>
-    <DoILRepack>false</DoILRepack>
   </PropertyGroup>
-  <Target Name="ILRepacker" AfterTargets="Build">
-      <ItemGroup>
-          <InputAssemblies Include="$(TargetPath)" />
-          <InputAssemblies Include="$(TargetDir)SixLabors.ImageSharp.dll" />
-          <InputAssemblies Include="$(TargetDir)System.Buffers.dll" />
-          <InputAssemblies Include="$(TargetDir)System.Memory.dll" />
-          <InputAssemblies Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
-          <InputAssemblies Include="$(TargetDir)System.Numerics.Vectors.dll" />
-      </ItemGroup>
-      <ILRepack Parallel="true" Internalize="true" InputAssemblies="@(InputAssemblies)" TargetKind="Dll" OutputFile="$(TargetPath)" />
-  </Target>
   <Target Name="CopyDLL" AfterTargets="ILRepacker">
     <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="$(ProjectDir)\..\Libs" />
     <Message Text="Copied to Libs folder." Importance="High" />
@@ -78,8 +66,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ILRepack.Lib.MSBuild" Version="2.1.18" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.4" />
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.34.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.9" />
     <PackageReference Include="System.Buffers" Version="4.5.1" />
     <PackageReference Include="System.Memory" Version="4.5.5" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />

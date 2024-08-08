@@ -424,11 +424,11 @@ public struct WarpedNoise
     private float mul;
     private NoiseStackSettings.NoiseSettings settings;
 
-    public static readonly WarpedNoise Empty = default(WarpedNoise);
+    public static readonly WarpedNoise Empty = default;
 
     public bool IsValid => noise != null;
 
-    public WarpedNoise(int seed, NoiseStackSettings.NoiseSettings settings, NoiseStackSettings.NoiseSettings? warpSettings = null)
+    public WarpedNoise(float size, int seed, NoiseStackSettings.NoiseSettings settings, NoiseStackSettings.NoiseSettings? warpSettings = null)
     {
         this.settings = settings;
 
@@ -443,10 +443,10 @@ public struct WarpedNoise
         const int RangeCheckSize = 100;
         for (int y = 0; y < RangeCheckSize; ++y)
         {
-            float yp = 2f * (y / (float)RangeCheckSize - 0.5f) * BetterContinents.WorldSize;
+            float yp = (y / (float)RangeCheckSize - 0.5f) * size;
             for (int x = 0; x < RangeCheckSize; ++x)
             {
-                float xp = 2f * (x / (float)RangeCheckSize - 0.5f) * BetterContinents.WorldSize;
+                float xp = (x / (float)RangeCheckSize - 0.5f) * size;
                 float height = noise.GetNoise(xp, yp);
                 min = Mathf.Min(min, height);
                 max = Mathf.Max(max, height);
@@ -493,17 +493,17 @@ public struct NoiseLayer
     public WarpedNoise noise;
     public WarpedNoise? mask;
 
-    public NoiseLayer(int seed, NoiseStackSettings.NoiseSettings layerSettings)
+    public NoiseLayer(float size, int seed, NoiseStackSettings.NoiseSettings layerSettings)
     {
-        noise = new WarpedNoise(seed, layerSettings);
+        noise = new WarpedNoise(size, seed, layerSettings);
         mask = null;
     }
 
-    public NoiseLayer(int seed, NoiseStackSettings.NoiseLayer noiseLayerSettings)
+    public NoiseLayer(float size, int seed, NoiseStackSettings.NoiseLayer noiseLayerSettings)
     {
-        noise = new WarpedNoise(seed, noiseLayerSettings.noiseSettings, noiseLayerSettings.noiseWarpSettings);
+        noise = new WarpedNoise(size, seed, noiseLayerSettings.noiseSettings, noiseLayerSettings.noiseWarpSettings);
         mask = noiseLayerSettings.maskSettings != null
-            ? new WarpedNoise(seed * 107, noiseLayerSettings.maskSettings, noiseLayerSettings.maskWarpSettings)
+            ? new WarpedNoise(size, seed * 107, noiseLayerSettings.maskSettings, noiseLayerSettings.maskWarpSettings)
             : null;
     }
 
@@ -520,12 +520,12 @@ public class NoiseStack
 {
     public List<NoiseLayer> layers = [];
 
-    public NoiseStack(int seed, NoiseStackSettings settings)
+    public NoiseStack(float size, int seed, NoiseStackSettings settings)
     {
         for (var layerIndex = 0; layerIndex < settings.NoiseLayers.Count; layerIndex++)
         {
             var layerSettings = settings.NoiseLayers[layerIndex];
-            layers.Add(new NoiseLayer(seed * 31 * (layerIndex + 3), layerSettings));
+            layers.Add(new NoiseLayer(size, seed * 31 * (layerIndex + 3), layerSettings));
         }
     }
 

@@ -74,20 +74,28 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<string> ConfigDebugResetCommand;
     public static ConfigEntry<string> ConfigOverrideVersion;
 
-
     public static ConfigEntry<float> ConfigHeatScale;
     public static ConfigEntry<string> ConfigHeatFile;
 
     public static BetterContinents instance;
 #nullable enable
-    public static float WorldSize = 10500f;
-    public static float EdgeSize = 500f;
+    public static void SetSize(float size, float edge)
+    {
+        Log($"Received world size {size} and edge size {edge}");
+        TotalRadius = size + edge;
+        TotalSize = TotalRadius * 2f;
+        WorldRadius = size;
+        WorldGeneratorPatch.ApplyNoiseSettings();
+    }
+    public static float TotalRadius = 10500f;
+    public static float TotalSize = TotalRadius * 2f;
+    public static float WorldRadius = 10000f;
     public const string ConfigFileExtension = ".BetterContinents";
     public static string GetBCFile(string path) => path + ConfigFileExtension;
     private static readonly Vector2 Half = Vector2.one * 0.5f;
-    private static float NormalizedX(float x) => x / (WorldSize * 2f) + 0.5f;
-    private static float NormalizedY(float y) => y / (WorldSize * 2f) + 0.5f;
-    private static Vector2 NormalizedToWorld(Vector2 p) => (p - Half) * WorldSize * 2f;
+    private static float NormalizedX(float x) => x / TotalSize + 0.5f;
+    private static float NormalizedY(float y) => y / TotalSize + 0.5f;
+    private static Vector2 NormalizedToWorld(Vector2 p) => (p - Half) * TotalSize;
     private static Vector2 WorldToNormalized(float x, float y) => new(NormalizedX(x), NormalizedY(y));
 
     public static void Log(string msg) => Debug.Log($"[BetterContinents] {msg}");

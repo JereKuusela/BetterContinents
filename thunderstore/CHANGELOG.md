@@ -1,3 +1,8 @@
+- v0.7.25
+  - Fixes Ashlands ocean storm not following the heat map.
+  - Fixes the terrain map having very low precision.
+  - Fixes Expand World Size not working with noise layers on servers.
+
 - v0.7.24
   - Fixes cloud save not working.
 
