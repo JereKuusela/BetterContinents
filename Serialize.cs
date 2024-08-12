@@ -62,8 +62,8 @@ public partial class BetterContinents
     TerrainMapColorLegacy, // Obsolete with color mapping, only used in test version so can be removed in the future.
     TerrainMap,
     PaintMap,
-
-
+    WorldSize,
+    EdgeSize,
   }
   public partial class BetterContinentsSettings
   {
@@ -339,6 +339,16 @@ public partial class BetterContinents
         pkg.Write((int)DataKey.AshlandGapEnabled);
       if (DeepNorthGapEnabled)
         pkg.Write((int)DataKey.DeepNorthGapEnabled);
+      if (WorldSize != 10000f)
+      {
+        pkg.Write((int)DataKey.WorldSize);
+        pkg.Write(WorldSize);
+      }
+      if (EdgeSize != 500f)
+      {
+        pkg.Write((int)DataKey.EdgeSize);
+        pkg.Write(EdgeSize);
+      }
     }
 
     private void Deserialize(ZPackage pkg)
@@ -556,6 +566,12 @@ public partial class BetterContinents
             break;
           case DataKey.DeepNorthGapEnabled:
             DeepNorthGapEnabled = true;
+            break;
+          case DataKey.WorldSize:
+            WorldSize = pkg.ReadSingle();
+            break;
+          case DataKey.EdgeSize:
+            EdgeSize = pkg.ReadSingle();
             break;
           default:
             LogError("Failed to load the save file. Unknown feature: " + key);

@@ -1,4 +1,5 @@
 - v0.7.25
+  - Adds new settings "World size" and "Edge size".
   - Fixes Ashlands ocean storm not following the heat map.
   - Fixes the terrain map having very low precision.
   - Fixes Expand World Size not working with noise layers on servers.

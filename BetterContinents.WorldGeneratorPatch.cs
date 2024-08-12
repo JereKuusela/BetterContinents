@@ -299,16 +299,6 @@ public partial class BetterContinents
             return finalHeight;
         }
 
-        public static IEnumerable<CodeInstruction> GetBiomeHeightTranspiler(IEnumerable<CodeInstruction> instructions)
-        {
-            var matcher = new CodeMatcher(instructions);
-            matcher = matcher.MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, -2f)).Advance(-5).
-                SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop).
-                SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop).
-                SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop).SetOpcodeAndAdvance(OpCodes.Nop);
-            return matcher.Instructions();
-        }
-
         public static bool GetBiomePrefix(float wx, float wy, ref Heightmap.Biome __result, World ___m_world)
         {
             var normalized = WorldToNormalized(wx, wy);

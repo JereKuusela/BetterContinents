@@ -15,7 +15,7 @@ public partial class BetterContinents
     PatchForestFactorPrefix();
     PatchForestFactorPostfix();
     PatchHeatPrefix();
-    PatchMapDropOff();
+    PatchWorldSize();
     PatchAshlandGap();
     PatchDeepNorthGap();
     PatchIsAshlands();
@@ -280,29 +280,22 @@ public partial class BetterContinents
 
   }
 
-  private static bool MapDropOffPatched = false;
-
-
-  private static void PatchMapDropOff()
+  private static void PatchWorldSize()
   {
-    var toPatch = Settings.EnabledForThisWorld && Settings.DisableMapEdgeDropoff;
-    if (toPatch == MapDropOffPatched)
-      return;
-    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiomeHeight));
-    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightTranspiler));
-    if (MapDropOffPatched)
-    {
-      Log("Unpatching WorldGenerator.GetBiomeHeight (map dropoff)");
-      HarmonyInstance.Unpatch(method, patch);
-      MapDropOffPatched = false;
-    }
-    if (toPatch)
-    {
-      Log("Patching WorldGenerator.GetBiomeHeight (map dropoff)");
-      HarmonyInstance.Patch(method, transpiler: new(patch));
-      MapDropOffPatched = true;
-    }
+    if (!Settings.EnabledForThisWorld)
+      WorldSizeHelper.PatchEdgeChecks(HarmonyInstance, 15000f, 500f);
+    else if (Settings.DisableMapEdgeDropoff)
+      // Easiest to just apply very large values to disable the feature.
+      WorldSizeHelper.PatchEdgeChecks(HarmonyInstance, 1E30f, 500f);
+    else
+      WorldSizeHelper.PatchEdgeChecks(HarmonyInstance, Settings.WorldSize, Settings.EdgeSize);
+
+    if (!Settings.EnabledForThisWorld)
+      WorldSizeHelper.PatchWorldSize(HarmonyInstance, 15000f, 500f);
+    else
+      WorldSizeHelper.PatchWorldSize(HarmonyInstance, Settings.WorldSize, Settings.EdgeSize);
   }
+
   private static bool GetBiomePatched = false;
   private static void PatchGetBiome()
   {

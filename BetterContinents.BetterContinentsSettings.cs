@@ -45,6 +45,8 @@ public partial class BetterContinents
         public bool HeightmapOverrideAll = true;
         public float HeightmapMask;
         public float HeatMapScale = 10f;
+        public float WorldSize = 10000f;
+        public float EdgeSize = 500f;
         public NoiseStackSettings BaseHeightNoise = new();
 
         // Non-serialized
@@ -156,6 +158,8 @@ public partial class BetterContinents
             {
                 ContinentSize = ConfigContinentSize.Value;
                 SeaLevel = ConfigSeaLevelAdjustment.Value;
+                WorldSize = ConfigWorldSize.Value;
+                EdgeSize = ConfigEdgeSize.Value;
 
                 HeightMap = ImageMapFloat.Create(HeightConfigPath);
                 HeightmapAmount = ConfigHeightmapAmount.Value;
@@ -322,6 +326,10 @@ public partial class BetterContinents
                 output($"Ashlands gap enabled {AshlandsGapEnabled}");
                 output($"Deep North gap enabled {DeepNorthGapEnabled}");
                 output($"Rivers enabled {RiversEnabled}");
+                if (WorldSize != 10000f)
+                    output($"World size {WorldSize}");
+                if (EdgeSize != 500f)
+                    output($"Edge size {EdgeSize}");
 
                 output($"Map edge dropoff {MapEdgeDropoff}");
                 output($"Mountains allowed at center {MountainsAllowedAtCenter}");

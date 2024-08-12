@@ -26,6 +26,8 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<float> ConfigSeaLevelAdjustment;
     public static ConfigEntry<bool> ConfigOceanChannelsEnabled;
     public static ConfigEntry<bool> ConfigAshlandsGapEnabled;
+    public static ConfigEntry<float> ConfigWorldSize;
+    public static ConfigEntry<float> ConfigEdgeSize;
 
     public static ConfigEntry<bool> ConfigDeepNorthGapEnabled;
 
@@ -132,6 +134,12 @@ public partial class BetterContinents : BaseUnityPlugin
                 groupBuilder.AddValue("Continent Size")
                     .Description("Continent size")
                     .Default(0.5f).Range(0f, 1f).Bind(out ConfigContinentSize);
+                groupBuilder.AddValue("World Size")
+                    .Description("World radius in meter")
+                    .Default(10000f).Bind(out ConfigWorldSize);
+                groupBuilder.AddValue("Edge Size")
+                    .Description("Edge size in meters")
+                    .Default(500f).Bind(out ConfigEdgeSize);
                 groupBuilder.AddValue("Sea Level Adjustment")
                     .Description("Modify sea level, which changes the land:sea ratio")
                     .Default(0.5f).Range(0f, 1f).Bind(out ConfigSeaLevelAdjustment);
@@ -303,6 +311,11 @@ public partial class BetterContinents : BaseUnityPlugin
         HarmonyInstance.PatchAll();
         Log("Awake");
         UI.Init();
+    }
+
+    public void Start()
+    {
+        EWD.Run();
     }
 
     public void OnGUI()

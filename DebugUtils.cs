@@ -184,6 +184,14 @@ public partial class DebugUtils
             bc.AddGroup("g", "Global", "Global settings, get more info with 'bc g help'",
                 group =>
                 {
+                    group.AddValue("worldsize", "World size", "World radius in meters",
+                        defaultValue: 10000f, minValue: 0f, maxValue: 1000000f,
+                        setter: SetHeightmapValue<float>(value => BetterContinents.Settings.WorldSize = value),
+                        getter: () => BetterContinents.Settings.WorldSize);
+                    group.AddValue("edgesize", "Edge size", "Edge size in meters",
+                        defaultValue: 500f, minValue: 0f, maxValue: 1000000f,
+                        setter: SetHeightmapValue<float>(value => BetterContinents.Settings.EdgeSize = value),
+                        getter: () => BetterContinents.Settings.EdgeSize);
                     group.AddValue("cs", "Continent size adjustment", "Continent size adjustment",
                         defaultValue: 0.5f, minValue: 0, maxValue: 1,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.ContinentSize = value),
