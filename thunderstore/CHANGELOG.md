@@ -1,8 +1,9 @@
 - v0.7.25
-  - Adds new settings "World size" and "Edge size".
+  - Changes the location map having higher priority than the default location generation.
   - Fixes Ashlands ocean storm not following the heat map.
   - Fixes the terrain map having very low precision.
   - Fixes Expand World Size not working with noise layers on servers.
+  - Fixed for the new update.
 
 - v0.7.24
   - Fixes cloud save not working.
