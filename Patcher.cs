@@ -108,12 +108,12 @@ public partial class BetterContinents
       }
     }
 
+    if (patchVersion == GetBaseHeightPatched)
+      return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBaseHeight));
     var patch1 = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBaseHeightPrefixV1));
     var patch2 = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBaseHeightPrefixV2));
     var patch3 = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBaseHeightPrefixV3));
-    if (patchVersion == GetBaseHeightPatched)
-      return;
     if (GetBaseHeightPatched == 1)
     {
       Log("Unpatching WorldGenerator.GetBaseHeight V1");
@@ -300,10 +300,10 @@ public partial class BetterContinents
   private static void PatchGetBiome()
   {
     var toPatch = Settings.EnabledForThisWorld && Settings.HasBiomeMap;
-    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiome), [typeof(float), typeof(float), typeof(float), typeof(bool)]);
-    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomePrefix));
     if (toPatch == GetBiomePatched)
       return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiome), [typeof(float), typeof(float), typeof(float), typeof(bool)]);
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomePrefix));
     if (GetBiomePatched)
     {
       Log("Unpatching WorldGenerator.GetBiome");
@@ -321,10 +321,10 @@ public partial class BetterContinents
   private static void PatchAddRivers()
   {
     var toPatch = Settings.EnabledForThisWorld && !Settings.RiversEnabled;
-    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.AddRivers));
-    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.AddRiversPrefix));
     if (toPatch == AddRiversPAtched)
       return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.AddRivers));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.AddRiversPrefix));
     if (AddRiversPAtched)
     {
       Log("Unpatching WorldGenerator.AddRivers");
@@ -342,10 +342,10 @@ public partial class BetterContinents
   private static void PatchForestFactorPrefix()
   {
     var toPatch = Settings.EnabledForThisWorld && Settings.ForestScale != 1f;
-    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetForestFactor));
-    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetForestFactorPrefix));
     if (toPatch == ForestFactorPrefixPatched)
       return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetForestFactor));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetForestFactorPrefix));
     if (ForestFactorPrefixPatched)
     {
       Log("Unpatching WorldGenerator.GetForestFactor prefix");
@@ -363,10 +363,10 @@ public partial class BetterContinents
   private static void PatchForestFactorPostfix()
   {
     var toPatch = Settings.EnabledForThisWorld && (Settings.HasForestMap || Settings.ForestAmountOffset != 0f);
-    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetForestFactor));
-    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetForestFactorPostfix));
     if (toPatch == ForestFactorPostfixPatched)
       return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetForestFactor));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetForestFactorPostfix));
     if (ForestFactorPostfixPatched)
     {
       Log("Unpatching WorldGenerator.GetForestFactor postfix");
@@ -385,10 +385,10 @@ public partial class BetterContinents
   private static void PatchHeatPrefix()
   {
     var toPatch = Settings.EnabledForThisWorld && Settings.HasHeatMap && Settings.HeatMapScale > 0f;
-    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetAshlandsOceanGradient), [typeof(float), typeof(float)]);
-    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetAshlandsOceanGradientPrefix));
     if (toPatch == HeatPrefixPatched)
       return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetAshlandsOceanGradient), [typeof(float), typeof(float)]);
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetAshlandsOceanGradientPrefix));
     if (HeatPrefixPatched)
     {
       Log("Unpatching WorldGenerator.GetAshlandsOceanGradient prefix");
@@ -407,10 +407,10 @@ public partial class BetterContinents
   private static void PatchAshlandGap()
   {
     var toPatch = Settings.EnabledForThisWorld && !Settings.AshlandsGapEnabled;
-    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.CreateAshlandsGap));
-    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.DisableGap));
     if (toPatch == AshlandsGapPatched)
       return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.CreateAshlandsGap));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.DisableGap));
     if (AshlandsGapPatched)
     {
       Log("Unpatching WorldGenerator.CreateAshlandsGap");
@@ -429,10 +429,10 @@ public partial class BetterContinents
   private static void PatchDeepNorthGap()
   {
     var toPatch = Settings.EnabledForThisWorld && !Settings.DeepNorthGapEnabled;
-    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.CreateDeepNorthGap));
-    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.DisableGap));
     if (toPatch == DeepNorthGapPatched)
       return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.CreateDeepNorthGap));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.DisableGap));
     if (DeepNorthGapPatched)
     {
       Log("Unpatching WorldGenerator.CreateDeepNorthGap");
@@ -451,10 +451,10 @@ public partial class BetterContinents
   private static void PatchIsAshlands()
   {
     var toPatch = Settings.EnabledForThisWorld && Settings.HasHeatMap && Settings.HeatMapScale > 0f;
-    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.IsAshlands));
-    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.IsAshlandsPrefix));
     if (toPatch == IsAshlandsPatched)
       return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.IsAshlands));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.IsAshlandsPrefix));
     if (IsAshlandsPatched)
     {
       Log("Unpatching WorldGenerator.IsAshlands");
@@ -468,4 +468,26 @@ public partial class BetterContinents
       IsAshlandsPatched = true;
     }
   }
+  /*
+    private static bool IsSpawnMapPatched = false;
+    private static void PatchIsSpawnMap()
+    {
+      var toPatch = Settings.EnabledForThisWorld && Settings.HasSpawnMap;
+      var method = AccessTools.Method(typeof(SpawnSystem), nameof(SpawnSystem.UpdateSpawnList));
+      var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.IsSpawnPointPrefix));
+      if (toPatch == IsSpawnMapPatched)
+        return;
+      if (IsSpawnMapPatched)
+      {
+        Log("Unpatching SpawnSystem.UpdateSpawnList");
+        HarmonyInstance.Unpatch(method, patch);
+        IsSpawnMapPatched = false;
+      }
+      if (toPatch)
+      {
+        Log("Patching SpawnSystem.UpdateSpawnList");
+        HarmonyInstance.Patch(method, prefix: new(patch));
+        IsSpawnMapPatched = true;
+      }
+    }*/
 }

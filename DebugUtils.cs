@@ -83,6 +83,9 @@ public partial class DebugUtils
                     if (BetterContinents.Settings.HasHeatMap)
                         reload.AddCommand("heat", "Heatmap", "Reloads the heatmap",
                             HeightmapCommand(_ => BetterContinents.Settings.ReloadHeatMap()));
+                    if (BetterContinents.Settings.HasSpawnMap)
+                        reload.AddCommand("spawn", "Spawnmap", "Reloads the spawnmap",
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadSpawnMap()));
                     if (BetterContinents.Settings.AnyImageMap)
                     {
                         reload.AddCommand("all", "All", "Reloads all image maps", HeightmapCommand(_ =>
@@ -98,6 +101,7 @@ public partial class DebugUtils
                             if (BetterContinents.Settings.HasLavaMap) BetterContinents.Settings.ReloadLavaMap();
                             if (BetterContinents.Settings.HasMossMap) BetterContinents.Settings.ReloadMossMap();
                             if (BetterContinents.Settings.HasHeatMap) BetterContinents.Settings.ReloadHeatMap();
+                            if (BetterContinents.Settings.HasSpawnMap) BetterContinents.Settings.ReloadSpawnMap();
                         }));
                     }
                 });

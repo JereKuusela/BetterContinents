@@ -62,6 +62,7 @@ public partial class BetterContinents
         private ImageMapFloat? FlatMap;
         private ImageMapFloat? ForestMap;
         private ImageMapFloat? HeatMap;
+        private ImageMapSpawn? SpawnMap;
 
         public bool HasHeightMap => HeightMap != null;
         public bool HasBiomeMap => BiomeMap != null;
@@ -74,6 +75,7 @@ public partial class BetterContinents
         public bool HasLavaMap => LavaMap != null;
         public bool HasMossMap => MossMap != null;
         public bool HasHeatMap => HeatMap != null;
+        public bool HasSpawnMap => SpawnMap != null;
 
 
         public bool AnyImageMap => HasHeightMap
@@ -86,7 +88,8 @@ public partial class BetterContinents
                                    || HasPaintMap
                                    || HasLavaMap
                                    || HasMossMap
-                                   || HasHeatMap;
+                                   || HasHeatMap
+                                   || HasSpawnMap;
         public bool ShouldHeightMapOverrideAll => HasHeightMap && HeightmapOverrideAll;
 
         public static BetterContinentsSettings Create()
@@ -124,6 +127,7 @@ public partial class BetterContinents
         private static readonly string PaintFile = "paintmap.png";
         private static readonly string LavaFile = "lavamap.png";
         private static readonly string MossFile = "mossmmap.png";
+        private static readonly string SpawnFile = "spawnmap.png";
 
         private static string HeightPath(string defaultFilename, string projectDir) => GetPath(projectDir, HeightFile, defaultFilename);
         private static string BiomePath(string defaultFilename, string projectDir) => GetPath(projectDir, BiomeFile, defaultFilename);
@@ -135,6 +139,7 @@ public partial class BetterContinents
         private static string PaintPath(string defaultFilename, string projectDir) => GetPath(projectDir, PaintFile, defaultFilename);
         private static string LavaPath(string defaultFilename, string projectDir) => GetPath(projectDir, LavaFile, defaultFilename);
         private static string MossPath(string defaultFilename, string projectDir) => GetPath(projectDir, MossFile, defaultFilename);
+        private static string SpawnPath(string defaultFilename, string projectDir) => GetPath(projectDir, SpawnFile, defaultFilename);
 
         private static string HeightConfigPath => HeightPath(ConfigHeightFile.Value, ConfigMapSourceDir.Value);
         private static string BiomeConfigPath => BiomePath(ConfigBiomeFile.Value, ConfigMapSourceDir.Value);
@@ -146,6 +151,7 @@ public partial class BetterContinents
         private static string PaintConfigPath => PaintPath(ConfigPaintFile.Value, ConfigMapSourceDir.Value);
         private static string LavaConfigPath => LavaPath(ConfigLavaFile.Value, ConfigMapSourceDir.Value);
         private static string MossConfigPath => MossPath(ConfigMossFile.Value, ConfigMapSourceDir.Value);
+        private static string SpawnConfigPath => SpawnPath(ConfigSpawnFile.Value, ConfigMapSourceDir.Value);
 
 
         private void InitSettings(bool enabled)
@@ -205,6 +211,8 @@ public partial class BetterContinents
 
                 HeatMap = ImageMapFloat.Create(HeatConfigPath);
                 HeatMapScale = ConfigHeatScale.Value;
+
+                SpawnMap = ImageMapSpawn.Create(SpawnConfigPath);
             }
             DynamicPatch();
         }
@@ -280,6 +288,10 @@ public partial class BetterContinents
         public void SetMossPath(string path) => MossMap = ImageMapFloat.Create(path);
         public string GetMossPath() => MossMap?.FilePath ?? string.Empty;
         public string ResolveMossPath(string path) => ResolvePath(path, MossFile);
+
+        public void SetSpawnPath(string path) => SpawnMap = ImageMapSpawn.Create(path);
+        public string GetSpawnPath() => SpawnMap?.FilePath ?? string.Empty;
+        public string ResolveSpawnPath(string path) => ResolvePath(path, SpawnFile);
 
         private string ResolvePath(string path, string defaultName)
         {
@@ -436,6 +448,10 @@ public partial class BetterContinents
                     output($"Heatmap scale {HeatMapScale}");
                 }
                 else output($"Heatmap disabled");
+
+                if (SpawnMap != null)
+                    output($"Spawnmap file ({SpawnMap.Size}) {SpawnMap.FilePath}");
+                else output($"Spawnmap disabled");
             }
             else
             {
@@ -745,6 +761,19 @@ public partial class BetterContinents
                 if (!MossMap.LoadSourceImage()) return;
             }
             MossMap.CreateMap();
+        }
+
+        public void ReloadSpawnMap()
+        {
+            if (SpawnMap == null) return;
+            if (!SpawnMap.LoadSourceImage())
+            {
+                if (!File.Exists(SpawnConfigPath) || File.Exists(SpawnMap.FilePath)) return;
+                LogWarning($"Cannot find image {SpawnMap.FilePath}: Using default path from config.");
+                SpawnMap.FilePath = SpawnConfigPath;
+                if (!SpawnMap.LoadSourceImage()) return;
+            }
+            SpawnMap.CreateMap();
         }
     }
 }

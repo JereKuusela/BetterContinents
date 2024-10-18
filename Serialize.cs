@@ -64,6 +64,8 @@ public partial class BetterContinents
     PaintMap,
     WorldSize,
     EdgeSize,
+    SpawnMapPath,
+    SpawnMap,
   }
   public partial class BetterContinentsSettings
   {
@@ -572,6 +574,14 @@ public partial class BetterContinents
             break;
           case DataKey.EdgeSize:
             EdgeSize = pkg.ReadSingle();
+            break;
+          case DataKey.SpawnMap:
+            SpawnMap = ImageMapSpawn.Create(pkg, "");
+            break;
+          case DataKey.SpawnMapPath:
+            path = pkg.ReadString();
+            if (SpawnMap != null)
+              SpawnMap.FilePath = path;
             break;
           default:
             LogError("Failed to load the save file. Unknown feature: " + key);
