@@ -16,7 +16,7 @@ public class WorldSizeHelper
   private static float BiomeStretch = 1f;
   public static void PatchEdgeChecks(Harmony harmony, float worldSize, float edgeSize)
   {
-    var toPatch = worldSize != 15000f || edgeSize != 500f;
+    var toPatch = worldSize != 10000f || edgeSize != 500f;
     if (toPatch == EdgeCheckPatched) return;
     WorldRadius = worldSize;
     EdgeSize = edgeSize;
@@ -166,7 +166,7 @@ public class WorldSizeHelper
 
   public static void PatchWorldSize(Harmony harmony, float worldSize, float edgeSize)
   {
-    var toPatch = worldSize != 15000f || edgeSize != 500f;
+    var toPatch = worldSize != 10000f || edgeSize != 500f;
     if (toPatch == WorldSizePatched) return;
     WorldRadius = worldSize;
     EdgeSize = edgeSize;

@@ -1,3 +1,6 @@
+- v0.7.26
+  - Fixes some maps not loading correctly.
+
 - v0.7.25
   - Changes the location map having higher priority than the default location generation.
   - Fixes Ashlands ocean storm not following the heat map.

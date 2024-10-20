@@ -283,7 +283,7 @@ public partial class BetterContinents
   private static void PatchWorldSize()
   {
     if (!Settings.EnabledForThisWorld)
-      WorldSizeHelper.PatchEdgeChecks(HarmonyInstance, 15000f, 500f);
+      WorldSizeHelper.PatchEdgeChecks(HarmonyInstance, 10000f, 500f);
     else if (Settings.DisableMapEdgeDropoff)
       // Easiest to just apply very large values to disable the feature.
       WorldSizeHelper.PatchEdgeChecks(HarmonyInstance, 1E30f, 500f);
@@ -291,7 +291,7 @@ public partial class BetterContinents
       WorldSizeHelper.PatchEdgeChecks(HarmonyInstance, Settings.WorldSize, Settings.EdgeSize);
 
     if (!Settings.EnabledForThisWorld)
-      WorldSizeHelper.PatchWorldSize(HarmonyInstance, 15000f, 500f);
+      WorldSizeHelper.PatchWorldSize(HarmonyInstance, 10000f, 500f);
     else
       WorldSizeHelper.PatchWorldSize(HarmonyInstance, Settings.WorldSize, Settings.EdgeSize);
   }
