@@ -92,7 +92,7 @@ internal class ImageMapSpawn() : ImageMapBase
     public bool IsEnabled(Vector2 zone, SpawnSystem.SpawnData spawnData)
     {
         if (Map == null || Map.Length == 0) return spawnData.m_enabled;
-        var zonePos = ZoneSystem.instance.GetZone(zone);
+        var zonePos = ZoneSystem.GetZone(zone);
         float xa = zonePos.x * (Size - 1);
         float ya = zonePos.y * (Size - 1);
 

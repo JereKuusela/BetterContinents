@@ -1,3 +1,6 @@
+- v0.7.27
+  - Fixed for the new game version.
+
 - v0.7.26
   - Fixes some maps not loading correctly.
 
