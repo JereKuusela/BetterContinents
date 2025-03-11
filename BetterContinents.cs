@@ -43,6 +43,7 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<float> ConfigHeightmapAdd;
     public static ConfigEntry<float> ConfigHeightmapMask;
     public static ConfigEntry<bool> ConfigHeightmapOverrideAll;
+    public static ConfigEntry<bool> ConfigHeightmapAlpha;
 
     public static ConfigEntry<int> ConfigBiomePrecision;
     public static ConfigEntry<string> ConfigBiomeFile;
@@ -188,6 +189,9 @@ public partial class BetterContinents : BaseUnityPlugin
                 groupBuilder.AddValue("Heightmap Override All")
                     .Description("All other aspects of the height calculation will be disabled, so the world will perfectly conform to your heightmap")
                     .Default(true).Bind(out ConfigHeightmapOverrideAll);
+                groupBuilder.AddValue("Heightmap Alpha")
+                    .Description("Enables alpha channel for the heightmap file to blend vanilla generation with the heightmap")
+                    .Default(false).Bind(out ConfigHeightmapAlpha);
             })
             .AddGroup("BetterContinents.Roughmap", groupBuilder =>
             {

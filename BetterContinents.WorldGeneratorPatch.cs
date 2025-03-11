@@ -115,6 +115,10 @@ public partial class BetterContinents
             Settings.ApplyPaintMap(wx, wy, biome, ref mask);
         }
 
+        public static void GetAshlandsHeight(ref Color mask, float wx, float wy)
+        {
+            Settings.ApplyPaintMap(wx, wy, Heightmap.Biome.AshLands, ref mask);
+        }
         private static float GetBaseHeightV1(float wx, float wy, float ___m_offset0, float ___m_offset1, float ___m_minMountainDistance)
         {
             float distance = Utils.Length(wx, wy);
@@ -338,6 +342,12 @@ public partial class BetterContinents
         {
             var heat = Settings.ApplyHeatmap(NormalizedX(x), NormalizedY(y));
             __result = heat > 0f;
+            return false;
+        }
+        // Usually lava requires heat so this is a fallback solution when people are using biome map but no heat map.
+        public static bool IsAshlandsFallbackPrefix(WorldGenerator __instance, float x, float y, ref bool __result)
+        {
+            __result = __instance.GetBiome(x, y) == Heightmap.Biome.AshLands;
             return false;
         }
     }

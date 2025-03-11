@@ -19,6 +19,8 @@ public partial class BetterContinents
     PatchAshlandGap();
     PatchDeepNorthGap();
     PatchIsAshlands();
+    PatchIsAshlandsFallback();
+    PatchGetAshlandsHeight();
   }
   private static int HeightmapGetBiomePatched = 0;
   private static void PatchHeightmap()
@@ -280,6 +282,29 @@ public partial class BetterContinents
 
   }
 
+  private static bool GetAshlandsHeightPatched = false;
+
+  private static void PatchGetAshlandsHeight()
+  {
+    var toPatch = Settings.EnabledForThisWorld && (Settings.HasPaintMap || Settings.HasLavaMap);
+    if (toPatch == GetAshlandsHeightPatched)
+      return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetAshlandsHeight));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetAshlandsHeight));
+    if (GetAshlandsHeightPatched)
+    {
+      Log("Unpatching WorldGenerator.GetAshlandsHeight");
+      HarmonyInstance.Unpatch(method, patch);
+      GetAshlandsHeightPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching WorldGenerator.GetAshlandsHeight");
+      HarmonyInstance.Patch(method, postfix: new(patch));
+      GetAshlandsHeightPatched = true;
+    }
+  }
+
   private static void PatchWorldSize()
   {
     if (!Settings.EnabledForThisWorld)
@@ -466,6 +491,27 @@ public partial class BetterContinents
       Log("Patching WorldGenerator.IsAshlands");
       HarmonyInstance.Patch(method, prefix: new(patch, Priority.VeryHigh));
       IsAshlandsPatched = true;
+    }
+  }
+  private static bool IsAshlandsFallbackPatched = false;
+  private static void PatchIsAshlandsFallback()
+  {
+    var toPatch = Settings.EnabledForThisWorld && Settings.HasBiomeMap && (!Settings.HasHeatMap || Settings.HeatMapScale == 0f);
+    if (toPatch == IsAshlandsFallbackPatched)
+      return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.IsAshlands));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.IsAshlandsFallbackPrefix));
+    if (IsAshlandsFallbackPatched)
+    {
+      Log("Unpatching WorldGenerator.IsAshlands (no heat map)");
+      HarmonyInstance.Unpatch(method, patch);
+      IsAshlandsFallbackPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching WorldGenerator.IsAshlands (no heat map)");
+      HarmonyInstance.Patch(method, prefix: new(patch, Priority.VeryHigh));
+      IsAshlandsFallbackPatched = true;
     }
   }
   /*

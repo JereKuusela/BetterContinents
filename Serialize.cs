@@ -66,6 +66,7 @@ public partial class BetterContinents
     EdgeSize,
     SpawnMapPath,
     SpawnMap,
+    HeightMapAlpha
   }
   public partial class BetterContinentsSettings
   {
@@ -126,6 +127,8 @@ public partial class BetterContinents
 
       if (HeightMap != null)
       {
+        if (HeightMapAlpha)
+          pkg.Write((int)DataKey.HeightMapAlpha);
         pkg.Write((int)DataKey.HeightMap);
         pkg.Write(HeightMap.SourceData);
         if (!network)
@@ -396,7 +399,7 @@ public partial class BetterContinents
             RidgeBlendSigmoidXOffset = pkg.ReadSingle();
             break;
           case DataKey.HeightMap:
-            HeightMap = ImageMapFloat.Create(pkg.ReadByteArray());
+            HeightMap = ImageMapFloat.Create(pkg.ReadByteArray(), HeightMapAlpha);
             break;
           case DataKey.HeightMapPath:
             path = pkg.ReadString();
@@ -411,6 +414,9 @@ public partial class BetterContinents
             break;
           case DataKey.HeightMapAdd:
             HeightmapAdd = pkg.ReadSingle();
+            break;
+          case DataKey.HeightMapAlpha:
+            HeightMapAlpha = true;
             break;
           case DataKey.OceanChannelsEnabled:
             OceanChannelsEnabled = false;
@@ -446,7 +452,7 @@ public partial class BetterContinents
               LocationMap.FilePath = path;
             break;
           case DataKey.RoughMap:
-            RoughMap = ImageMapFloat.Create(pkg.ReadByteArray());
+            RoughMap = ImageMapFloat.Create(pkg.ReadByteArray(), false);
             break;
           case DataKey.RoughMapPath:
             path = pkg.ReadString();
@@ -463,7 +469,7 @@ public partial class BetterContinents
             FlatmapBlend = pkg.ReadSingle();
             break;
           case DataKey.FlatMap:
-            FlatMap = ImageMapFloat.Create(pkg.ReadByteArray());
+            FlatMap = ImageMapFloat.Create(pkg.ReadByteArray(), false);
             break;
           case DataKey.FlatMapPath:
             path = pkg.ReadString();
@@ -471,7 +477,7 @@ public partial class BetterContinents
               FlatMap.FilePath = path;
             break;
           case DataKey.ForestMap:
-            ForestMap = ImageMapFloat.Create(pkg.ReadByteArray());
+            ForestMap = ImageMapFloat.Create(pkg.ReadByteArray(), false);
             break;
           case DataKey.ForestMapPath:
             path = pkg.ReadString();
@@ -537,7 +543,7 @@ public partial class BetterContinents
               PaintMap.FilePath = path;
             break;
           case DataKey.LavaMap:
-            LavaMap = ImageMapFloat.Create(pkg.ReadByteArray());
+            LavaMap = ImageMapFloat.Create(pkg.ReadByteArray(), false);
             break;
           case DataKey.LavaMapPath:
             path = pkg.ReadString();
@@ -545,7 +551,7 @@ public partial class BetterContinents
               LavaMap.FilePath = path;
             break;
           case DataKey.MossMap:
-            MossMap = ImageMapFloat.Create(pkg.ReadByteArray());
+            MossMap = ImageMapFloat.Create(pkg.ReadByteArray(), false);
             break;
           case DataKey.MossMapPath:
             path = pkg.ReadString();
@@ -553,7 +559,7 @@ public partial class BetterContinents
               MossMap.FilePath = path;
             break;
           case DataKey.HeatMap:
-            HeatMap = ImageMapFloat.Create(pkg.ReadByteArray());
+            HeatMap = ImageMapFloat.Create(pkg.ReadByteArray(), false);
             break;
           case DataKey.HeatMapPath:
             path = pkg.ReadString();
@@ -760,7 +766,7 @@ public partial class BetterContinents
         string roughmapFilePath = pkg.ReadString();
         if (!string.IsNullOrEmpty(roughmapFilePath))
         {
-          RoughMap = ImageMapFloat.Create(pkg.ReadByteArray(), roughmapFilePath);
+          RoughMap = ImageMapFloat.Create(pkg.ReadByteArray(), roughmapFilePath, false);
           RoughmapBlend = pkg.ReadSingle();
         }
 
@@ -771,13 +777,13 @@ public partial class BetterContinents
           string flatmapFilePath = pkg.ReadString();
           if (!string.IsNullOrEmpty(flatmapFilePath))
           {
-            FlatMap = ImageMapFloat.Create(pkg.ReadByteArray(), flatmapFilePath);
+            FlatMap = ImageMapFloat.Create(pkg.ReadByteArray(), flatmapFilePath, false);
           }
         }
         string forestmapFilePath = pkg.ReadString();
         if (!string.IsNullOrEmpty(forestmapFilePath))
         {
-          ForestMap = ImageMapFloat.Create(pkg.ReadByteArray(), forestmapFilePath);
+          ForestMap = ImageMapFloat.Create(pkg.ReadByteArray(), forestmapFilePath, false);
           ForestmapMultiply = pkg.ReadSingle();
           ForestmapAdd = pkg.ReadSingle();
         }

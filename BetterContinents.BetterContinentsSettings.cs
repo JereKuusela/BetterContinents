@@ -51,6 +51,7 @@ public partial class BetterContinents
 
         // Non-serialized
         private ImageMapFloat? HeightMap;
+        public bool HeightMapAlpha = false;
         private ImageMapBiome? BiomeMap;
         private ImageMapTerrain? TerrainMap;
         private ImageMapPaint? PaintMap;
@@ -167,7 +168,8 @@ public partial class BetterContinents
                 WorldSize = ConfigWorldSize.Value;
                 EdgeSize = ConfigEdgeSize.Value;
 
-                HeightMap = ImageMapFloat.Create(HeightConfigPath);
+                HeightMapAlpha = ConfigHeightmapAlpha.Value;
+                HeightMap = ImageMapFloat.Create(HeightConfigPath, HeightMapAlpha);
                 HeightmapAmount = ConfigHeightmapAmount.Value;
                 HeightmapBlend = ConfigHeightmapBlend.Value;
                 HeightmapAdd = ConfigHeightmapAdd.Value;
@@ -193,10 +195,10 @@ public partial class BetterContinents
 
                 LocationMap = ImageMapLocation.Create(LocationConfigPath);
 
-                RoughMap = ImageMapFloat.Create(RoughConfigPath);
+                RoughMap = ImageMapFloat.Create(RoughConfigPath, false);
                 RoughmapBlend = ConfigRoughmapBlend.Value;
 
-                ForestMap = ImageMapFloat.Create(ForestConfigPath);
+                ForestMap = ImageMapFloat.Create(ForestConfigPath, false);
                 ForestmapAdd = ConfigForestmapAdd.Value;
                 ForestmapMultiply = ConfigForestmapMultiply.Value;
                 MapEdgeDropoff = ConfigMapEdgeDropoff.Value;
@@ -206,10 +208,10 @@ public partial class BetterContinents
                 TerrainMap = ImageMapTerrain.Create(TerrainConfigPath);
 
                 PaintMap = ImageMapPaint.Create(PaintConfigPath);
-                LavaMap = ImageMapFloat.Create(LavaConfigPath);
-                MossMap = ImageMapFloat.Create(MossConfigPath);
+                LavaMap = ImageMapFloat.Create(LavaConfigPath, false);
+                MossMap = ImageMapFloat.Create(MossConfigPath, false);
 
-                HeatMap = ImageMapFloat.Create(HeatConfigPath);
+                HeatMap = ImageMapFloat.Create(HeatConfigPath, false);
                 HeatMapScale = ConfigHeatScale.Value;
 
                 SpawnMap = ImageMapSpawn.Create(SpawnConfigPath);
@@ -248,7 +250,7 @@ public partial class BetterContinents
             get => Mathf.InverseLerp(1, -1, ForestAmountOffset);
         }
 
-        public void SetHeightPath(string path) => HeightMap = ImageMapFloat.Create(path);
+        public void SetHeightPath(string path) => HeightMap = ImageMapFloat.Create(path, HeightMapAlpha);
         public string GetHeightPath() => HeightMap?.FilePath ?? string.Empty;
 
         public string ResolveHeightPath(string path) => ResolvePath(path, HeightFile);
@@ -265,15 +267,15 @@ public partial class BetterContinents
         public string GetLocationPath() => LocationMap?.FilePath ?? string.Empty;
         public string ResolveLocationPath(string path) => ResolvePath(path, LocationFile);
 
-        public void SetRoughPath(string path) => RoughMap = ImageMapFloat.Create(path);
+        public void SetRoughPath(string path) => RoughMap = ImageMapFloat.Create(path, false);
         public string GetRoughPath() => RoughMap?.FilePath ?? string.Empty;
         public string ResolveRoughPath(string path) => ResolvePath(path, RoughFile);
 
-        public void SetForestPath(string path) => ForestMap = ImageMapFloat.Create(path);
+        public void SetForestPath(string path) => ForestMap = ImageMapFloat.Create(path, false);
         public string GetForestPath() => ForestMap?.FilePath ?? string.Empty;
         public string ResolveForestPath(string path) => ResolvePath(path, ForestFile);
 
-        public void SetHeatPath(string path) => HeatMap = ImageMapFloat.Create(path);
+        public void SetHeatPath(string path) => HeatMap = ImageMapFloat.Create(path, false);
         public string GetHeatPath() => HeatMap?.FilePath ?? string.Empty;
         public string ResolveHeatPath(string path) => ResolvePath(path, HeatFile);
 
@@ -281,11 +283,11 @@ public partial class BetterContinents
         public string GetPaintPath() => PaintMap?.FilePath ?? string.Empty;
         public string ResolvePaintPath(string path) => ResolvePath(path, PaintFile);
 
-        public void SetLavaPath(string path) => LavaMap = ImageMapFloat.Create(path);
+        public void SetLavaPath(string path) => LavaMap = ImageMapFloat.Create(path, false);
         public string GetLavaPath() => LavaMap?.FilePath ?? string.Empty;
         public string ResolveLavaPath(string path) => ResolvePath(path, LavaFile);
 
-        public void SetMossPath(string path) => MossMap = ImageMapFloat.Create(path);
+        public void SetMossPath(string path) => MossMap = ImageMapFloat.Create(path, false);
         public string GetMossPath() => MossMap?.FilePath ?? string.Empty;
         public string ResolveMossPath(string path) => ResolvePath(path, MossFile);
 
@@ -546,7 +548,26 @@ public partial class BetterContinents
                 mask.b = paint.b;
                 if (paint.a != 1f)
                     mask.a = paint.a;
-            };
+            }
+            ;
+            if (LavaMap != null && biome == Heightmap.Biome.AshLands)
+                mask.a = LavaMap.GetValue(normalized.x, normalized.y);
+            else if (MossMap != null && biome == Heightmap.Biome.Mistlands)
+                mask.a = MossMap.GetValue(normalized.x, normalized.y);
+
+        }
+        public void ApplyLavaMap(float x, float y, Heightmap.Biome biome, ref Color mask)
+        {
+            var normalized = WorldToNormalized(x, y);
+            if (PaintMap != null && PaintMap.TryGetValue(normalized.x, normalized.y, out var paint))
+            {
+                mask.r = paint.r;
+                mask.g = paint.g;
+                mask.b = paint.b;
+                if (paint.a != 1f)
+                    mask.a = paint.a;
+            }
+            ;
             if (LavaMap != null && biome == Heightmap.Biome.AshLands)
                 mask.a = LavaMap.GetValue(normalized.x, normalized.y);
             else if (MossMap != null && biome == Heightmap.Biome.Mistlands)
@@ -626,7 +647,7 @@ public partial class BetterContinents
                 HeightMap.FilePath = HeightConfigPath;
                 if (!HeightMap.LoadSourceImage()) return;
             }
-            HeightMap.CreateMap();
+            HeightMap.CreateMap(HeightMapAlpha);
         }
 
         public void ReloadBiomeMap()
@@ -665,7 +686,7 @@ public partial class BetterContinents
                 RoughMap.FilePath = RoughConfigPath;
                 if (!RoughMap.LoadSourceImage()) return;
             }
-            RoughMap.CreateMap();
+            RoughMap.CreateMap(false);
         }
 
         public void ReloadFlatMap()
@@ -683,7 +704,7 @@ public partial class BetterContinents
                 FlatMap.FilePath = RoughConfigPath;
                 if (!FlatMap.LoadSourceImage()) return;
             }
-            FlatMap.CreateMap();
+            FlatMap.CreateMap(false);
         }
 
         public void ReloadForestMap()
@@ -696,7 +717,7 @@ public partial class BetterContinents
                 ForestMap.FilePath = ForestConfigPath;
                 if (!ForestMap.LoadSourceImage()) return;
             }
-            ForestMap.CreateMap();
+            ForestMap.CreateMap(false);
         }
         public void ReloadHeatMap()
         {
@@ -708,7 +729,7 @@ public partial class BetterContinents
                 HeatMap.FilePath = ForestConfigPath;
                 if (!HeatMap.LoadSourceImage()) return;
             }
-            HeatMap.CreateMap();
+            HeatMap.CreateMap(false);
         }
 
         public void ReloadTerrainMap()
@@ -747,7 +768,7 @@ public partial class BetterContinents
                 LavaMap.FilePath = LavaConfigPath;
                 if (!LavaMap.LoadSourceImage()) return;
             }
-            LavaMap.CreateMap();
+            LavaMap.CreateMap(false);
         }
 
         public void ReloadMossMap()
@@ -760,7 +781,7 @@ public partial class BetterContinents
                 MossMap.FilePath = MossConfigPath;
                 if (!MossMap.LoadSourceImage()) return;
             }
-            MossMap.CreateMap();
+            MossMap.CreateMap(false);
         }
 
         public void ReloadSpawnMap()

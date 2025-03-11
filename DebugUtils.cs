@@ -132,14 +132,14 @@ public partial class DebugUtils
             bc.AddCommand("show", "Show locations", "Pins locations matching optional filter on the map", args =>
             {
                 GameUtils.ShowOnMap((args ?? "")
-                    .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Split([' '], StringSplitOptions.RemoveEmptyEntries)
                     .Select(f => f.Trim())
                     .ToArray());
             });
             bc.AddCommand("hide", "Hide locations", "Removes pins matching optional filter from the map", args =>
             {
                 GameUtils.HideOnMap((args ?? "")
-                    .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Split([' '], StringSplitOptions.RemoveEmptyEntries)
                     .Select(f => f.Trim())
                     .ToArray());
             });
@@ -150,7 +150,7 @@ public partial class DebugUtils
                 else
                     GameUtils.EnableMinimapClouds();
                 GameUtils.HideOnMap((args ?? "")
-                    .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Split([' '], StringSplitOptions.RemoveEmptyEntries)
                     .Select(f => f.Trim())
                     .ToArray());
             });
@@ -269,6 +269,12 @@ public partial class DebugUtils
                         defaultValue: 0f, minValue: 0, maxValue: 1,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.HeightmapMask = value),
                         getter: () => BetterContinents.Settings.HeightmapMask);
+                    group.AddValue("alpha", "Heightmap Alpha",
+                        "Enables alpha channel to blend vanilla terrain with the heightmap",
+                        defaultValue: false,
+                        setter: SetHeightmapValue<bool>(value =>
+                            BetterContinents.Settings.HeightMapAlpha = value),
+                        getter: () => BetterContinents.Settings.HeightMapAlpha);
                 });
 
             bc.AddGroup("r", "Roughmap", "Roughmap settings, get more info with 'bc param r help'", group =>
