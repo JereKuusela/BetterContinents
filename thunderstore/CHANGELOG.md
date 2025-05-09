@@ -1,6 +1,5 @@
 - v0.7.28
   - Adds fallback handling for lava when heat map is missing.
-  - Fixed for the new game version.
 
 - v0.7.27
   - Fixed for the new game version.
