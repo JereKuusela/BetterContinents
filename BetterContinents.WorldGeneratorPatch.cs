@@ -345,9 +345,9 @@ public partial class BetterContinents
             return false;
         }
         // Usually lava requires heat so this is a fallback solution when people are using biome map but no heat map.
-        public static bool IsAshlandsFallbackPrefix(WorldGenerator __instance, float x, float y, ref bool __result)
+        public static bool IsAshlandsFallbackPrefix(float x, float y, ref bool __result)
         {
-            __result = __instance.GetBiome(x, y) == Heightmap.Biome.AshLands;
+            __result = WorldGenerator.instance?.GetBiome(x, y) == Heightmap.Biome.AshLands;
             return false;
         }
     }

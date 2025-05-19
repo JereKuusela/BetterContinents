@@ -1,3 +1,6 @@
+- v0.7.29
+  - Fixes some worlds not working.
+
 - v0.7.28
   - Adds fallback handling for lava when heat map is missing.
 
