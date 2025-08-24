@@ -2,8 +2,8 @@
 
 Mod originally created by billw2012.
 
-- [Full Documentation](https://billw2012.github.io/BetterContinents-Docs/introduction.html)
-- [Installation Guide](https://billw2012.github.io/BetterContinents-Docs/setup-guide.html)
+- [Full Documentation](https://jerekuusela.github.io/BetterContinents-Docs/introduction.html)
+- [Installation Guide](https://jerekuusela.github.io/BetterContinents-Docs/setup-guide.html)
 - [Discord](https://discord.gg/3XW8ZntYzN)
 
 ## Introduction
