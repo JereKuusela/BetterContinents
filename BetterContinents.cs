@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
@@ -99,10 +100,8 @@ public partial class BetterContinents : BaseUnityPlugin
     public static string GetBCFile(string path) => Path.ChangeExtension(path, ConfigFileExtension);
     public static string GetLegacyBCFile(string path) => Path.ChangeExtension(path, ".fwl" + ConfigFileExtension);
     private static readonly Vector2 Half = Vector2.one * 0.5f;
-    private static float NormalizedX(float x) => x / TotalSize + 0.5f;
-    private static float NormalizedY(float y) => y / TotalSize + 0.5f;
+    private static float Normalize(float x) => Mathf.Clamp(x / TotalSize + 0.5f, 0f, 1f);
     private static Vector2 NormalizedToWorld(Vector2 p) => (p - Half) * TotalSize;
-    private static Vector2 WorldToNormalized(float x, float y) => new(NormalizedX(x), NormalizedY(y));
 
     public static void Log(string msg) => Debug.Log($"[BetterContinents] {msg}");
     public static void LogError(string msg) => Debug.LogError($"[BetterContinents] {msg}");

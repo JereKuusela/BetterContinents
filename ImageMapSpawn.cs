@@ -160,7 +160,7 @@ internal class ImageMapSpawn() : ImageMapBase
       colorToIndex[new(c.r, c.g, c.b, c.a)] = i;
     }
 
-    BetterContinents.Log($"Colors to index: {string.Join(", ", colorToIndex.Select(kvp => $"{kvp.Key} => {kvp.Value}"))}");
+    bool warned = false;
     Map = LoadPixels(img, pixel =>
     {
       // Black color always means nothing is done.
@@ -170,7 +170,14 @@ internal class ImageMapSpawn() : ImageMapBase
       if (colorToIndex.TryGetValue(pixel, out var index))
         return (byte)index;
       else
+      {
+        if (!warned)
+        {
+          warned = true;
+          BetterContinents.LogWarning($"{Path.GetFileName(FilePath)}: Unknown color {pixel} found in the image.");
+        }
         return (byte)0;
+      }
     });
 
     BetterContinents.Log($"Time to calculate colors from {FilePath}: {st.ElapsedMilliseconds} ms");

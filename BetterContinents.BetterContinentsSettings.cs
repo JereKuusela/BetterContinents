@@ -568,14 +568,14 @@ public partial class BetterContinents
     public bool ApplyTerrainMap(float x, float z, ref Color color)
     {
       if (TerrainMap == null) return false;
-      var normalized = WorldToNormalized(x, z);
-      return TerrainMap.TryGetValue(normalized.x, normalized.y, out color);
+      return TerrainMap.TryGetValue(Normalize(x), Normalize(z), out color);
     }
 
     public void ApplyPaintMap(float x, float z, Heightmap.Biome biome, ref Color mask)
     {
-      var normalized = WorldToNormalized(x, z);
-      if (PaintMap != null && PaintMap.TryGetValue(normalized.x, normalized.y, out var paint))
+      var wx = Normalize(x);
+      var wz = Normalize(z);
+      if (PaintMap != null && PaintMap.TryGetValue(wx, wz, out var paint))
       {
         mask.r = paint.r;
         mask.g = paint.g;
@@ -585,15 +585,16 @@ public partial class BetterContinents
       }
         ;
       if (LavaMap != null && biome == Heightmap.Biome.AshLands)
-        mask.a = LavaMap.GetValue(normalized.x, normalized.y);
+        mask.a = LavaMap.GetValue(wx, wz);
       else if (MossMap != null && biome == Heightmap.Biome.Mistlands)
-        mask.a = MossMap.GetValue(normalized.x, normalized.y);
+        mask.a = MossMap.GetValue(wx, wz);
 
     }
     public void ApplyLavaMap(float x, float z, Heightmap.Biome biome, ref Color mask)
     {
-      var normalized = WorldToNormalized(x, z);
-      if (PaintMap != null && PaintMap.TryGetValue(normalized.x, normalized.y, out var paint))
+      var wx = Normalize(x);
+      var wz = Normalize(z);
+      if (PaintMap != null && PaintMap.TryGetValue(wx, wz, out var paint))
       {
         mask.r = paint.r;
         mask.g = paint.g;
@@ -603,9 +604,9 @@ public partial class BetterContinents
       }
         ;
       if (LavaMap != null && biome == Heightmap.Biome.AshLands)
-        mask.a = LavaMap.GetValue(normalized.x, normalized.y);
+        mask.a = LavaMap.GetValue(wx, wz);
       else if (MossMap != null && biome == Heightmap.Biome.Mistlands)
-        mask.a = MossMap.GetValue(normalized.x, normalized.y);
+        mask.a = MossMap.GetValue(wx, wz);
 
     }
 
@@ -613,8 +614,7 @@ public partial class BetterContinents
     public void ApplyVegetationMap(Vector3 position, List<ZoneSystem.ZoneVegetation> vegetation)
     {
       if (VegetationMap == null) return;
-      var normalized = WorldToNormalized(position.x, position.z);
-      var entry = VegetationMap.GetEntry(normalized.x, normalized.y);
+      var entry = VegetationMap.GetEntry(Normalize(position.x), Normalize(position.z));
       if (entry == null) return;
 
       foreach (var v in vegetation)
@@ -629,8 +629,7 @@ public partial class BetterContinents
     public bool CheckVegetationMap(Vector3 position, ZoneSystem.ZoneVegetation vegetation)
     {
       if (VegetationMap == null) return false;
-      var normalized = WorldToNormalized(position.x, position.z);
-      var entry = VegetationMap.GetEntry(normalized.x, normalized.y);
+      var entry = VegetationMap.GetEntry(Normalize(position.x), Normalize(position.z));
       if (entry == null) return false;
       return entry.HasDisabled(vegetation.m_prefab.name);
     }
@@ -646,8 +645,7 @@ public partial class BetterContinents
     public void ApplySpawnMap(Vector3 position, List<SpawnSystem.SpawnData> spawners)
     {
       if (SpawnMap == null) return;
-      var normalized = WorldToNormalized(position.x, position.z);
-      var entry = SpawnMap.GetEntry(normalized.x, normalized.y);
+      var entry = SpawnMap.GetEntry(Normalize(position.x), Normalize(position.z));
       if (entry == null) return;
 
       foreach (var v in spawners)

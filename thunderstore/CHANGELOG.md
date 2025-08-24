@@ -1,6 +1,9 @@
 - v0.7.30
   - Adds spawn map.
   - Adds vegetation map.
+  - Improves config settings layout.
+  - Minor optimizations.
+  - Fixes index out of range error when going out of map bounds.
 
 - v0.7.29
   - Fixes some worlds not working.

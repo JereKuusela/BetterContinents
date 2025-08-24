@@ -103,12 +103,12 @@ public partial class BetterContinents
         {
             var smoothHeight = __instance.GetBaseHeight(wx, wy, false) * 200f;
             Settings.ApplyPaintMap(wx, wy, biome, ref mask);
-            return Settings.ApplyRoughmap(NormalizedX(wx), NormalizedY(wy), smoothHeight, result);
+            return Settings.ApplyRoughmap(Normalize(wx), Normalize(wy), smoothHeight, result);
         }
         public static float GetBiomeHeightWithRough(float result, WorldGenerator __instance, ref Color mask, float wx, float wy)
         {
             var smoothHeight = __instance.GetBaseHeight(wx, wy, false) * 200f;
-            return Settings.ApplyRoughmap(NormalizedX(wx), NormalizedY(wy), smoothHeight, result);
+            return Settings.ApplyRoughmap(Normalize(wx), Normalize(wy), smoothHeight, result);
         }
         public static void GetBiomeHeightWithPaint(ref Color mask, Heightmap.Biome biome, float wx, float wy)
         {
@@ -124,8 +124,8 @@ public partial class BetterContinents
             float distance = Utils.Length(wx, wy);
 
             // The base map x, y coordinates in 0..1 range
-            float mapX = NormalizedX(wx);
-            float mapY = NormalizedY(wy);
+            float mapX = Normalize(wx);
+            float mapY = Normalize(wy);
 
             wx *= Settings.GlobalScale;
             wy *= Settings.GlobalScale;
@@ -198,8 +198,8 @@ public partial class BetterContinents
             float distance = Utils.Length(wx, wy);
 
             // The base map x, y coordinates in 0..1 range
-            float mapX = NormalizedX(wx);
-            float mapY = NormalizedY(wy);
+            float mapX = Normalize(wx);
+            float mapY = Normalize(wy);
 
             wx *= Settings.GlobalScale;
             wy *= Settings.GlobalScale;
@@ -273,8 +273,8 @@ public partial class BetterContinents
             float distance = Utils.Length(wx, wy);
 
             // The base map x, y coordinates in 0..1 range
-            float mapX = NormalizedX(wx);
-            float mapY = NormalizedY(wy);
+            float mapX = Normalize(wx);
+            float mapY = Normalize(wy);
 
             float baseHeight = Settings.ApplyHeightmap(mapX, mapY, 0f);
             float finalHeight = BaseHeightNoise?.Apply(wx, wy, baseHeight) ?? 0;
@@ -303,10 +303,9 @@ public partial class BetterContinents
             return finalHeight;
         }
 
-        public static bool GetBiomePrefix(float wx, float wy, ref Heightmap.Biome __result, World ___m_world)
+        public static bool GetBiomePrefix(float wx, float wy, ref Heightmap.Biome __result)
         {
-            var normalized = WorldToNormalized(wx, wy);
-            var result = Settings.GetBiomeOverride(normalized.x, normalized.y);
+            var result = Settings.GetBiomeOverride(Normalize(wx), Normalize(wy));
             if (result != Heightmap.Biome.None)
                 __result = result;
             return false;
@@ -328,19 +327,19 @@ public partial class BetterContinents
         {
             if (Settings.ForestScale != 1f)
                 pos /= Settings.ForestScale;
-            __result = Settings.ApplyForest(NormalizedX(pos.x), NormalizedY(pos.z), __result);
+            __result = Settings.ApplyForest(Normalize(pos.x), Normalize(pos.z), __result);
         }
 
         public static bool GetAshlandsOceanGradientPrefix(float x, float y, ref float __result)
         {
             // Ships take damage even with 0 heat, so the small subtraction is needed to turn zero to slightly negative.
-            __result = Settings.ApplyHeatmap(NormalizedX(x), NormalizedY(y)) - 0.00001f;
+            __result = Settings.ApplyHeatmap(Normalize(x), Normalize(y)) - 0.00001f;
             return false;
         }
 
         public static bool IsAshlandsPrefix(float x, float y, ref bool __result)
         {
-            var heat = Settings.ApplyHeatmap(NormalizedX(x), NormalizedY(y));
+            var heat = Settings.ApplyHeatmap(Normalize(x), Normalize(y));
             __result = heat > 0f;
             return false;
         }
