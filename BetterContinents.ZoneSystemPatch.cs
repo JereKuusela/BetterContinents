@@ -21,6 +21,7 @@ public partial class BetterContinents
           LogWarning("Skipping automatic genloc, use the command manually if needed.");
           __instance.m_locationsGenerated = true;
         }
+        Settings.SanityCheck(ZNetScene.instance);
       }
     }
     // Changes to location type spawn placement (this is the functional part of the mod)
