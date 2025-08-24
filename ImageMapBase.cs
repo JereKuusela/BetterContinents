@@ -97,14 +97,6 @@ internal abstract class ImageMapBase()
           $"Cannot use texture {FilePath}: its width ({width}) does not match its height ({height})");
       return false;
     }
-
-    static bool IsPowerOfTwo(int x) => (x & (x - 1)) == 0;
-    if (!IsPowerOfTwo(width))
-    {
-      BetterContinents.LogError(
-          $"Cannot use texture {FilePath}: it is not a power of two size (e.g. 256, 512, 1024, 2048)");
-      return false;
-    }
     return true;
   }
 

@@ -192,6 +192,11 @@ public partial class DebugUtils
             bc.AddGroup("g", "Global", "Global settings, get more info with 'bc g help'",
                 group =>
                 {
+                    group.AddValue("skipdefaultlocations", "Skip default locations",
+                        "Whether to skip default location placement",
+                        defaultValue: false,
+                        setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.SkipDefaultLocations = value),
+                        getter: () => BetterContinents.Settings.SkipDefaultLocations);
                     group.AddValue("worldsize", "World size", "World radius in meters",
                         defaultValue: 10000f, minValue: 0f, maxValue: 1000000f,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.WorldSize = value),

@@ -68,6 +68,7 @@ public partial class BetterContinents
     FixWaterColor,
     VegetationMap,
     VegetationMapPath,
+    SkipDefaultLocations,
   }
   public partial class BetterContinentsSettings
   {
@@ -206,6 +207,11 @@ public partial class BetterContinents
         pkg.Write((int)DataKey.OverrideStartPosition);
         pkg.Write(StartPositionX);
         pkg.Write(StartPositionY);
+      }
+
+      if (SkipDefaultLocations)
+      {
+        pkg.Write((int)DataKey.SkipDefaultLocations);
       }
 
       if (LocationMap != null)
@@ -467,6 +473,9 @@ public partial class BetterContinents
             OverrideStartPosition = true;
             StartPositionX = pkg.ReadSingle();
             StartPositionY = pkg.ReadSingle();
+            break;
+          case DataKey.SkipDefaultLocations:
+            SkipDefaultLocations = true;
             break;
           case DataKey.LocationMap:
             LocationMap = ImageMapLocation.Create(pkg);
@@ -778,6 +787,7 @@ public partial class BetterContinents
       OverrideStartPosition = false;
       StartPositionX = 0;
       StartPositionY = 0;
+      SkipDefaultLocations = false;
       BaseHeightNoise = new();
       HeightmapOverrideAll = false;
       HeightmapMask = 0;

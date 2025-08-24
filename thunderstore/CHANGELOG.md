@@ -1,6 +1,7 @@
 - v0.7.30
   - Adds spawn map.
   - Adds vegetation map.
+  - Changes the "Skip default location placement" config setting to be saved on the map settings.
   - Improves config settings layout.
   - Minor optimizations.
   - Fixes index out of range error when going out of map bounds.

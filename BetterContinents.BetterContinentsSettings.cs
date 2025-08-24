@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using SixLabors.ImageSharp.PixelFormats;
 using UnityEngine;
 
 namespace BetterContinents;
@@ -34,6 +33,7 @@ public partial class BetterContinents
     public bool OverrideStartPosition;
     public float StartPositionX;
     public float StartPositionY;
+    public bool SkipDefaultLocations;
     public float RoughmapBlend = 1f;
     public bool UseRoughInvertedAsFlat;
     public float FlatmapBlend;
@@ -200,6 +200,7 @@ public partial class BetterContinents
         OverrideStartPosition = ConfigOverrideStartPosition.Value;
         StartPositionX = ConfigStartPositionX.Value;
         StartPositionY = ConfigStartPositionY.Value;
+        SkipDefaultLocations = ConfigSkipDefaultLocations.Value;
 
         LocationMap = ImageMapLocation.Create(LocationConfigPath);
 
@@ -730,7 +731,6 @@ public partial class BetterContinents
 
     public Heightmap.Biome GetBiomeOverride(float mapX, float mapY) => BiomeMap?.GetValue(mapX, mapY) ?? 0;
 
-    public Vector2? FindSpawn(string spawn) => LocationMap?.FindSpawn(spawn);
     public IEnumerable<Vector2> GetAllSpawns(string spawn) => LocationMap?.GetAllSpawns(spawn) ?? [];
 
     public void ReloadHeightMap()

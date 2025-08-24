@@ -76,7 +76,7 @@ public partial class BetterContinents : BaseUnityPlugin
     public static ConfigEntry<float> ConfigStartPositionY;
 
     public static ConfigEntry<bool> ConfigDebugModeEnabled;
-    public static ConfigEntry<bool> ConfigDebugSkipDefaultLocationPlacement;
+    public static ConfigEntry<bool> ConfigSkipDefaultLocations;
     public static ConfigEntry<string> ConfigDebugResetCommand;
     public static ConfigEntry<string> ConfigOverrideVersion;
 
@@ -133,8 +133,6 @@ public partial class BetterContinents : BaseUnityPlugin
                     .Default(true).Bind(out ConfigEnabled);
                 groupBuilder.AddValue("Debug Mode")
                     .Description("Automatically reveals the full map on respawn, enables cheat mode, and debug mode, for debugging purposes").Bind(out ConfigDebugModeEnabled);
-                groupBuilder.AddValue("Skip Default Location Placement")
-                    .Description("Skips default location placement during world gen (spawn temple and locationmap are still placed), for quickly testing the heightmap itself").Bind(out ConfigDebugSkipDefaultLocationPlacement);
                 groupBuilder.AddValue("Debug Reset Command")
                     .Description("Upgrade World command to execute when reloading images.").Default("zones_reset start").Bind(out ConfigDebugResetCommand);
                 groupBuilder.AddValue("Override version")
@@ -146,6 +144,8 @@ public partial class BetterContinents : BaseUnityPlugin
             })
             .AddGroup("BetterContinents.Global", groupBuilder =>
             {
+                groupBuilder.AddValue("Skip Default Locations")
+                  .Description("Skips the default location placement. Spawn temple and location map are still placed.").Bind(out ConfigSkipDefaultLocations);
                 groupBuilder.AddValue("Continent Size")
                     .Description("Continent size")
                     .Default(0.5f).Range(0f, 1f).Bind(out ConfigContinentSize);

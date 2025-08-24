@@ -72,7 +72,8 @@ public partial class BetterContinents
     [HarmonyPrefix, HarmonyPatch(nameof(ZoneSystem.CountNrOfLocation))]
     private static bool CountNrOfLocation(ZoneSystem.ZoneLocation location, ref int __result)
     {
-      if (!ConfigDebugSkipDefaultLocationPlacement.Value) return true;
+      if (!Settings.EnabledForThisWorld) return true;
+      if (!Settings.SkipDefaultLocations) return true;
       if (location.m_prefabName == "StartTemple") return true;
       __result = location.m_quantity;
       return false;

@@ -176,7 +176,7 @@ internal class ImageMapSpawn() : ImageMapBase
           warned = true;
           BetterContinents.LogWarning($"{Path.GetFileName(FilePath)}: Unknown color {pixel} found in the image.");
         }
-        return (byte)0;
+        return (byte)255;
       }
     });
 
@@ -211,28 +211,99 @@ internal class SpawnEntry
 
   public void SanityCheck(ZNetScene scene)
   {
+    // Process Enabled patterns
     foreach (var name in Enabled.ToArray())
     {
       Enabled.Remove(name);
-      Enabled.Add(SanityCheck(scene, name));
+      var matches = SanityCheck(scene, name);
+      foreach (var match in matches)
+      {
+        Enabled.Add(match);
+      }
     }
+
+    // Process Disabled patterns
     foreach (var name in Disabled.ToArray())
     {
       Disabled.Remove(name);
-      Disabled.Add(SanityCheck(scene, name));
+      var matches = SanityCheck(scene, name);
+      foreach (var match in matches)
+      {
+        Disabled.Add(match);
+      }
     }
   }
-  private string SanityCheck(ZNetScene scene, string name)
+  private IEnumerable<string> SanityCheck(ZNetScene scene, string name)
   {
-    if (scene.GetPrefab(name)) return name;
+    // Check if this is a wildcard pattern
+    if (name.Contains("*"))
+    {
+      // Find all matching prefabs using wildcard pattern
+      var matches = new List<string>();
+      foreach (var item in scene.m_namedPrefabs.Values)
+      {
+        if (MatchesWildcard(item.name, name))
+          matches.Add(item.name);
+      }
+      // Return matches if any found, otherwise return the original pattern
+      return matches.Count > 0 ? matches : new[] { name };
+    }
+
+    // First try exact match
+    if (scene.GetPrefab(name)) return [name];
+
+    // Try case-insensitive exact match for non-wildcard names
     foreach (var item in scene.m_namedPrefabs.Values)
     {
       if (item.name.Equals(name, StringComparison.OrdinalIgnoreCase))
-        return item.name;
+        return new[] { item.name };
     }
-    return name;
+
+    // Return original name if no match found
+    return [name];
   }
 
+  private bool MatchesWildcard(string text, string pattern)
+  {
+    // Handle simple cases
+    if (pattern == "*") return true;
+    if (!pattern.Contains("*")) return text.Equals(pattern, StringComparison.OrdinalIgnoreCase);
+
+    var parts = pattern.Split('*');
+
+    // Case 1: *substring* (contains)
+    if (pattern.StartsWith("*") && pattern.EndsWith("*") && parts.Length == 3 && parts[0] == "" && parts[2] == "")
+    {
+      return text.IndexOf(parts[1], StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    // Case 2: *suffix (ends with)
+    if (pattern.StartsWith("*"))
+    {
+      return text.EndsWith(parts[1], StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Case 3: prefix* (starts with)
+    if (pattern.EndsWith("*"))
+    {
+      return text.StartsWith(parts[0], StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Case 4: prefix*suffix (starts with prefix and ends with suffix)
+    if (parts.Length == 2 && !string.IsNullOrEmpty(parts[0]) && !string.IsNullOrEmpty(parts[1]))
+    {
+      return text.StartsWith(parts[0], StringComparison.OrdinalIgnoreCase) &&
+             text.EndsWith(parts[1], StringComparison.OrdinalIgnoreCase) &&
+             text.Length >= parts[0].Length + parts[1].Length;
+    }
+
+    // Case 5: More complex patterns - not supported.
+    return false;
+  }
+
+
   public bool HasEnabled(string name) => Enabled.Contains(name) || (All == true && !Disabled.Contains(name));
+
   public bool HasDisabled(string name) => Disabled.Contains(name) || (All == false && !Enabled.Contains(name));
+
 }
