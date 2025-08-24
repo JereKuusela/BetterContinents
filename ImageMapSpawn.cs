@@ -33,16 +33,25 @@ internal class ImageMapSpawn() : ImageMapBase
             FilePath = path
         };
         map.Deserialize(pkg);
-        map.CreateMap();
+        // No need to create any texture.
+        map.Size = (int)Math.Sqrt(map.Map.Length);
         return map;
     }
-    private UnityEngine.Color[] Map = [];
-    private readonly Dictionary<UnityEngine.Color, SpawnEntry> Colors = [];
+
+    private byte[] Map = [];
+    private readonly List<Color32> Colors = [];
+    private readonly List<SpawnEntry> Entries = [];
 
 
     public override bool LoadSourceImage()
     {
         Colors.Clear();
+        Entries.Clear();
+
+        // White is hardcoded to disable everything.
+        Colors.Add(new Color32(255, 255, 255, 255));
+        Entries.Add(new SpawnEntry("none"));
+
         if (!base.LoadSourceImage()) return false;
         var path = Path.Combine(Path.GetDirectoryName(FilePath), Path.GetFileNameWithoutExtension(FilePath) + ".txt");
         if (!File.Exists(path))
@@ -55,52 +64,77 @@ internal class ImageMapSpawn() : ImageMapBase
             var lines = File.ReadAllLines(path);
             foreach (var line in lines)
             {
+                if (line == "") continue;
                 var parts = line.Split(':');
                 if (parts.Length != 2) continue;
-                var color = ParseColor(parts[0]);
-                if (color == null) continue;
-                var spawn = parts[1];
-                Colors[color.Value] = new SpawnEntry(spawn);
+                var color = ParseColor32(parts[0]);
+                var spawn = parts[1].Trim();
+                Colors.Add(color);
+                Entries.Add(new SpawnEntry(spawn));
             }
         }
         catch (Exception ex)
         {
             BetterContinents.LogError($"Cannot load file {path}: {ex.Message}.");
         }
+
         return true;
     }
     public void Deserialize(ZPackage pkg)
     {
-        int count = pkg.ReadInt();
         Colors.Clear();
+        Entries.Clear();
+
+        int count = pkg.ReadInt();
         for (int i = 0; i < count; i++)
         {
-            var r = pkg.ReadShort();
-            var g = pkg.ReadShort();
-            var b = pkg.ReadShort();
-            var a = pkg.ReadShort();
-            var color = new UnityEngine.Color(r / 255f, g / 255f, b / 255f, a / 255f);
+            var r = pkg.ReadByte();
+            var g = pkg.ReadByte();
+            var b = pkg.ReadByte();
+            var a = pkg.ReadByte();
+            var color = new Color32(r, g, b, a);
             var spawn = pkg.ReadString();
-            Colors[color] = new SpawnEntry(spawn);
+
+            BetterContinents.Log($"Loaded spawn color {color} => {spawn}");
+            Colors.Add(color);
+            Entries.Add(new SpawnEntry(spawn));
         }
+
         SourceData = pkg.ReadByteArray();
+        Map = SourceData;
     }
 
 
     public bool CreateMap() => CreateMap<Rgba32>();
 
-    public bool IsEnabled(Vector2 zone, SpawnSystem.SpawnData spawnData)
+    public void Serialize(ZPackage pkg)
     {
-        if (Map == null || Map.Length == 0) return spawnData.m_enabled;
-        var zonePos = ZoneSystem.GetZone(zone);
-        float xa = zonePos.x * (Size - 1);
-        float ya = zonePos.y * (Size - 1);
+        pkg.Write(Colors.Count);
+        for (int i = 0; i < Colors.Count; i++)
+        {
+            var color = Colors[i];
+            pkg.Write(color.r);
+            pkg.Write(color.g);
+            pkg.Write(color.b);
+            pkg.Write(color.a);
+            var entry = Entries[i];
+            pkg.Write(entry.Data);
+        }
+        pkg.Write(Map);
+    }
+
+    public SpawnEntry? GetEntry(float x, float y)
+    {
+        if (Map == null || Map.Length == 0) return null;
+        float xa = x * (Size - 1);
+        float ya = y * (Size - 1);
 
         int xi = Mathf.RoundToInt(xa);
         int yi = Mathf.RoundToInt(ya);
-        var color = Map[yi * Size + xi];
-        if (!Colors.TryGetValue(color, out var entry)) return spawnData.m_enabled;
-        return entry.IsEnabled(spawnData);
+        var index = Map[yi * Size + xi];
+
+        if (index >= Entries.Count) return null;
+        return Entries[index];
     }
 
     protected override bool LoadTextureToMap<T>(Image<T> image)
@@ -109,7 +143,27 @@ internal class ImageMapSpawn() : ImageMapBase
         st.Start();
 
         var img = (Image<Rgba32>)(Image)image;
-        Map = LoadPixels(img, pixel => new UnityEngine.Color(pixel.R / 255f, pixel.G / 255f, pixel.B / 255f, pixel.A / 255f));
+        var colorToIndex = new Dictionary<Rgba32, int>();
+
+        // Build color to index mapping
+        for (int i = 0; i < Colors.Count; i++)
+        {
+            var c = Colors[i];
+            colorToIndex[new(c.r, c.g, c.b, c.a)] = i;
+        }
+
+        BetterContinents.Log($"Colors to index: {string.Join(", ", colorToIndex.Select(kvp => $"{kvp.Key} => {kvp.Value}"))}");
+        Map = LoadPixels(img, pixel =>
+        {
+            // Black color always means nothing is done.
+            if (pixel.R == 0 && pixel.G == 0 && pixel.B == 0 && pixel.A == 255)
+                return (byte)255;
+
+            if (colorToIndex.TryGetValue(pixel, out var index))
+                return (byte)index;
+            else
+                return (byte)0;
+        });
 
         BetterContinents.Log($"Time to calculate colors from {FilePath}: {st.ElapsedMilliseconds} ms");
         return true;
@@ -120,23 +174,38 @@ internal class SpawnEntry
 {
     private readonly HashSet<string> Enabled = [];
     private readonly HashSet<string> Disabled = [];
+    private readonly bool? All;
+    public readonly string Data;
 
     public SpawnEntry(string data)
     {
-        var parts = data.Split('|');
+        Data = data;
+        var parts = data.Split('|').Select(s => s.Trim());
         foreach (var part in parts)
         {
-            if (part.StartsWith("-"))
-                Disabled.Add(part.Substring(1));
+            if (part == "all")
+                All = true;
+            else if (part == "none")
+                All = false;
+            else if (part.StartsWith("-"))
+                Disabled.Add(SanityCheck(part.Substring(1)));
             else
-                Enabled.Add(part);
+                Enabled.Add(SanityCheck(part));
         }
     }
 
-    public bool IsEnabled(SpawnSystem.SpawnData spawnData)
+    private string SanityCheck(string name)
     {
-        if (Enabled.Contains(spawnData.m_prefab.name)) return true;
-        if (Disabled.Contains(spawnData.m_prefab.name)) return false;
-        return spawnData.m_enabled;
+        var scene = ZNetScene.instance;
+        if (scene.GetPrefab(name)) return name;
+        foreach (var item in scene.m_namedPrefabs.Values)
+        {
+            if (item.name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                return item.name;
+        }
+        return name;
     }
+
+    public bool HasEnabled(string name) => Enabled.Contains(name) || (All == true && !Disabled.Contains(name));
+    public bool HasDisabled(string name) => Disabled.Contains(name) || (All == false && !Enabled.Contains(name));
 }

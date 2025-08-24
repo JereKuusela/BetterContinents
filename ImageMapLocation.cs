@@ -6,7 +6,6 @@ using System.Linq;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using UnityEngine;
-using Color = UnityEngine.Color;
 
 namespace BetterContinents;
 
@@ -84,7 +83,7 @@ internal class ImageMapLocation() : ImageMapBase()
 
     public override void SerializeLegacy(ZPackage pkg, int version, bool network)
     {
-        // File path may contain sensitive imformation so its removed from network serialization.
+        // File path may contain sensitive information so its removed from network serialization.
         pkg.Write(network ? "?" : FilePath);
         pkg.Write(RemainingAreas.Count);
         foreach (var kv in RemainingAreas)
@@ -154,6 +153,7 @@ internal class ImageMapLocation() : ImageMapBase()
     public bool CreateMap() => CreateMap<Rgba32>();
     protected override bool LoadTextureToMap<T>(Image<T> image)
     {
+        var black = new Color32(0, 0, 0, 255);
         var sw = new Stopwatch();
         sw.Start();
         var img = (Image<Rgba32>)(Image)image;
@@ -171,7 +171,7 @@ internal class ImageMapLocation() : ImageMapBase()
 
             void Enqueue(int xa, int ya)
             {
-                pixels[Index(xa, ya)] = Color.black;
+                pixels[Index(xa, ya)] = black;
                 q.Enqueue(new Vector2i(xa, ya));
             }
 
@@ -210,7 +210,7 @@ internal class ImageMapLocation() : ImageMapBase()
             {
                 int i = Index(x, y);
                 var color = pixels[i];
-                if (color != Color.black)
+                if (!color.Equals(black))
                 {
                     var area = new List<Vector2>();
 

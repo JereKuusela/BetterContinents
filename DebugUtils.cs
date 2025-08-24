@@ -80,6 +80,9 @@ public partial class DebugUtils
                     if (BetterContinents.Settings.HasMossMap)
                         reload.AddCommand("moss", "Mossmap", "Reloads the mossmap",
                             HeightmapCommand(_ => BetterContinents.Settings.ReloadMossMap()));
+                    if (BetterContinents.Settings.HasVegetationMap)
+                        reload.AddCommand("vegetation", "Vegetationmap", "Reloads the vegetationmap",
+                            HeightmapCommand(_ => BetterContinents.Settings.ReloadVegetationMap()));
                     if (BetterContinents.Settings.HasHeatMap)
                         reload.AddCommand("heat", "Heatmap", "Reloads the heatmap",
                             HeightmapCommand(_ => BetterContinents.Settings.ReloadHeatMap()));
@@ -100,6 +103,7 @@ public partial class DebugUtils
                             if (BetterContinents.Settings.HasPaintMap) BetterContinents.Settings.ReloadPaintMap();
                             if (BetterContinents.Settings.HasLavaMap) BetterContinents.Settings.ReloadLavaMap();
                             if (BetterContinents.Settings.HasMossMap) BetterContinents.Settings.ReloadMossMap();
+                            if (BetterContinents.Settings.HasVegetationMap) BetterContinents.Settings.ReloadVegetationMap();
                             if (BetterContinents.Settings.HasHeatMap) BetterContinents.Settings.ReloadHeatMap();
                             if (BetterContinents.Settings.HasSpawnMap) BetterContinents.Settings.ReloadSpawnMap();
                         }));
@@ -196,6 +200,11 @@ public partial class DebugUtils
                         defaultValue: 500f, minValue: 0f, maxValue: 1000000f,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.EdgeSize = value),
                         getter: () => BetterContinents.Settings.EdgeSize);
+                    group.AddValue("fixwatercolor", "Fix water color",
+                        "Whether to fix the water color",
+                        defaultValue: true,
+                        setter: SetHeightmapValue<bool>(value => BetterContinents.Settings.FixWaterColor = value),
+                        getter: () => BetterContinents.Settings.FixWaterColor);
                     group.AddValue("cs", "Continent size adjustment", "Continent size adjustment",
                         defaultValue: 0.5f, minValue: 0, maxValue: 1,
                         setter: SetHeightmapValue<float>(value => BetterContinents.Settings.ContinentSize = value),
@@ -413,6 +422,42 @@ public partial class DebugUtils
                             Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
                     }),
                     getter: () => BetterContinents.Settings.GetMossPath());
+            });
+            bc.AddGroup("vegetation", "Vegetationmap", "Vegetationmap settings, get more info with 'bc param s help'", group =>
+            {
+                group.AddValue("fn", "Vegetationmap Filename",
+                    "Sets vegetationmap filename (full path, directory or file name)",
+                    defaultValue: string.Empty,
+                    setter: SetHeightmapValue<string>(path =>
+                    {
+                        var fullPath = BetterContinents.Settings.ResolveVegetationPath(path);
+                        BetterContinents.Settings.SetVegetationPath(fullPath);
+                        if (BetterContinents.Settings.HasVegetationMap)
+                            Console.instance.Print($"<color=#ffa500>Vegetationmap enabled!</color>");
+                        else if (string.IsNullOrEmpty(path))
+                            Console.instance.Print($"<color=#ff0000>Vegetationmap disabled!</color>");
+                        else
+                            Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
+                    }),
+                    getter: () => BetterContinents.Settings.GetVegetationPath());
+            });
+            bc.AddGroup("spawn", "Spawnmap", "Spawnmap settings, get more info with 'bc param s help'", group =>
+            {
+                group.AddValue("fn", "Spawnmap Filename",
+                    "Sets spawnmap filename (full path, directory or file name)",
+                    defaultValue: string.Empty,
+                    setter: SetHeightmapValue<string>(path =>
+                    {
+                        var fullPath = BetterContinents.Settings.ResolveSpawnPath(path);
+                        BetterContinents.Settings.SetSpawnPath(fullPath);
+                        if (BetterContinents.Settings.HasSpawnMap)
+                            Console.instance.Print($"<color=#ffa500>Spawnmap enabled!</color>");
+                        else if (string.IsNullOrEmpty(path))
+                            Console.instance.Print($"<color=#ff0000>Spawnmap disabled!</color>");
+                        else
+                            Console.instance.Print($"<color=#ff0000>ERROR: Path {path} not found!</color>");
+                    }),
+                    getter: () => BetterContinents.Settings.GetSpawnPath());
             });
             bc.AddGroup("heat", "Heatmap", "Heatmap settings, get more info with 'bc param s help'", group =>
             {

@@ -28,7 +28,7 @@ public partial class DebugUtils
         private readonly Type valueType;
         private readonly Command parent;
 
-        private UnityEngine.Color backgroundColor;
+        private Color32 backgroundColor;
         private KeyValuePair<object, object>? range;
         private List<object> validValues;
         private Action<object> setValue;
@@ -383,7 +383,7 @@ public partial class DebugUtils
                 {
                     case CommandType.Group:
                         var groupStyle = GUI.skin.box;
-                        if (cmd.backgroundColor != default)
+                        if (cmd.backgroundColor.a != 0)
                         {
                             groupStyle = new GUIStyle(GUI.skin.box)
                             {
@@ -409,7 +409,7 @@ public partial class DebugUtils
                         break;
                     case CommandType.Command:
                         var buttonStyle = GUI.skin.button;
-                        if (cmd.backgroundColor != default)
+                        if (cmd.backgroundColor.a != 0)
                         {
                             buttonStyle = new GUIStyle(GUI.skin.button)
                             {
@@ -424,7 +424,7 @@ public partial class DebugUtils
                         break;
                     case CommandType.Value:
                         var valueStyle = GUIStyle.none;
-                        if (cmd.backgroundColor != default)
+                        if (cmd.backgroundColor.a != 0)
                         {
                             valueStyle = new GUIStyle(GUIStyle.none)
                             {

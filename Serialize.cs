@@ -1,5 +1,3 @@
-using System;
-
 namespace BetterContinents;
 
 public partial class BetterContinents
@@ -66,7 +64,10 @@ public partial class BetterContinents
     EdgeSize,
     SpawnMapPath,
     SpawnMap,
-    HeightMapAlpha
+    HeightMapAlpha,
+    FixWaterColor,
+    VegetationMap,
+    VegetationMapPath,
   }
   public partial class BetterContinentsSettings
   {
@@ -165,6 +166,28 @@ public partial class BetterContinents
         {
           pkg.Write((int)DataKey.BiomeMapPath);
           pkg.Write(BiomeMap.FilePath);
+        }
+      }
+      if (SpawnMap != null)
+      {
+        pkg.Write((int)DataKey.SpawnMap);
+        SpawnMap.Serialize(pkg);
+
+        if (!network)
+        {
+          pkg.Write((int)DataKey.SpawnMapPath);
+          pkg.Write(SpawnMap.FilePath);
+        }
+      }
+      if (VegetationMap != null)
+      {
+        pkg.Write((int)DataKey.VegetationMap);
+        VegetationMap.Serialize(pkg);
+
+        if (!network)
+        {
+          pkg.Write((int)DataKey.VegetationMapPath);
+          pkg.Write(VegetationMap.FilePath);
         }
       }
       if (ForestScale != 1f)
@@ -354,6 +377,8 @@ public partial class BetterContinents
         pkg.Write((int)DataKey.EdgeSize);
         pkg.Write(EdgeSize);
       }
+      if (!FixWaterColor)
+        pkg.Write((int)DataKey.FixWaterColor);
     }
 
     private void Deserialize(ZPackage pkg)
@@ -558,6 +583,14 @@ public partial class BetterContinents
             if (MossMap != null)
               MossMap.FilePath = path;
             break;
+          case DataKey.VegetationMap:
+            VegetationMap = ImageMapSpawn.Create(pkg, "");
+            break;
+          case DataKey.VegetationMapPath:
+            path = pkg.ReadString();
+            if (VegetationMap != null)
+              VegetationMap.FilePath = path;
+            break;
           case DataKey.HeatMap:
             HeatMap = ImageMapFloat.Create(pkg.ReadByteArray(), false);
             break;
@@ -580,6 +613,9 @@ public partial class BetterContinents
             break;
           case DataKey.EdgeSize:
             EdgeSize = pkg.ReadSingle();
+            break;
+          case DataKey.FixWaterColor:
+            FixWaterColor = false;
             break;
           case DataKey.SpawnMap:
             SpawnMap = ImageMapSpawn.Create(pkg, "");

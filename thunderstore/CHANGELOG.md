@@ -1,3 +1,7 @@
+- v0.7.30
+  - Adds spawn map.
+  - Adds vegetation map.
+
 - v0.7.29
   - Fixes some worlds not working.
 

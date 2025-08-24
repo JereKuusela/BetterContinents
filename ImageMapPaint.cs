@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using SixLabors.ImageSharp.PixelFormats;
+using UnityEngine;
 
 namespace BetterContinents;
 
@@ -50,18 +51,18 @@ internal class ImageMapPaint() : ImageMapColor()
     {
         Colors = ParseColors(SourceColors);
     }
-    private static Dictionary<Rgba32, UnityEngine.Color?> ParseColors(string colors) =>
+    private static Dictionary<Rgba32, Color32?> ParseColors(string colors) =>
         colors.Split('|')
         .Select(s => s.Trim().Split(':')).Where(s => s.Length == 2)
-        .Select(s => Tuple.Create(ParseRGBA(s[1]), ParseColor(s[0])))
+        .Select(s => Tuple.Create(ParseRGBA(s[1]), (Color32?)ParseColor32(s[0])))
         .Distinct(new Comparer())
         .ToDictionary(s => s.Item1, s => s.Item2);
 
 
 
-    class Comparer : IEqualityComparer<Tuple<Rgba32, UnityEngine.Color?>>
+    class Comparer : IEqualityComparer<Tuple<Rgba32, Color32?>>
     {
-        public bool Equals(Tuple<Rgba32, UnityEngine.Color?> x, Tuple<Rgba32, UnityEngine.Color?> y) => x.Item1.Equals(y.Item1);
-        public int GetHashCode(Tuple<Rgba32, UnityEngine.Color?> obj) => obj.Item1.GetHashCode();
+        public bool Equals(Tuple<Rgba32, Color32?> x, Tuple<Rgba32, Color32?> y) => x.Item1.Equals(y.Item1);
+        public int GetHashCode(Tuple<Rgba32, Color32?> obj) => obj.Item1.GetHashCode();
     }
 }

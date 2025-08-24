@@ -47,6 +47,7 @@ public partial class BetterContinents
         public float HeatMapScale = 10f;
         public float WorldSize = 10000f;
         public float EdgeSize = 500f;
+        public bool FixWaterColor = true;
         public NoiseStackSettings BaseHeightNoise = new();
 
         // Non-serialized
@@ -57,6 +58,7 @@ public partial class BetterContinents
         private ImageMapPaint? PaintMap;
         private ImageMapFloat? LavaMap;
         private ImageMapFloat? MossMap;
+        private ImageMapSpawn? VegetationMap;
 
         private ImageMapLocation? LocationMap;
         private ImageMapFloat? RoughMap;
@@ -75,6 +77,7 @@ public partial class BetterContinents
         public bool HasPaintMap => PaintMap != null;
         public bool HasLavaMap => LavaMap != null;
         public bool HasMossMap => MossMap != null;
+        public bool HasVegetationMap => VegetationMap != null;
         public bool HasHeatMap => HeatMap != null;
         public bool HasSpawnMap => SpawnMap != null;
 
@@ -89,6 +92,7 @@ public partial class BetterContinents
                                    || HasPaintMap
                                    || HasLavaMap
                                    || HasMossMap
+                                   || HasVegetationMap
                                    || HasHeatMap
                                    || HasSpawnMap;
         public bool ShouldHeightMapOverrideAll => HasHeightMap && HeightmapOverrideAll;
@@ -128,6 +132,7 @@ public partial class BetterContinents
         private static readonly string PaintFile = "paintmap.png";
         private static readonly string LavaFile = "lavamap.png";
         private static readonly string MossFile = "mossmmap.png";
+        private static readonly string VegetationFile = "vegetationmap.png";
         private static readonly string SpawnFile = "spawnmap.png";
 
         private static string HeightPath(string defaultFilename, string projectDir) => GetPath(projectDir, HeightFile, defaultFilename);
@@ -140,6 +145,7 @@ public partial class BetterContinents
         private static string PaintPath(string defaultFilename, string projectDir) => GetPath(projectDir, PaintFile, defaultFilename);
         private static string LavaPath(string defaultFilename, string projectDir) => GetPath(projectDir, LavaFile, defaultFilename);
         private static string MossPath(string defaultFilename, string projectDir) => GetPath(projectDir, MossFile, defaultFilename);
+        private static string VegetationPath(string defaultFilename, string projectDir) => GetPath(projectDir, VegetationFile, defaultFilename);
         private static string SpawnPath(string defaultFilename, string projectDir) => GetPath(projectDir, SpawnFile, defaultFilename);
 
         private static string HeightConfigPath => HeightPath(ConfigHeightFile.Value, ConfigMapSourceDir.Value);
@@ -152,6 +158,7 @@ public partial class BetterContinents
         private static string PaintConfigPath => PaintPath(ConfigPaintFile.Value, ConfigMapSourceDir.Value);
         private static string LavaConfigPath => LavaPath(ConfigLavaFile.Value, ConfigMapSourceDir.Value);
         private static string MossConfigPath => MossPath(ConfigMossFile.Value, ConfigMapSourceDir.Value);
+        private static string VegetationConfigPath => VegetationPath(ConfigVegetationFile.Value, ConfigMapSourceDir.Value);
         private static string SpawnConfigPath => SpawnPath(ConfigSpawnFile.Value, ConfigMapSourceDir.Value);
 
 
@@ -167,6 +174,7 @@ public partial class BetterContinents
                 SeaLevel = ConfigSeaLevelAdjustment.Value;
                 WorldSize = ConfigWorldSize.Value;
                 EdgeSize = ConfigEdgeSize.Value;
+                FixWaterColor = ConfigFixWaterColor.Value;
 
                 HeightMapAlpha = ConfigHeightmapAlpha.Value;
                 HeightMap = ImageMapFloat.Create(HeightConfigPath, HeightMapAlpha);
@@ -210,6 +218,7 @@ public partial class BetterContinents
                 PaintMap = ImageMapPaint.Create(PaintConfigPath);
                 LavaMap = ImageMapFloat.Create(LavaConfigPath, false);
                 MossMap = ImageMapFloat.Create(MossConfigPath, false);
+                VegetationMap = ImageMapSpawn.Create(VegetationConfigPath);
 
                 HeatMap = ImageMapFloat.Create(HeatConfigPath, false);
                 HeatMapScale = ConfigHeatScale.Value;
@@ -251,50 +260,61 @@ public partial class BetterContinents
         }
 
         public void SetHeightPath(string path) => HeightMap = ImageMapFloat.Create(path, HeightMapAlpha);
-        public string GetHeightPath() => HeightMap?.FilePath ?? string.Empty;
+        public string GetHeightPath() => SimplePath(HeightMap?.FilePath ?? string.Empty);
 
         public string ResolveHeightPath(string path) => ResolvePath(path, HeightFile);
 
         public void SetBiomePath(string path) => BiomeMap = ImageMapBiome.Create(path);
-        public string GetBiomePath() => BiomeMap?.FilePath ?? string.Empty;
+        public string GetBiomePath() => SimplePath(BiomeMap?.FilePath ?? string.Empty);
         public string ResolveBiomePath(string path) => ResolvePath(path, BiomeFile);
 
         public void SetTerrainPath(string path) => TerrainMap = ImageMapTerrain.Create(path);
-        public string GetTerrainPath() => TerrainMap?.FilePath ?? string.Empty;
+        public string GetTerrainPath() => SimplePath(TerrainMap?.FilePath ?? string.Empty);
         public string ResolveTerrainPath(string path) => ResolvePath(path, TerrainFile);
 
         public void SetLocationPath(string path) => LocationMap = ImageMapLocation.Create(path);
-        public string GetLocationPath() => LocationMap?.FilePath ?? string.Empty;
+        public string GetLocationPath() => SimplePath(LocationMap?.FilePath ?? string.Empty);
         public string ResolveLocationPath(string path) => ResolvePath(path, LocationFile);
 
         public void SetRoughPath(string path) => RoughMap = ImageMapFloat.Create(path, false);
-        public string GetRoughPath() => RoughMap?.FilePath ?? string.Empty;
+        public string GetRoughPath() => SimplePath(RoughMap?.FilePath ?? string.Empty);
         public string ResolveRoughPath(string path) => ResolvePath(path, RoughFile);
 
         public void SetForestPath(string path) => ForestMap = ImageMapFloat.Create(path, false);
-        public string GetForestPath() => ForestMap?.FilePath ?? string.Empty;
+        public string GetForestPath() => SimplePath(ForestMap?.FilePath ?? string.Empty);
         public string ResolveForestPath(string path) => ResolvePath(path, ForestFile);
 
         public void SetHeatPath(string path) => HeatMap = ImageMapFloat.Create(path, false);
-        public string GetHeatPath() => HeatMap?.FilePath ?? string.Empty;
+        public string GetHeatPath() => SimplePath(HeatMap?.FilePath ?? string.Empty);
         public string ResolveHeatPath(string path) => ResolvePath(path, HeatFile);
 
         public void SetPaintPath(string path) => PaintMap = ImageMapPaint.Create(path);
-        public string GetPaintPath() => PaintMap?.FilePath ?? string.Empty;
+        public string GetPaintPath() => SimplePath(PaintMap?.FilePath ?? string.Empty);
         public string ResolvePaintPath(string path) => ResolvePath(path, PaintFile);
 
         public void SetLavaPath(string path) => LavaMap = ImageMapFloat.Create(path, false);
-        public string GetLavaPath() => LavaMap?.FilePath ?? string.Empty;
+        public string GetLavaPath() => SimplePath(LavaMap?.FilePath ?? string.Empty);
         public string ResolveLavaPath(string path) => ResolvePath(path, LavaFile);
 
         public void SetMossPath(string path) => MossMap = ImageMapFloat.Create(path, false);
-        public string GetMossPath() => MossMap?.FilePath ?? string.Empty;
+        public string GetMossPath() => SimplePath(MossMap?.FilePath ?? string.Empty);
         public string ResolveMossPath(string path) => ResolvePath(path, MossFile);
 
+        public void SetVegetationPath(string path) => VegetationMap = ImageMapSpawn.Create(path);
+        public string GetVegetationPath() => SimplePath(VegetationMap?.FilePath ?? string.Empty);
+        public string ResolveVegetationPath(string path) => ResolvePath(path, VegetationFile);
+
         public void SetSpawnPath(string path) => SpawnMap = ImageMapSpawn.Create(path);
-        public string GetSpawnPath() => SpawnMap?.FilePath ?? string.Empty;
+        public string GetSpawnPath() => SimplePath(SpawnMap?.FilePath ?? string.Empty);
         public string ResolveSpawnPath(string path) => ResolvePath(path, SpawnFile);
 
+        private string SimplePath(string path)
+        {
+            path = CleanPath(path);
+            if (path.StartsWith(ConfigMapSourceDir.Value))
+                return path.Substring(ConfigMapSourceDir.Value.Length).TrimStart(Path.DirectorySeparatorChar);
+            return path;
+        }
         private string ResolvePath(string path, string defaultName)
         {
             path = CleanPath(path);
@@ -307,6 +327,8 @@ public partial class BetterContinents
                 return "";
             }
             var name = Path.GetFileName(path);
+            if (name != "" && !Path.HasExtension(name))
+                name += Path.GetExtension(defaultName);
             var directory = Path.GetDirectoryName(path);
             if (name != "" && File.Exists(Path.Combine(ConfigMapSourceDir.Value, name)))
                 return Path.Combine(ConfigMapSourceDir.Value, name);
@@ -344,6 +366,7 @@ public partial class BetterContinents
                     output($"World size {WorldSize}");
                 if (EdgeSize != 500f)
                     output($"Edge size {EdgeSize}");
+                output($"Fix water color {FixWaterColor}");
 
                 output($"Map edge dropoff {MapEdgeDropoff}");
                 output($"Mountains allowed at center {MountainsAllowedAtCenter}");
@@ -443,6 +466,10 @@ public partial class BetterContinents
                     output($"Mossmmap file ({MossMap.Size}) {MossMap.FilePath}");
                 else output($"Mossmmap disabled");
 
+                if (VegetationMap != null)
+                    output($"Vegetationmap file ({VegetationMap.Size}) {VegetationMap.FilePath}");
+                else output($"Vegetationmap disabled");
+
                 if (HeatMap != null)
                 {
                     output($"Heatmap file {HeatMap.FilePath}");
@@ -498,8 +525,15 @@ public partial class BetterContinents
             }
             catch
             {
-                Log($"Couldn't find loaded settings for this world at {path}, mod is disabled.");
-                return Disabled();
+                try
+                {
+                    fileReader = new FileReader(GetLegacyBCFile(path), fileSource);
+                }
+                catch
+                {
+                    Log($"Couldn't find loaded settings for this world at {path}, mod is disabled.");
+                    return Disabled();
+                }
             }
 
             try
@@ -531,16 +565,16 @@ public partial class BetterContinents
             fileWriter.Finish();
         }
 
-        public bool ApplyTerrainMap(float x, float y, ref Color color)
+        public bool ApplyTerrainMap(float x, float z, ref Color color)
         {
             if (TerrainMap == null) return false;
-            var normalized = WorldToNormalized(x, y);
+            var normalized = WorldToNormalized(x, z);
             return TerrainMap.TryGetValue(normalized.x, normalized.y, out color);
         }
 
-        public void ApplyPaintMap(float x, float y, Heightmap.Biome biome, ref Color mask)
+        public void ApplyPaintMap(float x, float z, Heightmap.Biome biome, ref Color mask)
         {
-            var normalized = WorldToNormalized(x, y);
+            var normalized = WorldToNormalized(x, z);
             if (PaintMap != null && PaintMap.TryGetValue(normalized.x, normalized.y, out var paint))
             {
                 mask.r = paint.r;
@@ -556,9 +590,9 @@ public partial class BetterContinents
                 mask.a = MossMap.GetValue(normalized.x, normalized.y);
 
         }
-        public void ApplyLavaMap(float x, float y, Heightmap.Biome biome, ref Color mask)
+        public void ApplyLavaMap(float x, float z, Heightmap.Biome biome, ref Color mask)
         {
-            var normalized = WorldToNormalized(x, y);
+            var normalized = WorldToNormalized(x, z);
             if (PaintMap != null && PaintMap.TryGetValue(normalized.x, normalized.y, out var paint))
             {
                 mask.r = paint.r;
@@ -573,6 +607,70 @@ public partial class BetterContinents
             else if (MossMap != null && biome == Heightmap.Biome.Mistlands)
                 mask.a = MossMap.GetValue(normalized.x, normalized.y);
 
+        }
+
+        private Dictionary<ZoneSystem.ZoneVegetation, Heightmap.Biome> EnabledVegetation = [];
+        public void ApplyVegetationMap(Vector3 position, List<ZoneSystem.ZoneVegetation> vegetation)
+        {
+            if (VegetationMap == null) return;
+            var normalized = WorldToNormalized(position.x, position.z);
+            var entry = VegetationMap.GetEntry(normalized.x, normalized.y);
+            if (entry == null) return;
+
+            foreach (var v in vegetation)
+            {
+                if (entry.HasEnabled(v.m_prefab.name))
+                {
+                    EnabledVegetation[v] = v.m_biome;
+                    v.m_biome = (Heightmap.Biome)(-1);
+                }
+            }
+        }
+        public bool CheckVegetationMap(Vector3 position, ZoneSystem.ZoneVegetation vegetation)
+        {
+            if (VegetationMap == null) return false;
+            var normalized = WorldToNormalized(position.x, position.z);
+            var entry = VegetationMap.GetEntry(normalized.x, normalized.y);
+            if (entry == null) return false;
+            return entry.HasDisabled(vegetation.m_prefab.name);
+        }
+        public void RevertVegetationMap()
+        {
+            foreach (var kvp in EnabledVegetation)
+            {
+                kvp.Key.m_biome = kvp.Value;
+            }
+            EnabledVegetation.Clear();
+        }
+        private Dictionary<SpawnSystem.SpawnData, Heightmap.Biome> EnabledSpawns = [];
+        public void ApplySpawnMap(Vector3 position, List<SpawnSystem.SpawnData> spawners)
+        {
+            if (SpawnMap == null) return;
+            var normalized = WorldToNormalized(position.x, position.z);
+            var entry = SpawnMap.GetEntry(normalized.x, normalized.y);
+            if (entry == null) return;
+
+            foreach (var v in spawners)
+            {
+                if (entry.HasEnabled(v.m_prefab.name))
+                {
+                    EnabledSpawns[v] = v.m_biome;
+                    v.m_biome = (Heightmap.Biome)(-1);
+                }
+                if (entry.HasDisabled(v.m_prefab.name))
+                {
+                    EnabledSpawns[v] = v.m_biome;
+                    v.m_biome = 0;
+                }
+            }
+        }
+        public void RevertSpawnMap()
+        {
+            foreach (var kvp in EnabledSpawns)
+            {
+                kvp.Key.m_biome = kvp.Value;
+            }
+            EnabledSpawns.Clear();
         }
         public float ApplyHeightmap(float x, float y, float height)
         {
@@ -782,6 +880,19 @@ public partial class BetterContinents
                 if (!MossMap.LoadSourceImage()) return;
             }
             MossMap.CreateMap(false);
+        }
+
+        public void ReloadVegetationMap()
+        {
+            if (VegetationMap == null) return;
+            if (!VegetationMap.LoadSourceImage())
+            {
+                if (!File.Exists(VegetationConfigPath) || File.Exists(VegetationMap.FilePath)) return;
+                LogWarning($"Cannot find image {VegetationMap.FilePath}: Using default path from config.");
+                VegetationMap.FilePath = VegetationConfigPath;
+                if (!VegetationMap.LoadSourceImage()) return;
+            }
+            VegetationMap.CreateMap();
         }
 
         public void ReloadSpawnMap()

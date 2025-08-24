@@ -48,11 +48,11 @@ internal class ImageMapBiome() : ImageMapBase
     }
     private static readonly Heightmap.Biome[] ByteToBiome = new int[32].Select((_, i) => i == 0 ? 0 : (Heightmap.Biome)(1 << (i - 1))).ToArray();
     public byte[] Serialize() =>
-        Map.Select(b =>
+        [.. Map.Select(b =>
         {
             var idx = Array.IndexOf(ByteToBiome, b);
             return idx < 0 ? (byte)0 : (byte)idx;
-        }).ToArray();
+        })];
 
     private Heightmap.Biome[] Map = [];
     private Dictionary<Heightmap.Biome, Color32> Colors = [];

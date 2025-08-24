@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using HarmonyLib;
 using UnityEngine;
 
@@ -74,6 +75,39 @@ public partial class BetterContinents
       if (location.m_prefabName == "StartTemple") return true;
       __result = location.m_quantity;
       return false;
+    }
+
+    /* Vegetation manipulation
+       Enabling is done for the whole zone. More precise solution would require entirely new implementation.
+       Enabling is currently done by setting all biomes. This has to be reverted at end of the function.
+       Disabling uses the clear area system so it's very precise. However transpiler is needed to keep track of the current vegetation.
+       This technically should allow precise manipulation with enable + disable combo.
+    */
+    public static void PlaceVegetationEnable(ZoneSystem __instance, Vector3 zoneCenterPos)
+    {
+      Settings.ApplyVegetationMap(zoneCenterPos, __instance.m_vegetation);
+    }
+    public static void PlaceVegetationRestore()
+    {
+      Settings.RevertVegetationMap();
+    }
+    private static ZoneSystem.ZoneVegetation? CurrentVegetation;
+    private static ZoneSystem.ZoneVegetation SetCurrentVegetation(ZoneSystem.ZoneVegetation vegetation)
+    {
+      CurrentVegetation = vegetation;
+      return vegetation;
+    }
+    public static IEnumerable<CodeInstruction> PlaceVegetationSaveCurrent(IEnumerable<CodeInstruction> instructions) =>
+      new CodeMatcher(instructions)
+      .MatchForward(false, new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(ZoneSystem.ZoneVegetation), nameof(ZoneSystem.ZoneVegetation.m_enable))))
+      .Insert(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ZoneSystemPatch), nameof(SetCurrentVegetation))))
+      .InstructionEnumeration();
+
+
+    public static bool CheckVegetationMapClearArea(bool result, Vector3 point)
+    {
+      if (result || CurrentVegetation == null) return result;
+      return Settings.CheckVegetationMap(point, CurrentVegetation);
     }
   }
 }

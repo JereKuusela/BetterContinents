@@ -113,7 +113,9 @@ public partial class BetterContinents
         {
             try
             {
-                File.Delete(GetBCFile(World.GetMetaPath(name)));
+                var path = World.GetMetaPath(name);
+                File.Delete(GetBCFile(path));
+                File.Delete(GetLegacyBCFile(path));
                 Log($"Deleted saved settings for {name}");
             }
             catch

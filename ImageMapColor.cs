@@ -11,9 +11,9 @@ namespace BetterContinents;
 abstract class ImageMapColor() : ImageMapBase()
 {
 
-    private UnityEngine.Color?[] Map = [];
+    private Color32?[] Map = [];
     public string SourceColors = "";
-    protected Dictionary<Rgba32, UnityEngine.Color?> Colors = [];
+    protected Dictionary<Rgba32, Color32?> Colors = [];
 
     public bool CreateMap() => CreateMap<Rgba32>();
 
@@ -50,7 +50,7 @@ abstract class ImageMapColor() : ImageMapBase()
         {
             if (Colors.TryGetValue(pixel, out var color))
                 return color;
-            return (UnityEngine.Color?)new UnityEngine.Color(pixel.R / 255f, pixel.G / 255f, pixel.B / 255f, pixel.A / 255f);
+            return new Color32(pixel.R, pixel.G, pixel.B, pixel.A);
         });
 
         BetterContinents.Log($"Time to calculate colors from {FilePath}: {st.ElapsedMilliseconds} ms");
@@ -88,9 +88,10 @@ abstract class ImageMapColor() : ImageMapBase()
             return false;
         }
 
-        var a = UnityEngine.Color.Lerp((UnityEngine.Color)p00, (UnityEngine.Color)p10, xd);
-        var b = UnityEngine.Color.Lerp((UnityEngine.Color)p01, (UnityEngine.Color)p11, xd);
-        color = UnityEngine.Color.Lerp(a, b, yd);
+        var a = Color32.Lerp(p00.Value, p10.Value, xd);
+        var b = Color32.Lerp(p01.Value, p11.Value, xd);
+        var c = Color32.Lerp(a, b, yd);
+        color = new UnityEngine.Color(c.r / 255f, c.g / 255f, c.b / 255f, c.a / 255f);
         return true;
     }
 }

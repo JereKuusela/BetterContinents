@@ -18,11 +18,10 @@ public partial class BetterContinents
             if (string.IsNullOrEmpty(actualFileEnding)) return;
             // BC uses .fwl.BetterContinents extension. GetSaveInfo uses only the last extension.
             // So we need to remove the .fwl extension from the file name.
-            if (saveName.EndsWith(".fwl", StringComparison.OrdinalIgnoreCase))
-                saveName = saveName.Substring(0, saveName.Length - 4);
+            if (!saveName.EndsWith(".fwl", StringComparison.OrdinalIgnoreCase)) return;
+            saveName = saveName.Substring(0, saveName.Length - 4);
             // And add it back to the actualFileEnding.
-            if (actualFileEnding == ConfigFileExtension)
-                actualFileEnding = ".fwl" + ConfigFileExtension;
+            actualFileEnding = ".fwl" + ConfigFileExtension;
         }
         [HarmonyTranspiler, HarmonyPatch(typeof(SaveCollection), nameof(SaveCollection.Reload))]
         static IEnumerable<CodeInstruction> Reload(IEnumerable<CodeInstruction> instructions) => Transpile(instructions);
@@ -44,6 +43,18 @@ public partial class BetterContinents
                 i += 1;
                 // Add our extension.
                 codes.Insert(i - 1, new CodeInstruction(OpCodes.Ldstr, ".fwl" + ConfigFileExtension));
+                i += 1;
+                // Duplicate the check.
+                codes.Insert(i - 1, codes[i + 1]);
+                i += 1;
+                // Duplicate the jump.
+                codes.Insert(i - 1, codes[i + 2]);
+                i += 1;
+                // Duplicate the previous instruction.
+                codes.Insert(i - 1, codes[i - 1]);
+                i += 1;
+                // Add our extension.
+                codes.Insert(i - 1, new CodeInstruction(OpCodes.Ldstr, ConfigFileExtension));
                 i += 1;
                 // Duplicate the check.
                 codes.Insert(i - 1, codes[i + 1]);

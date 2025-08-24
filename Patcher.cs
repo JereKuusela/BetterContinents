@@ -1,3 +1,4 @@
+using System.Security.Policy;
 using HarmonyLib;
 
 namespace BetterContinents;
@@ -21,6 +22,9 @@ public partial class BetterContinents
     PatchIsAshlands();
     PatchIsAshlandsFallback();
     PatchGetAshlandsHeight();
+    PatchColorTransition();
+    PatchVegetationMap();
+    PatchSpawnMap();
   }
   private static int HeightmapGetBiomePatched = 0;
   private static void PatchHeightmap()
@@ -169,7 +173,7 @@ public partial class BetterContinents
     var toRoughPaintPatch = Settings.EnabledForThisWorld;
     var toRoughPatch = Settings.EnabledForThisWorld;
     var toPaintPatch = Settings.EnabledForThisWorld;
-    if (Settings.HasPaintMap || Settings.HasLavaMap || Settings.HasMossMap)
+    if (Settings.HasPaintMap || Settings.HasLavaMap || Settings.HasMossMap || Settings.HasVegetationMap)
     {
       toHeightPatch = false;
       toRoughPatch = false;
@@ -514,26 +518,84 @@ public partial class BetterContinents
       IsAshlandsFallbackPatched = true;
     }
   }
-  /*
-    private static bool IsSpawnMapPatched = false;
-    private static void PatchIsSpawnMap()
+  private static bool IsVegetationMapPatched = false;
+  private static void PatchVegetationMap()
+  {
+    var toPatch = Settings.EnabledForThisWorld && Settings.HasVegetationMap;
+    var method = AccessTools.Method(typeof(ZoneSystem), nameof(ZoneSystem.PlaceVegetation));
+    var prefixPatch = AccessTools.Method(typeof(ZoneSystemPatch), nameof(ZoneSystemPatch.PlaceVegetationEnable));
+    var postfixPatch = AccessTools.Method(typeof(ZoneSystemPatch), nameof(ZoneSystemPatch.PlaceVegetationRestore));
+    var transpilerPatch = AccessTools.Method(typeof(ZoneSystemPatch), nameof(ZoneSystemPatch.PlaceVegetationSaveCurrent));
+    var clearAreaMethod = AccessTools.Method(typeof(ZoneSystem), nameof(ZoneSystem.InsideClearArea));
+    var clearAreaPatch = AccessTools.Method(typeof(ZoneSystemPatch), nameof(ZoneSystemPatch.CheckVegetationMapClearArea));
+    if (toPatch == IsVegetationMapPatched)
+      return;
+    if (IsVegetationMapPatched)
     {
-      var toPatch = Settings.EnabledForThisWorld && Settings.HasSpawnMap;
-      var method = AccessTools.Method(typeof(SpawnSystem), nameof(SpawnSystem.UpdateSpawnList));
-      var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.IsSpawnPointPrefix));
-      if (toPatch == IsSpawnMapPatched)
-        return;
-      if (IsSpawnMapPatched)
-      {
-        Log("Unpatching SpawnSystem.UpdateSpawnList");
-        HarmonyInstance.Unpatch(method, patch);
-        IsSpawnMapPatched = false;
-      }
-      if (toPatch)
-      {
-        Log("Patching SpawnSystem.UpdateSpawnList");
-        HarmonyInstance.Patch(method, prefix: new(patch));
-        IsSpawnMapPatched = true;
-      }
-    }*/
+      Log("Unpatching ZoneSystem.PlaceVegetation");
+      HarmonyInstance.Unpatch(method, prefixPatch);
+      HarmonyInstance.Unpatch(method, postfixPatch);
+      HarmonyInstance.Unpatch(method, transpilerPatch);
+      HarmonyInstance.Unpatch(clearAreaMethod, clearAreaPatch);
+      IsVegetationMapPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching ZoneSystem.PlaceVegetation");
+      HarmonyInstance.Patch(method, prefix: new(prefixPatch), postfix: new(postfixPatch), transpiler: new(transpilerPatch));
+      HarmonyInstance.Patch(clearAreaMethod, postfix: new(clearAreaPatch));
+      IsVegetationMapPatched = true;
+    }
+  }
+  private static void PatchColorTransition()
+  {
+    /*
+  private static bool ColorTransitionPatched = false;
+    var toPatch = Settings.EnabledForThisWorld && Settings.FixWaterColor;
+    if (toPatch == ColorTransitionPatched)
+      return;
+    var methodStart = AccessTools.Method(typeof(Player), nameof(Player.AddKnownBiome));
+    var methodEnd = AccessTools.Method(typeof(Player), nameof(Player.OnSpawned));
+    var patchStart = AccessTools.Method(typeof(WaterColor), nameof(WaterColor.StartColorTransition));
+    var patchEnd = AccessTools.Method(typeof(WaterColor), nameof(WaterColor.ResetColorTransition));
+    if (ColorTransitionPatched)
+    {
+      Log("Unpatching WorldGenerator.GetAshlandsOceanGradient prefix");
+      HarmonyInstance.Unpatch(methodStart, patchStart);
+      HarmonyInstance.Unpatch(methodEnd, patchEnd);
+      ColorTransitionPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching WorldGenerator.GetAshlandsOceanGradient prefix");
+      HarmonyInstance.Patch(methodStart, postfix: new(patchStart));
+      HarmonyInstance.Patch(methodEnd, postfix: new(patchEnd));
+      ColorTransitionPatched = true;
+    }
+    */
+  }
+
+  private static bool IsSpawnMapPatched = false;
+  private static void PatchSpawnMap()
+  {
+    var toPatch = Settings.EnabledForThisWorld && Settings.HasSpawnMap;
+    var method = AccessTools.Method(typeof(SpawnSystem), nameof(SpawnSystem.UpdateSpawnList));
+    var prefixPatch = AccessTools.Method(typeof(SpawnSystemPatch), nameof(SpawnSystemPatch.UpdateSpawnListEnable));
+    var postfixPatch = AccessTools.Method(typeof(SpawnSystemPatch), nameof(SpawnSystemPatch.UpdateSpawnListDisable));
+    if (toPatch == IsSpawnMapPatched)
+      return;
+    if (IsSpawnMapPatched)
+    {
+      Log("Unpatching SpawnSystem.UpdateSpawnList");
+      HarmonyInstance.Unpatch(method, prefixPatch);
+      HarmonyInstance.Unpatch(method, postfixPatch);
+      IsSpawnMapPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching SpawnSystem.UpdateSpawnList");
+      HarmonyInstance.Patch(method, prefix: new(prefixPatch), postfix: new(postfixPatch));
+      IsSpawnMapPatched = true;
+    }
+  }
 }

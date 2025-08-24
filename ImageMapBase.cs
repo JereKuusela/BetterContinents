@@ -120,11 +120,6 @@ internal abstract class ImageMapBase()
         var rgba = ParseRGBA(color);
         return new Color32(rgba.R, rgba.G, rgba.B, rgba.A);
     }
-    protected static UnityEngine.Color? ParseColor(string color)
-    {
-        var rgba = ParseRGBA(color);
-        return new UnityEngine.Color(rgba.R / 255f, rgba.G / 255f, rgba.B / 255f, rgba.A / 255f);
-    }
     protected static Rgba32 ParseRGBA(string color)
     {
         color = color.Trim();
