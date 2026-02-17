@@ -100,6 +100,14 @@ public partial class DebugUtils
             public Command AddValue(string name, string uiName, string desc, Type type)
             {
                 var newCommand = new Command(CommandType.Value, parent, name, uiName, desc, type);
+
+                // Extract Enum names into validValues
+                Type underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+                if (underlyingType.IsEnum)
+                {
+                    newCommand.validValues = Enum.GetNames(underlyingType).Cast<object>().ToList();
+                }
+
                 subcommands.Add(newCommand);
                 return newCommand;
             }

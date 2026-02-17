@@ -131,18 +131,26 @@ public class WorldSizeHelper
     private static IEnumerable<CodeInstruction> UpdateWindTranspiler(IEnumerable<CodeInstruction> instructions)
     {
         CodeMatcher matcher = new(instructions);
+
+        // Patch 1
         matcher = Replace(matcher, 10500f, WorldTotalRadius);
-        // Removes the subtraction of m_edgeOfWorldWidth (already applied above).
-        matcher = matcher
-          .SetOpcodeAndAdvance(OpCodes.Nop)
-          .SetOpcodeAndAdvance(OpCodes.Nop)
-          .SetOpcodeAndAdvance(OpCodes.Nop);
+        if (!matcher.IsInvalid) // Only Nop if we actually found and replaced the anchor
+        {
+            matcher.SetOpcodeAndAdvance(OpCodes.Nop)
+                   .SetOpcodeAndAdvance(OpCodes.Nop)
+                   .SetOpcodeAndAdvance(OpCodes.Nop);
+        }
+
+        // Patch 2
         matcher = Replace(matcher, 10500f, WorldTotalRadius);
-        // Removes the subtraction of m_edgeOfWorldWidth (already applied above).
-        matcher = matcher
-          .SetOpcodeAndAdvance(OpCodes.Nop)
-          .SetOpcodeAndAdvance(OpCodes.Nop)
-          .SetOpcodeAndAdvance(OpCodes.Nop);
+        if (!matcher.IsInvalid)
+        {
+            matcher.SetOpcodeAndAdvance(OpCodes.Nop)
+                   .SetOpcodeAndAdvance(OpCodes.Nop)
+                   .SetOpcodeAndAdvance(OpCodes.Nop);
+        }
+
+        // Patch 3
         matcher = Replace(matcher, 10500f, WorldTotalRadius);
 
         return matcher.InstructionEnumeration();
@@ -225,14 +233,19 @@ public class WorldSizeHelper
 
     private static CodeMatcher Replace(CodeMatcher instructions, double value, double newValue)
     {
-        return instructions
-          .MatchForward(false, new CodeMatch(OpCodes.Ldc_R8, value))
-          .SetOperandAndAdvance(newValue);
+        instructions.MatchForward(false, new CodeMatch(OpCodes.Ldc_R8, value));
+
+        if (instructions.IsInvalid) return instructions;
+
+        return instructions.SetOperandAndAdvance(newValue);
     }
     private static CodeMatcher Replace(CodeMatcher instructions, float value, float newValue)
     {
-        return instructions
-          .MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, value))
-          .SetOperandAndAdvance(newValue);
+        instructions.MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, value));
+
+        // If it didn't find the float, just return the matcher as-is so it doesn't crash the next line
+        if (instructions.IsInvalid) return instructions;
+
+        return instructions.SetOperandAndAdvance(newValue);
     }
 }

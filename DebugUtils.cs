@@ -910,24 +910,46 @@ public partial class DebugUtils
             // }
         });
         CommandWrapper.Register("bc", args => GetAutoComplete());
+
+
     }
 
     private static List<string> GetAutoComplete()
     {
         var text = Console.instance.m_input.text;
-        // Empty part kept on purpose to detect when going to the next part.
-        var parts = text.Split(' ');
+        if (string.IsNullOrEmpty(text)) return new List<string>();
+
+        // 1. Check if we are starting a new word or completing the current one
+        bool isNewParam = text.EndsWith(" ");
+
+        // 2. Split into parts, ignoring extra spaces
+        var parts = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return new List<string>();
+
+        // 3. Determine how deep to go into the tree
+        int traverseDepth = isNewParam ? parts.Length : parts.Length - 1;
+
         var cmd = rootCommand;
-        for (int i = 1; i < parts.Length - 1; i++)
+        for (int i = 1; i < traverseDepth; i++)
         {
-            var subcmd = cmd.GetSubcommands().FirstOrDefault(s => s.cmd == parts[i]);
-            if (subcmd == null)
-                break;
+            var part = parts[i];
+            var subcmd = cmd.GetSubcommands()
+                            .FirstOrDefault(s => s.cmd != null && s.cmd.Equals(part, StringComparison.OrdinalIgnoreCase));
+
+            if (subcmd == null) return new List<string>();
             cmd = subcmd;
         }
-        if (cmd.GetSubcommands().Count == 0)
-            return CommandWrapper.Info(cmd.desc);
-        return cmd.GetSubcommands().Select(s => s.cmd).ToList();
+
+        // 4. Get options and FILTER OUT GUI-ONLY COMMANDS (where cmd is null)
+        // This fixes the "Dead Tab" cycle (nothing -> 0 -> 1 -> nothing)
+        var options = cmd.GetSubcommands()
+                         .Where(s => !string.IsNullOrEmpty(s.cmd))
+                         .Select(s => s.cmd)
+                         .ToList();
+
+        // 5. Return empty list instead of null
+        // This prevents ServerDevcommands from falling back to "?Too many parameters"
+        return options ?? new List<string>();
     }
 
     public static void RunConsoleCommand(string text)
