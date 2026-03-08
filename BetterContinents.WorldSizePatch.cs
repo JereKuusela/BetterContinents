@@ -152,7 +152,7 @@ public class WorldSizeHelper
   {
     var method = AccessTools.Method(typeof(WaterVolume), nameof(WaterVolume.GetWaterSurface));
     var transpiler = AccessTools.Method(typeof(WorldSizeHelper), nameof(ReplaceTotalSize));
-    if (WorldSizePatched)
+    if (EdgeCheckPatched)
       harmony.Patch(method, transpiler: new HarmonyMethod(transpiler));
     else
       harmony.Unpatch(method, transpiler);

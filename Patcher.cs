@@ -290,6 +290,7 @@ public partial class BetterContinents
 
   private static void PatchGetAshlandsHeight()
   {
+    // Mossmap is not needed as it doesn't apply to Ashlands.
     var toPatch = Settings.EnabledForThisWorld && (Settings.HasPaintMap || Settings.HasLavaMap);
     if (toPatch == GetAshlandsHeightPatched)
       return;

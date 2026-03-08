@@ -277,7 +277,7 @@ public partial class BetterContinents
             float mapY = Normalize(wy);
 
             float baseHeight = Settings.ApplyHeightmap(mapX, mapY, 0f);
-            float finalHeight = BaseHeightNoise?.Apply(wx, wy, baseHeight) ?? 0;
+            float finalHeight = BaseHeightNoise?.Apply(wx, wy, baseHeight) ?? baseHeight;
             finalHeight -= 0.15f; // Resulting in about 30% water coverage by default
             finalHeight += Settings.SeaLevelAdjustment;
 
@@ -306,8 +306,9 @@ public partial class BetterContinents
         public static bool GetBiomePrefix(float wx, float wy, ref Heightmap.Biome __result)
         {
             var result = Settings.GetBiomeOverride(Normalize(wx), Normalize(wy));
-            if (result != Heightmap.Biome.None)
-                __result = result;
+            if (result == Heightmap.Biome.None)
+                return true;
+            __result = result;
             return false;
         }
 

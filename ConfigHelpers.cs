@@ -133,14 +133,16 @@ public class ValueBuilder
           ShowRangeAsPercent = showAsPercent,
           ObjToStr = o =>
               {
-              if (o is float f) return f.ToString(CultureInfo.InvariantCulture);
-              return o.ToString();
-            },
+                if (o is float f) return f.ToString(CultureInfo.InvariantCulture);
+                return o.ToString();
+              },
           StrToObj = s =>
               {
-              if (typeof(T) == typeof(float)) return float.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out var f) ? f : default;
-              return s;
-            }
+                if (typeof(T) == typeof(float)) return float.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out var f) ? f : default;
+                if (typeof(T) == typeof(int)) return int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i) ? i : default;
+                if (typeof(T) == typeof(bool)) return bool.TryParse(s, out var b) && b;
+                return s;
+              }
         }));
     bound = true;
   }

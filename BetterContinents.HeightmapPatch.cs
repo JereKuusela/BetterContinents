@@ -162,6 +162,7 @@ public partial class BetterContinents
     {
       data.m_baseMask[j] = new Color(0f, 0f, 0f, 0f);
     }
+    Color[] array = new Color[4];
     for (int k = 0; k < num; k++)
     {
       float wy = (float)((double)vector.z + (double)k * (double)data.m_scale);
@@ -183,7 +184,6 @@ public partial class BetterContinents
         }
         else
         {
-          Color[] array = new Color[4];
           float biomeHeight = worldGen.GetBiomeHeight(biome, wx, wy, out array[0], false);
           float biomeHeight2 = worldGen.GetBiomeHeight(biome2, wx, wy, out array[1], false);
           float biomeHeight3 = worldGen.GetBiomeHeight(biome3, wx, wy, out array[2], false);

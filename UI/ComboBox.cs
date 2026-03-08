@@ -84,7 +84,7 @@ public class ComboBox
             isClickedComboButton = true;
         }
 
-        if (isClickedComboButton)
+        if (isClickedComboButton && listContent.Length > 0)
         {
             GUI.enabled = false;
             GUI.color = new Color(1, 1, 1, 2);

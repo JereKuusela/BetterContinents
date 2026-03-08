@@ -382,8 +382,9 @@ public partial class BetterContinents : BaseUnityPlugin
                         var r = (byte)(num >> 8);
                         var g = (byte)(num & 255);
                         cachedTexture[i * map.m_textureSize + j] = new(r, g, 0, byte.MaxValue);
-                        Interlocked.Increment(ref progress);
                     }
+                    // Updated every row, because every pixel is pointless for a percentage.
+                    Interlocked.Increment(ref progress);
                 });
             });
 
@@ -391,7 +392,7 @@ public partial class BetterContinents : BaseUnityPlugin
             {
                 UI.Add("GeneratingMinimap", () =>
                 {
-                    int percentProgress = (int)(100 * ((float)progress / (map.m_textureSize * map.m_textureSize)));
+                    int percentProgress = (int)(100 * ((float)progress / map.m_textureSize));
                     UI.DisplayMessage($"Better Continents: generating minimap {percentProgress}% ...");
                 });
                 yield return new WaitUntil(() => task.IsCompleted);

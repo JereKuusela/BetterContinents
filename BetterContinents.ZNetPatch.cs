@@ -177,7 +177,7 @@ public partial class BetterContinents
         private static readonly List<BCClientInfo> ClientInfo = [];
 
         // Register our RPC for receiving settings on clients
-        [HarmonyPrefix, HarmonyPatch("OnNewConnection")]
+        [HarmonyPrefix, HarmonyPatch(nameof(ZNet.OnNewConnection))]
         private static void OnNewConnectionPrefix(ZNet __instance, ZNetPeer peer)
         {
             Log($"Registering settings RPC");
@@ -376,7 +376,16 @@ public partial class BetterContinents
             }
         }
 
-        [HarmonyPrefix, HarmonyPatch("RPC_Error")]
+
+        [HarmonyPostfix, HarmonyPatch(nameof(ZNet.ClearPlayerData))]
+        private static void ClearPlayerData(ZNetPeer peer)
+        {
+            var bcClientInfo = ClientInfo.FirstOrDefault(c => c.peer == peer);
+            if (bcClientInfo != null)
+                ClientInfo.Remove(bcClientInfo);
+        }
+
+        [HarmonyPrefix, HarmonyPatch(nameof(ZNet.RPC_Error))]
         private static void RPC_ErrorPrefix(ref int error)
         {
             if (error == 69)

@@ -13,7 +13,7 @@ public partial class BetterContinents
 
     public bool EnabledForThisWorld;
     public int Version;
-    public float GlobalScale;
+    public float GlobalScale = 1f;
     public float MountainsAmount;
     public float SeaLevelAdjustment;
     public float MaxRidgeHeight;
@@ -131,7 +131,7 @@ public partial class BetterContinents
     private static readonly string TerrainFile = "terrainmap.png";
     private static readonly string PaintFile = "paintmap.png";
     private static readonly string LavaFile = "lavamap.png";
-    private static readonly string MossFile = "mossmmap.png";
+    private static readonly string MossFile = "mossmap.png";
     private static readonly string VegetationFile = "vegetationmap.png";
     private static readonly string SpawnFile = "spawnmap.png";
 
@@ -464,8 +464,8 @@ public partial class BetterContinents
         else output($"Lavamap disabled");
 
         if (MossMap != null)
-          output($"Mossmmap file ({MossMap.Size}) {MossMap.FilePath}");
-        else output($"Mossmmap disabled");
+          output($"Mossmap file ({MossMap.Size}) {MossMap.FilePath}");
+        else output($"Mossmap disabled");
 
         if (VegetationMap != null)
           output($"Vegetationmap file ({VegetationMap.Size}) {VegetationMap.FilePath}");
@@ -502,6 +502,7 @@ public partial class BetterContinents
     {
       using BinaryReader binaryReader = new(File.OpenRead(path));
       int count = binaryReader.ReadInt32();
+      if (count < 0 || count > binaryReader.BaseStream.Length) throw new Exception("Invalid data length");
       return Load(new ZPackage(binaryReader.ReadBytes(count)));
     }
 
@@ -512,9 +513,11 @@ public partial class BetterContinents
 
       byte[] binaryData = zpackage.GetArray();
       Directory.CreateDirectory(Path.GetDirectoryName(path));
-      using BinaryWriter binaryWriter = new(File.Create(path));
+      using BinaryWriter binaryWriter = new(File.Create(path + ".tmp"));
       binaryWriter.Write(binaryData.Length);
       binaryWriter.Write(binaryData);
+      binaryWriter.Flush();
+      File.Move(path + ".tmp", path);
     }
 
     public static BetterContinentsSettings LoadFromSource(string path, FileHelpers.FileSource fileSource)
@@ -686,9 +689,7 @@ public partial class BetterContinents
     public float ApplyRoughmap(float x, float y, float smoothHeight, float roughHeight)
     {
       if (RoughMap == null)
-      {
         return roughHeight;
-      }
 
       float r = RoughMap.GetValue(x, y);
       return Mathf.Lerp(smoothHeight, roughHeight, r * RoughmapBlend);
@@ -701,10 +702,8 @@ public partial class BetterContinents
         return flatHeight;
       }
       var image = UseRoughInvertedAsFlat ? RoughMap : FlatMap;
-      if (image == null || RoughmapBlend == 0)
-      {
+      if (image == null)
         return height;
-      }
 
       float f = UseRoughInvertedAsFlat ? 1 - image.GetValue(x, y) : image.GetValue(x, y);
       return Mathf.Lerp(height, flatHeight, f * FlatmapBlend);
@@ -822,7 +821,7 @@ public partial class BetterContinents
       {
         if (!File.Exists(HeatConfigPath) || File.Exists(HeatMap.FilePath)) return;
         LogWarning($"Cannot find image {HeatMap.FilePath}: Using default path from config.");
-        HeatMap.FilePath = ForestConfigPath;
+        HeatMap.FilePath = HeatConfigPath;
         if (!HeatMap.LoadSourceImage()) return;
       }
       HeatMap.CreateMap(false);
