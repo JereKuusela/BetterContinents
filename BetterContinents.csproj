@@ -7,7 +7,7 @@
      <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
   <Target Name="CopyDLL" AfterTargets="ILRepacker">
-    <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="$(ProjectDir)\..\Libs" />
+    <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="C:\Users\gotoz\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\playground\BepInEx\plugins\JereKuusela-BetterContinents" />
     <Message Text="Copied to Libs folder." Importance="High" />
   </Target>
   <ItemGroup>

@@ -30,6 +30,16 @@ public class WorldSizeHelper
         PatchBiomeHeight(harmony);
         PatchGetBaseHeight(harmony);
     }
+    public static float GetWorldStretch() => WorldStretch;
+
+    public static void SetStretch(float worldStretch, float biomeStretch)
+    {
+        WorldStretch = worldStretch;
+        BiomeStretch = biomeStretch;
+        BetterContinents.Log($"[WorldSizeHelper] Updated stretches: World={WorldStretch}, Biome={BiomeStretch}");
+        // Refresh EWD with new values
+        if (WorldSizePatched) EWD.RefreshSize(WorldRadius, WorldTotalRadius, WorldStretch, BiomeStretch);
+    }
 
     private static void PatchApplyEdgeForce(Harmony harmony)
     {
@@ -231,21 +241,32 @@ public class WorldSizeHelper
         return matcher.InstructionEnumeration();
     }
 
-    private static CodeMatcher Replace(CodeMatcher instructions, double value, double newValue)
-    {
-        instructions.MatchForward(false, new CodeMatch(OpCodes.Ldc_R8, value));
-
-        if (instructions.IsInvalid) return instructions;
-
-        return instructions.SetOperandAndAdvance(newValue);
-    }
     private static CodeMatcher Replace(CodeMatcher instructions, float value, float newValue)
     {
         instructions.MatchForward(false, new CodeMatch(OpCodes.Ldc_R4, value));
 
-        // If it didn't find the float, just return the matcher as-is so it doesn't crash the next line
-        if (instructions.IsInvalid) return instructions;
+        if (instructions.IsInvalid)
+        {
+            // Use the method directly
+            BetterContinents.Log($"[WorldSizeHelper] Replace: float {value} NOT FOUND");
+            return instructions;
+        }
 
+        BetterContinents.Log($"[WorldSizeHelper] Replace: float {value} -> {newValue}");
+        return instructions.SetOperandAndAdvance(newValue);
+    }
+
+    private static CodeMatcher Replace(CodeMatcher instructions, double value, double newValue)
+    {
+        instructions.MatchForward(false, new CodeMatch(OpCodes.Ldc_R8, value));
+
+        if (instructions.IsInvalid)
+        {
+            BetterContinents.Log($"[WorldSizeHelper] Replace: double {value} NOT FOUND");
+            return instructions;
+        }
+
+        BetterContinents.Log($"[WorldSizeHelper] Replace: double {value} -> {newValue}");
         return instructions.SetOperandAndAdvance(newValue);
     }
 }
