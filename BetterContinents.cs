@@ -370,7 +370,7 @@ public partial class BetterContinents : BaseUnityPlugin
             int progress = 0;
             var task = Task.Run(() =>
             {
-                GameUtils.SimpleParallelFor(4, 0, map.m_textureSize, i =>
+                GameUtils.SimpleParallelFor(Math.Max(1, Environment.ProcessorCount - 2), 0, map.m_textureSize, i =>
                 {
                     for (int j = 0; j < map.m_textureSize; j++)
                     {
