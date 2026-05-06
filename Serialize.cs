@@ -636,6 +636,7 @@ public partial class BetterContinents
             break;
           default:
             LogError("Failed to load the save file. Unknown feature: " + key);
+            // Must stop because no way to know what to read next.
             EnabledForThisWorld = false;
             return;
         }

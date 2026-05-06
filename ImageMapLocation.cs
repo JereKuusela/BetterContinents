@@ -161,13 +161,14 @@ internal class ImageMapLocation() : ImageMapBase()
         int Index(int x, int y) => y * Size + x;
 
         bool Compare(Color32 a, Color32 b) => a.r == b.r && a.g == b.g && a.b == b.b;
+        Queue<Vector2i> q = new();
 
         void FloodFill(int x, int y, Action<int, int> fillfn)
         {
             var sourceColor = pixels[Index(x, y)];
             bool CheckValidity(int xc, int yc) => xc >= 0 && xc < Size && yc >= 0 && yc < Size && Compare(pixels[Index(xc, yc)], sourceColor);
 
-            var q = new Queue<Vector2i>(Size * Size);
+            q.Clear();
 
             void Enqueue(int xa, int ya)
             {
