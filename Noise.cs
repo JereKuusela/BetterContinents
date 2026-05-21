@@ -452,7 +452,8 @@ public struct WarpedNoise
                 max = Mathf.Max(max, height);
             }
         }
-        BetterContinents.Log($"{RangeCheckSize * RangeCheckSize / st.ElapsedMilliseconds} samples per ms, range [{min}, {max}]");
+        long elapsed = Math.Max(st.ElapsedMilliseconds, 1);
+        BetterContinents.Log($"{RangeCheckSize * RangeCheckSize / elapsed} samples per ms, range [{min}, {max}]");
         add = -min;
         if (max != min)
             mul = 1 / (max - min);

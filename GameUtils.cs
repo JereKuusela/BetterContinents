@@ -322,9 +322,7 @@ public static class GameUtils
                         var name = $"{li.m_location.m_prefabName} {idx++}";
                         var pin = pins.FirstOrDefault(p => p.m_name == name && p.m_pos == li.m_position);
                         if (pin != null)
-                        {
-                            Minimap.instance.RemovePin(pins.FirstOrDefault());
-                        }
+                            Minimap.instance.RemovePin(pin);
                     }
                 }
             }

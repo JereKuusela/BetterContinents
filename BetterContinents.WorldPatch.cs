@@ -120,7 +120,7 @@ public partial class BetterContinents
       }
       catch
       {
-        // ignored
+        LogError($"Failed to delete saved settings for {name}");
       }
     }
   }
