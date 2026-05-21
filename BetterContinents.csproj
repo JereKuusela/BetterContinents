@@ -2,12 +2,13 @@
   <PropertyGroup>
     <TargetFramework>net4.8</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>BetterContinents</AssemblyName>
     <LangVersion>preview</LangVersion>
     <nullable>enable</nullable>
      <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
   <Target Name="CopyDLL" AfterTargets="ILRepacker">
-    <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="C:\Users\gotoz\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\playground\BepInEx\plugins\JereKuusela-BetterContinents" />
+    <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="$(ProjectDir)\..\..\Libs" />
     <Message Text="Copied to Libs folder." Importance="High" />
   </Target>
   <ItemGroup>

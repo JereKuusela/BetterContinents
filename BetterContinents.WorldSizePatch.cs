@@ -1,3 +1,4 @@
+// 0.0.1
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -138,12 +139,22 @@ public class WorldSizeHelper
         else
             harmony.Unpatch(method, transpiler);
     }
+    /**
+     * The first two anchors stand in for the IL sequence
+     * (ldc.r4 10500 / ldarg.0 / ldfld m_edgeOfWorldWidth / sub), i.e. the inner
+     * falloff boundary expressed as outer-minus-edge. The 3xNOP block removes
+     * the subtraction, so the substituted constant must already be the inner
+     * radius. Using WorldTotalRadius here pushed the wind transition outside
+     * the playable area by exactly EdgeSize, which is wrong for any non-default
+     * edge size. The third anchor is a bare outer radius with no subtraction
+     * following it, and stays WorldTotalRadius.
+     */
     private static IEnumerable<CodeInstruction> UpdateWindTranspiler(IEnumerable<CodeInstruction> instructions)
     {
         CodeMatcher matcher = new(instructions);
 
         // Patch 1
-        matcher = Replace(matcher, 10500f, WorldTotalRadius);
+        matcher = Replace(matcher, 10500f, WorldRadius);
         if (!matcher.IsInvalid) // Only Nop if we actually found and replaced the anchor
         {
             matcher.SetOpcodeAndAdvance(OpCodes.Nop)
@@ -152,7 +163,7 @@ public class WorldSizeHelper
         }
 
         // Patch 2
-        matcher = Replace(matcher, 10500f, WorldTotalRadius);
+        matcher = Replace(matcher, 10500f, WorldRadius);
         if (!matcher.IsInvalid)
         {
             matcher.SetOpcodeAndAdvance(OpCodes.Nop)
