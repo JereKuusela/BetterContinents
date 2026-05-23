@@ -1,4 +1,4 @@
-// 0.0.1
+// 0.0.3c
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -7,6 +7,26 @@ namespace BetterContinents;
 
 public class WorldSizeHelper
 {
+    /**
+     * Earlier (0.0.2c) the gate was `if (toPatch == EdgeCheckPatched) return;`
+     * where toPatch was a boolean — "is patching needed at all". That gate
+     * skips re-patching whenever the boolean state is unchanged, even if the
+     * actual radius VALUES have changed. User-visible symptom was the toggle
+     * bug: going from DisableMapEdgeDropoff=true (1E30) to false (real
+     * WorldSize, e.g. 25000) both produce toPatch=true, gate fires, IL stays
+     * baked with 1E30, dropoff appears stuck off. Reverse direction has the
+     * same problem.
+     *
+     * Fix is to memoise the last (worldSize, edgeSize) pair we actually
+     * patched and gate on value-equality. NaN sentinels guarantee the first
+     * call fires.
+     *
+     * Second part of the fix is in each sub-patch helper below: harmony.Patch
+     * with the same patch method is a no-op (Harmony deduplicates), so the
+     * static-field-driven transpiler delegate never gets a chance to re-bake
+     * IL with the new constants. We Unpatch first, then Patch — that forces
+     * the wrapper rebuild and the transpiler runs again with current values.
+     */
     private static bool EdgeCheckPatched = false;
     private static bool WorldSizePatched = false;
     private static float WorldRadius = 0f;
@@ -14,14 +34,22 @@ public class WorldSizeHelper
     private static float WorldTotalRadius = 0f;
     private static float WorldStretch = 1f;
     private static float BiomeStretch = 1f;
+    private static float LastEdgeWorldSize = float.NaN;
+    private static float LastEdgeSize = float.NaN;
+    private static float LastWorldSizeWorldSize = float.NaN;
+    private static float LastWorldSizeEdgeSize = float.NaN;
+
     public static void PatchEdgeChecks(Harmony harmony, float worldSize, float edgeSize)
     {
-        var toPatch = worldSize != 10000f || edgeSize != 500f;
-        if (toPatch == EdgeCheckPatched) return;
+        if (worldSize == LastEdgeWorldSize && edgeSize == LastEdgeSize) return;
+        LastEdgeWorldSize = worldSize;
+        LastEdgeSize = edgeSize;
+
         WorldRadius = worldSize;
         EdgeSize = edgeSize;
         WorldTotalRadius = WorldRadius + EdgeSize;
-        EdgeCheckPatched = toPatch;
+        EdgeCheckPatched = worldSize != 10000f || edgeSize != 500f;
+
         PatchApplyEdgeForce(harmony);
         PatchEdgeOfWorldKill(harmony);
         PatchSetupMaterial(harmony);
@@ -46,10 +74,9 @@ public class WorldSizeHelper
     {
         var method = AccessTools.Method(typeof(Ship), nameof(Ship.ApplyEdgeForce));
         var patch = AccessTools.Method(typeof(WorldSizeHelper), nameof(ApplyEdgeForceTranspiler));
+        harmony.Unpatch(method, patch);
         if (EdgeCheckPatched)
             harmony.Patch(method, transpiler: new HarmonyMethod(patch));
-        else
-            harmony.Unpatch(method, patch);
     }
     private static IEnumerable<CodeInstruction> ApplyEdgeForceTranspiler(IEnumerable<CodeInstruction> instructions) => ModifyEdgeCheck(instructions);
 
@@ -58,14 +85,11 @@ public class WorldSizeHelper
         var method = AccessTools.Method(typeof(Player), nameof(Player.EdgeOfWorldKill));
         var prefix = AccessTools.Method(typeof(WorldSizeHelper), nameof(EdgeOfWorldKillPrefix));
         var transpiler = AccessTools.Method(typeof(WorldSizeHelper), nameof(EdgeOfWorldKillTranspiler));
+        harmony.Unpatch(method, prefix);
+        harmony.Unpatch(method, transpiler);
         if (EdgeCheckPatched)
         {
             harmony.Patch(method, prefix: new HarmonyMethod(prefix), transpiler: new HarmonyMethod(transpiler));
-        }
-        else
-        {
-            harmony.Unpatch(method, prefix);
-            harmony.Unpatch(method, transpiler);
         }
     }
     private static IEnumerable<CodeInstruction> EdgeOfWorldKillTranspiler(IEnumerable<CodeInstruction> instructions) => ModifyEdgeCheck(instructions);
@@ -85,13 +109,10 @@ public class WorldSizeHelper
     {
         var method = AccessTools.Method(typeof(WaterVolume), nameof(WaterVolume.SetupMaterial));
         var prefix = AccessTools.Method(typeof(WorldSizeHelper), nameof(SetupMaterialPrefix));
+        harmony.Unpatch(method, prefix);
         if (EdgeCheckPatched)
         {
             harmony.Patch(method, prefix: new HarmonyMethod(prefix));
-        }
-        else
-        {
-            harmony.Unpatch(method, prefix);
         }
         RefreshSetupMaterial();
     }
@@ -111,13 +132,10 @@ public class WorldSizeHelper
     {
         var method = AccessTools.Method(typeof(EnvMan), nameof(EnvMan.Awake));
         var postfix = AccessTools.Method(typeof(WorldSizeHelper), nameof(ScaleGlobalWaterSurfacePostFix));
+        harmony.Unpatch(method, postfix);
         if (EdgeCheckPatched)
         {
             harmony.Patch(method, postfix: new HarmonyMethod(postfix));
-        }
-        else
-        {
-            harmony.Unpatch(method, postfix);
         }
         if (EnvMan.instance)
             ScaleGlobalWaterSurface(EnvMan.instance);
@@ -134,10 +152,9 @@ public class WorldSizeHelper
     {
         var method = AccessTools.Method(typeof(EnvMan), nameof(EnvMan.UpdateWind));
         var transpiler = AccessTools.Method(typeof(WorldSizeHelper), nameof(UpdateWindTranspiler));
+        harmony.Unpatch(method, transpiler);
         if (EdgeCheckPatched)
             harmony.Patch(method, transpiler: new HarmonyMethod(transpiler));
-        else
-            harmony.Unpatch(method, transpiler);
     }
     /**
      * The first two anchors stand in for the IL sequence
@@ -181,44 +198,59 @@ public class WorldSizeHelper
     {
         var method = AccessTools.Method(typeof(WaterVolume), nameof(WaterVolume.GetWaterSurface));
         var transpiler = AccessTools.Method(typeof(WorldSizeHelper), nameof(ReplaceTotalSize));
+        harmony.Unpatch(method, transpiler);
         if (WorldSizePatched)
             harmony.Patch(method, transpiler: new HarmonyMethod(transpiler));
-        else
-            harmony.Unpatch(method, transpiler);
     }
 
+    /**
+     * GetWaterSurface receives world-space coordinates (no stretch applied),
+     * so the literal 10500f at the kill-radius check is the outer radius in
+     * world units and gets replaced with WorldTotalRadius directly.
+     */
     private static IEnumerable<CodeInstruction> ReplaceTotalSize(IEnumerable<CodeInstruction> instructions)
       => Replace(new(instructions), 10500f, WorldTotalRadius).InstructionEnumeration();
 
     private static void PatchBiomeHeight(Harmony harmony)
     {
         var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiomeHeight));
-        var transpiler = AccessTools.Method(typeof(WorldSizeHelper), nameof(ReplaceTotalSize));
+        var transpiler = AccessTools.Method(typeof(WorldSizeHelper), nameof(ReplaceTotalSizeStretched));
+        harmony.Unpatch(method, transpiler);
         if (EdgeCheckPatched)
             harmony.Patch(method, transpiler: new HarmonyMethod(transpiler));
-        else
-            harmony.Unpatch(method, transpiler);
     }
+
+    /**
+     * GetBiomeHeight is called with PRE-STRETCH coordinates: EWS's stretch
+     * prefix on the same method divides wx/wy by WorldStretch before the body
+     * runs, so the literal 10500f compares against shrunken inputs. The
+     * replacement constant therefore has to be shrunk too, i.e. divided by
+     * WorldStretch.
+     */
+    private static IEnumerable<CodeInstruction> ReplaceTotalSizeStretched(IEnumerable<CodeInstruction> instructions)
+      => Replace(new(instructions), 10500f, WorldTotalRadius / WorldStretch).InstructionEnumeration();
 
     public static void PatchWorldSize(Harmony harmony, float worldSize, float edgeSize)
     {
-        var toPatch = worldSize != 10000f || edgeSize != 500f;
-        if (toPatch == WorldSizePatched) return;
+        if (worldSize == LastWorldSizeWorldSize && edgeSize == LastWorldSizeEdgeSize) return;
+        LastWorldSizeWorldSize = worldSize;
+        LastWorldSizeEdgeSize = edgeSize;
+
         WorldRadius = worldSize;
         EdgeSize = edgeSize;
         WorldTotalRadius = WorldRadius + EdgeSize;
-        WorldSizePatched = toPatch;
+        WorldSizePatched = worldSize != 10000f || edgeSize != 500f;
+
         PatchGetAshlandsHeight(harmony);
-        if (toPatch) EWD.RefreshSize(WorldRadius, WorldTotalRadius, WorldStretch, BiomeStretch);
+        if (WorldSizePatched) EWD.RefreshSize(WorldRadius, WorldTotalRadius, WorldStretch, BiomeStretch);
     }
     private static void PatchGetAshlandsHeight(Harmony harmony)
     {
         var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetAshlandsHeight));
         var patch = AccessTools.Method(typeof(WorldSizeHelper), nameof(GetAshlandsHeightTranspiler));
+        harmony.Unpatch(method, patch);
         if (WorldSizePatched)
             harmony.Patch(method, transpiler: new HarmonyMethod(patch));
-        else
-            harmony.Unpatch(method, patch);
     }
     private static IEnumerable<CodeInstruction> GetAshlandsHeightTranspiler(IEnumerable<CodeInstruction> instructions)
     {
@@ -231,10 +263,9 @@ public class WorldSizeHelper
     {
         var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBaseHeight));
         var patch = AccessTools.Method(typeof(WorldSizeHelper), nameof(GetBaseHeightTranspiler));
+        harmony.Unpatch(method, patch);
         if (EdgeCheckPatched)
             harmony.Patch(method, transpiler: new HarmonyMethod(patch));
-        else
-            harmony.Unpatch(method, patch);
     }
     private static IEnumerable<CodeInstruction> GetBaseHeightTranspiler(IEnumerable<CodeInstruction> instructions)
     {
@@ -258,12 +289,10 @@ public class WorldSizeHelper
 
         if (instructions.IsInvalid)
         {
-            // Use the method directly
-            BetterContinents.Log($"[WorldSizeHelper] Replace: float {value} NOT FOUND");
+            BetterContinents.LogWarning($"[WorldSizeHelper] Replace: float {value} NOT FOUND");
             return instructions;
         }
 
-        BetterContinents.Log($"[WorldSizeHelper] Replace: float {value} -> {newValue}");
         return instructions.SetOperandAndAdvance(newValue);
     }
 
@@ -273,11 +302,10 @@ public class WorldSizeHelper
 
         if (instructions.IsInvalid)
         {
-            BetterContinents.Log($"[WorldSizeHelper] Replace: double {value} NOT FOUND");
+            BetterContinents.LogWarning($"[WorldSizeHelper] Replace: double {value} NOT FOUND");
             return instructions;
         }
 
-        BetterContinents.Log($"[WorldSizeHelper] Replace: double {value} -> {newValue}");
         return instructions.SetOperandAndAdvance(newValue);
     }
 }

@@ -181,6 +181,11 @@ public partial class DebugUtils
                     GameUtils.SaveMinimap(path, size);
                     Console.instance.Print($"Map screenshot saved to {path}, size {size} x {size}");
                 });
+            bc.AddCommand("export_heightmap", "Export world heightmap",
+                "Samples the current world's height function and writes a 16-bit grayscale PNG. " +
+                "Optionally pass a resolution (default 4096, max 8192).",
+                arg => ExportCommands.ExportHeightmap(arg));
+
             bc.AddCommand("savepreset", "Save preset",
                 "Saves current world settings as a preset, including a thumbnail, pass preset name as argument",
                 arg =>

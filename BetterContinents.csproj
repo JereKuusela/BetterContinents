@@ -108,5 +108,6 @@
     <EmbeddedResource Include="assets\BCAssets\Presets\Swirls.png" />
     <EmbeddedResource Include="assets\BCAssets\Presets\Vanillaish.BetterContinents" />
     <EmbeddedResource Include="assets\BCAssets\Presets\Vanillaish.png" />
+    <EmbeddedResource Include="assets\BCAssets\squaremap_assets" />
   </ItemGroup>
 </Project>

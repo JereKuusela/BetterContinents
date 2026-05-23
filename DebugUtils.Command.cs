@@ -600,23 +600,27 @@ public partial class DebugUtils
 
             private static void DrawSettingValue(Command cmd, CommandUIState state)
             {
-                if (cmd.customDrawer != null)
-                    cmd.customDrawer(cmd);
-                //else if (this.range.HasValue)
-                //    DrawRangeField();
+                if (cmd.customDrawer != null) { cmd.customDrawer(cmd); return; }
+
+                /**
+                 * Enum (and nullable enum) wins over validValues: AddValue auto-fills
+                 * validValues with Enum.GetNames() strings for any enum field, which
+                 * fails DrawListField's IsInstanceOfType check (string is not an
+                 * instance of the enum type). Nullable.GetUnderlyingType handles
+                 * NoiseType?  cmd.valueType.IsEnum returns false for Nullable<TEnum>.
+                 */
+                var underlying = Nullable.GetUnderlyingType(cmd.valueType) ?? cmd.valueType;
+                if (underlying.IsEnum)
+                {
+                    if (underlying.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
+                        DrawFlagsField(cmd, Enum.GetValues(underlying), RightColumnWidth);
+                    else
+                        DrawComboboxField(cmd, state, Enum.GetValues(underlying));
+                }
                 else if (cmd.validValues != null)
                     DrawListField(cmd, state);
-                else if (cmd.valueType.IsEnum)
-                {
-                    if (cmd.valueType.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
-                        DrawFlagsField(cmd, Enum.GetValues(cmd.valueType), RightColumnWidth);
-                    else
-                        DrawComboboxField(cmd, state, Enum.GetValues(cmd.valueType));
-                }
                 else
-                {
                     DrawFieldBasedOnValueType(cmd, state);
-                }
             }
 
             private static void DrawListField(Command cmd, CommandUIState state)

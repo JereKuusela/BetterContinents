@@ -323,6 +323,7 @@ public partial class BetterContinents
             WorldSizeHelper.PatchWorldSize(HarmonyInstance, 10000f, 500f);
         else
             WorldSizeHelper.PatchWorldSize(HarmonyInstance, Settings.WorldSize, Settings.EdgeSize);
+        MinimapShaderSwap.Apply();
     }
 
     private static bool GetBiomePatched = false;
