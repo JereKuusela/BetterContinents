@@ -43,7 +43,7 @@ public partial class DebugUtils
                 BetterContinents.Settings.Dump(str =>
                     Console.instance.Print($"<size=15><color=#c0c0c0>{str}</color></size>"));
                 Console.instance.Print(
-                    $"<color=#ffa500>NOTE: these settings don't map exactly to console param function or the config file, as some of them are derived.</color>");
+                    $"<color=#ffa500>NOTE: these settings don't map exactly to consolefunction or the config file, as some of them are derived.</color>");
             });
 
             if (BetterContinents.Settings.AnyImageMap)
@@ -181,6 +181,11 @@ public partial class DebugUtils
                     GameUtils.SaveMinimap(path, size);
                     Console.instance.Print($"Map screenshot saved to {path}, size {size} x {size}");
                 });
+            bc.AddCommand("export_heightmap", "Export world heightmap",
+                "Samples the current world's height function and writes a 16-bit grayscale PNG. " +
+                "Optionally pass a resolution (default 4096, max 8192).",
+                arg => ExportCommands.ExportHeightmap(arg));
+
             bc.AddCommand("savepreset", "Save preset",
                 "Saves current world settings as a preset, including a thumbnail, pass preset name as argument",
                 arg =>
@@ -189,7 +194,7 @@ public partial class DebugUtils
                     Presets.Save(BetterContinents.Settings, arg);
                 });
 
-            bc.AddGroup("g", "Global", "Global settings, get more info with 'bc g help'",
+            bc.AddGroup("g", "Global", "Global settings, get more info with 'bc g'",
                 group =>
                 {
                     group.AddValue("skipdefaultlocations", "Skip default locations",
@@ -242,7 +247,7 @@ public partial class DebugUtils
                         getter: () => BetterContinents.Settings.MountainsAllowedAtCenter);
                 });
 
-            bc.AddGroup("h", "Heightmap", "Heightmap settings, get more info with 'bc param h help'",
+            bc.AddGroup("h", "Heightmap", "Heightmap settings, get more info with 'bc h'",
                 group =>
                 {
                     group.AddValue("fn", "Heightmap filename",
@@ -291,7 +296,7 @@ public partial class DebugUtils
                         getter: () => BetterContinents.Settings.HeightMapAlpha);
                 });
 
-            bc.AddGroup("r", "Roughmap", "Roughmap settings, get more info with 'bc param r help'", group =>
+            bc.AddGroup("r", "Roughmap", "Roughmap settings, get more info with 'bc r'", group =>
             {
                 group.AddValue("fn", "Roughmap Filename",
                     "Sets roughmap filename (full path, directory or file name)",
@@ -313,7 +318,7 @@ public partial class DebugUtils
                     setter: SetHeightmapValue<float>(value => BetterContinents.Settings.RoughmapBlend = value),
                     getter: () => BetterContinents.Settings.RoughmapBlend);
             });
-            bc.AddGroup("b", "Biomemap", "Biomemap settings, get more info with 'bc param b help'", group =>
+            bc.AddGroup("b", "Biomemap", "Biomemap settings, get more info with 'bc b'", group =>
             {
                 group.AddValue("fn", "Biomemap Filename",
                     "Sets biomemap filename (full path, directory or file name)",
@@ -336,7 +341,7 @@ public partial class DebugUtils
                     setter: SetHeightmapValue<int>(value => BetterContinents.Settings.BiomePrecision = value),
                     getter: () => BetterContinents.Settings.BiomePrecision);
             });
-            bc.AddGroup("terrain", "Terrainmap", "Terrainmap settings, get more info with 'bc param terrain help'",
+            bc.AddGroup("terrain", "Terrainmap", "Terrainmap settings, get more info with 'bc terrain'",
                 group =>
                 {
                     group.AddValue("fn", "Terrainmap Filename",
@@ -355,7 +360,7 @@ public partial class DebugUtils
                         }),
                         getter: () => BetterContinents.Settings.GetTerrainPath());
                 });
-            bc.AddGroup("l", "Locationmap", "Locationmap settings, get more info with 'bc param s help'", group =>
+            bc.AddGroup("l", "Locationmap", "Locationmap settings, get more info with 'bc l'", group =>
             {
                 group.AddValue("fn", "Locationmap Filename",
                     "Sets locationmap filename (full path, directory or file name)",
@@ -374,7 +379,7 @@ public partial class DebugUtils
                     getter: () => BetterContinents.Settings.GetLocationPath());
             });
 
-            bc.AddGroup("paint", "Paintmap", "Paintmap settings, get more info with 'bc param s help'", group =>
+            bc.AddGroup("paint", "Paintmap", "Paintmap settings, get more info with 'bc paint'", group =>
             {
                 group.AddValue("fn", "Paintmap Filename",
                     "Sets paintmap filename (full path, directory or file name)",
@@ -392,7 +397,7 @@ public partial class DebugUtils
                     }),
                     getter: () => BetterContinents.Settings.GetPaintPath());
             });
-            bc.AddGroup("lava", "Lavamap", "Lavamap settings, get more info with 'bc param s help'", group =>
+            bc.AddGroup("lava", "Lavamap", "Lavamap settings, get more info with 'bc lava'", group =>
             {
                 group.AddValue("fn", "Lavamap Filename",
                     "Sets lavamap filename (full path, directory or file name)",
@@ -410,7 +415,7 @@ public partial class DebugUtils
                     }),
                     getter: () => BetterContinents.Settings.GetLavaPath());
             });
-            bc.AddGroup("moss", "Mossmap", "Mossmap settings, get more info with 'bc param s help'", group =>
+            bc.AddGroup("moss", "Mossmap", "Mossmap settings, get more info with 'bc moss'", group =>
             {
                 group.AddValue("fn", "Mossmap Filename",
                     "Sets mossmap filename (full path, directory or file name)",
@@ -428,7 +433,7 @@ public partial class DebugUtils
                     }),
                     getter: () => BetterContinents.Settings.GetMossPath());
             });
-            bc.AddGroup("vegetation", "Vegetationmap", "Vegetationmap settings, get more info with 'bc param s help'", group =>
+            bc.AddGroup("vegetation", "Vegetationmap", "Vegetationmap settings, get more info with 'bc vegetation'", group =>
             {
                 group.AddValue("fn", "Vegetationmap Filename",
                     "Sets vegetationmap filename (full path, directory or file name)",
@@ -446,7 +451,7 @@ public partial class DebugUtils
                     }),
                     getter: () => BetterContinents.Settings.GetVegetationPath());
             });
-            bc.AddGroup("spawn", "Spawnmap", "Spawnmap settings, get more info with 'bc param s help'", group =>
+            bc.AddGroup("spawn", "Spawnmap", "Spawnmap settings, get more info with 'bc spawn'", group =>
             {
                 group.AddValue("fn", "Spawnmap Filename",
                     "Sets spawnmap filename (full path, directory or file name)",
@@ -464,7 +469,7 @@ public partial class DebugUtils
                     }),
                     getter: () => BetterContinents.Settings.GetSpawnPath());
             });
-            bc.AddGroup("heat", "Heatmap", "Heatmap settings, get more info with 'bc param s help'", group =>
+            bc.AddGroup("heat", "Heatmap", "Heatmap settings, get more info with 'bc heat'", group =>
             {
                 group.AddValue("fn", "Heatmap Filename",
                     "Sets heatmap filename (full path, directory or file name)",
@@ -487,7 +492,7 @@ public partial class DebugUtils
                     setter: SetHeightmapValue<float>(value => BetterContinents.Settings.HeatMapScale = value),
                     getter: () => BetterContinents.Settings.HeatMapScale);
             });
-            bc.AddGroup("fo", "Forest", "Forest settings, get more info with 'bc param fo help'", group =>
+            bc.AddGroup("fo", "Forest", "Forest settings, get more info with 'bc fo'", group =>
             {
                 group.AddValue("sc", "Forest Scale", "Forest scale",
                     defaultValue: 0.5f, minValue: 0f, maxValue: 1f,
@@ -529,7 +534,7 @@ public partial class DebugUtils
                     setter: SetHeightmapValue<float>(value => BetterContinents.Settings.ForestmapAdd = value),
                     getter: () => BetterContinents.Settings.ForestmapAdd);
             });
-            // bc.AddGroup("ri", "ridge settings, get more info with 'bc param ri help'", 
+            // bc.AddGroup("ri", "ridge settings, get more info with 'bcri'", 
             // subcmd =>
             // {
             //     AddHeightmapSubcommand(subcmd, "mh", "ridges max height", "(between 0 and 1)", args =>
@@ -540,7 +545,7 @@ public partial class DebugUtils
             //     AddHeightmapSubcommand(subcmd, "bl", "ridge blend", "(between 0 and 1)", args => BetterContinents.Settings.RidgeBlend = float.Parse(args));
             //     AddHeightmapSubcommand(subcmd, "am", "ridge amount", "(between 0 and 1)", args => BetterContinents.Settings.RidgeAmount = float.Parse(args));
             // });
-            bc.AddGroup("st", "Start Position", "Start position settings, get more info with 'bc param st help'",
+            bc.AddGroup("st", "Start Position", "Start position settings, get more info with 'bc st'",
                 group =>
                 {
                     group.AddValue("os", "Override Start Position", "Overrides the start position",
@@ -691,9 +696,8 @@ public partial class DebugUtils
                     getter: () => settings.UseOpacity);
                 group.AddValue("op", "Opacity", "Opacity",
                     defaultValue: 1, minValue: 0, maxValue: 1,
-                    getter: () => settings.Threshold,
-                    setter: SetHeightmapValue<float>(value => settings.Threshold = value));
-
+                    getter: () => settings.Opacity,
+                    setter: SetHeightmapValue<float>(value => settings.Opacity = value)); //changed the copy paste error
                 group.AddValue("blm", "Blend Mode", "How to apply this layer to the previous one",
                     defaultValue: BlendOperations.BlendModeType.Overlay,
                     setter: SetHeightmapValue<BlendOperations.BlendModeType>(value =>
@@ -911,24 +915,46 @@ public partial class DebugUtils
             // }
         });
         CommandWrapper.Register("bc", args => GetAutoComplete());
+
+
     }
 
     private static List<string> GetAutoComplete()
     {
         var text = Console.instance.m_input.text;
-        // Empty part kept on purpose to detect when going to the next part.
-        var parts = text.Split(' ');
+        if (string.IsNullOrEmpty(text)) return new List<string>();
+
+        // 1. Check if we are starting a new word or completing the current one
+        bool isNewParam = text.EndsWith(" ");
+
+        // 2. Split into parts, ignoring extra spaces
+        var parts = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return new List<string>();
+
+        // 3. Determine how deep to go into the tree
+        int traverseDepth = isNewParam ? parts.Length : parts.Length - 1;
+
         var cmd = rootCommand;
-        for (int i = 1; i < parts.Length - 1; i++)
+        for (int i = 1; i < traverseDepth; i++)
         {
-            var subcmd = cmd.GetSubcommands().FirstOrDefault(s => s.cmd == parts[i]);
-            if (subcmd == null)
-                break;
+            var part = parts[i];
+            var subcmd = cmd.GetSubcommands()
+                            .FirstOrDefault(s => s.cmd != null && s.cmd.Equals(part, StringComparison.OrdinalIgnoreCase));
+
+            if (subcmd == null) return new List<string>();
             cmd = subcmd;
         }
-        if (cmd.GetSubcommands().Count == 0)
-            return CommandWrapper.Info(cmd.desc);
-        return cmd.GetSubcommands().Select(s => s.cmd).ToList();
+
+        // 4. Get options and FILTER OUT GUI-ONLY COMMANDS (where cmd is null)
+        // This fixes the "Dead Tab" cycle (nothing -> 0 -> 1 -> nothing)
+        var options = cmd.GetSubcommands()
+                         .Where(s => !string.IsNullOrEmpty(s.cmd))
+                         .Select(s => s.cmd)
+                         .ToList();
+
+        // 5. Return empty list instead of null
+        // This prevents ServerDevcommands from falling back to "?Too many parameters"
+        return options ?? new List<string>();
     }
 
     public static void RunConsoleCommand(string text)

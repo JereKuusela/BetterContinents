@@ -16,6 +16,10 @@ namespace BetterContinents;
 public partial class BetterContinents : BaseUnityPlugin
 {
 #nullable disable
+
+    //signal so that we can reclaim the threads
+    public static event Action MinimapGenerationComplete;
+
     public static Harmony HarmonyInstance;
     // See the Awake function for the config descriptions
     public static ConfigEntry<int> NexusID;
@@ -366,7 +370,7 @@ public partial class BetterContinents : BaseUnityPlugin
             int progress = 0;
             var task = Task.Run(() =>
             {
-                GameUtils.SimpleParallelFor(4, 0, map.m_textureSize, i =>
+                GameUtils.SimpleParallelFor(Math.Max(1, Environment.ProcessorCount - 2), 0, map.m_textureSize, i =>
                 {
                     for (int j = 0; j < map.m_textureSize; j++)
                     {
@@ -401,6 +405,7 @@ public partial class BetterContinents : BaseUnityPlugin
             {
                 UI.Remove("GeneratingMinimap");
             }
+            BetterContinents.MinimapGenerationComplete?.Invoke();//signal we are done so that we can reclaim threads
 
             map.m_forestMaskTexture.SetPixels32(forestPixels);
             map.m_forestMaskTexture.Apply();
@@ -420,10 +425,9 @@ public partial class BetterContinents : BaseUnityPlugin
             map.GenerateWorldMap();
         }
     }
-
-    // Cache might have wrong map size so has to be fully reimplemented.
-    // This could be transpiled too but more complex.
-    [HarmonyPatch(typeof(Minimap), nameof(Minimap.TryLoadMinimapTextureData))]
+        // Cache might have wrong map size so has to be fully reimplemented.
+        // This could be transpiled too but more complex.
+        [HarmonyPatch(typeof(Minimap), nameof(Minimap.TryLoadMinimapTextureData))]
     public class PatchTryLoadMinimapTextureData
     {
         static bool Prefix(Minimap __instance, ref bool __result)
@@ -434,7 +438,7 @@ public partial class BetterContinents : BaseUnityPlugin
 
         private static bool TryLoadMinimapTextureData(Minimap obj)
         {
-            if (string.IsNullOrEmpty(obj.m_forestMaskTexturePath) || !File.Exists(obj.m_forestMaskTexturePath) || !File.Exists(obj.m_mapTexturePath) || !File.Exists(obj.m_heightTexturePath) || 33 != ZNet.World.m_worldVersion)
+            if (string.IsNullOrEmpty(obj.m_forestMaskTexturePath) || !File.Exists(obj.m_forestMaskTexturePath) || !File.Exists(obj.m_mapTexturePath) || !File.Exists(obj.m_heightTexturePath) || 37 != ZNet.World.m_worldVersion) //changed world version to 37
             {
                 return false;
             }

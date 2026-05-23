@@ -2,11 +2,13 @@
   <PropertyGroup>
     <TargetFramework>net4.8</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>BetterContinents</AssemblyName>
     <LangVersion>preview</LangVersion>
     <nullable>enable</nullable>
+     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
   </PropertyGroup>
   <Target Name="CopyDLL" AfterTargets="ILRepacker">
-    <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="$(ProjectDir)\..\Libs" />
+    <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="$(ProjectDir)\..\..\Libs" />
     <Message Text="Copied to Libs folder." Importance="High" />
   </Target>
   <ItemGroup>
@@ -67,6 +69,25 @@
     <Reference Include="SPlatform">
       <HintPath>..\Libs\SPlatform.dll</HintPath>
     </Reference>
+    <Reference Include="System.Runtime">
+      <HintPath>..\Libs\System.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib">
+      <HintPath>..\Libs\mscorlib.dll</HintPath>
+      <Aliases>global</Aliases>
+    </Reference>
+    <Reference Include="netstandard">
+      <HintPath>..\Libs\netstandard.dll</HintPath>
+      <Aliases>global</Aliases>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>..\Libs\System.Core.dll</HintPath>
+      <Aliases>global</Aliases>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>..\Libs\System.dll</HintPath>
+      <Aliases>global</Aliases>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.44.1" />
@@ -87,5 +108,6 @@
     <EmbeddedResource Include="assets\BCAssets\Presets\Swirls.png" />
     <EmbeddedResource Include="assets\BCAssets\Presets\Vanillaish.BetterContinents" />
     <EmbeddedResource Include="assets\BCAssets\Presets\Vanillaish.png" />
+    <EmbeddedResource Include="assets\BCAssets\squaremap_assets" />
   </ItemGroup>
 </Project>

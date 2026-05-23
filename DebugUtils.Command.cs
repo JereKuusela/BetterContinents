@@ -37,6 +37,18 @@ public partial class DebugUtils
         private Action<SubcommandBuilder> subCommandBuilder;
         private Action<Command> customDrawer = null;
 
+        //Just helping the user by showing more friendly type names for the common types, otherwise it would just show the raw type name which isn't as nice
+        private static string GetFriendlyTypeName(Type type)
+        {
+            if (type == typeof(float)) return "float";
+            if (type == typeof(int)) return "int";
+            if (type == typeof(bool)) return "bool";
+            if (type == typeof(string)) return "string";
+            return type.Name;
+        }
+
+
+
         private static readonly Dictionary<Type, Func<string, object>> StringToTypeConverters = new()
             {
                 { typeof(string), s => s },
@@ -88,6 +100,14 @@ public partial class DebugUtils
             public Command AddValue(string name, string uiName, string desc, Type type)
             {
                 var newCommand = new Command(CommandType.Value, parent, name, uiName, desc, type);
+
+                // Extract Enum names into validValues
+                Type underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+                if (underlyingType.IsEnum)
+                {
+                    newCommand.validValues = Enum.GetNames(underlyingType).Cast<object>().ToList();
+                }
+
                 subcommands.Add(newCommand);
                 return newCommand;
             }
@@ -122,71 +142,88 @@ public partial class DebugUtils
         }
 
         public bool Run(string text)
+{
+    // 1. Determine if this command is the target or just the prefix
+    bool hasArgs = text.StartsWith(cmd + " ");
+    if (!hasArgs && text != cmd)
+    {
+        return false;
+    }
+
+    // Extract the remaining string after the current command keyword
+    string args = hasArgs ? text.Substring(cmd.Length).Trim() : string.Empty;
+
+    // 2. Handle GROUP types (e.g., "bc hl", "bc g")
+    // These contain other subcommands and act as folders.
+    if (commandType == CommandType.Group)
+    {
+        if (!hasArgs)
         {
-            bool hasArgs = text.StartsWith(cmd + " ");
-            if (!hasArgs && text != cmd)
-            {
-                return false;
-            }
-
-            string args = hasArgs ? text.Substring(cmd.Length).Trim() : string.Empty;
-
-            if (commandType == CommandType.Group)
-            {
-                if (!hasArgs)
-                {
-                    ShowSubcommandHelp();
-                }
-                else if (!GetSubcommands().Any(subcmd => subcmd.Run(args)))
-                {
-                    Console.instance.Print($"<color=#ff0000>Error: argument {args} is not recognized as a subcommand of {cmd}</color>");
-                    ShowSubcommandHelp();
-                }
-            }
-            else if (commandType == CommandType.Command)
-            {
-                if (args == "help")
-                {
-                    ShowSubcommandHelp();
-                }
-                else
-                {
-                    setValue(args);
-                }
-            }
-            else if (commandType == CommandType.Value)
-            {
-                if (args == "help")
-                {
-                    ShowSubcommandHelp();
-                }
-                else
-                {
-                    try
-                    {
-                        if (hasArgs)
-                        {
-                            var parser = StringToTypeConverters[valueType];
-                            setValue(parser(text.Substring(cmd.Length).Trim()));
-                        }
-                        else if (getValue == null)
-                        {
-                            Console.instance.Print($"(value is write only, can't show the current value");
-                        }
-                        else
-                        {
-                            Console.instance.Print($"Current value of {cmd} is {GetValueString().Replace("\\", "\\\\")}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.instance.Print($"{cmd} failed: {ex.Message}");
-                    }
-                }
-            }
-
-            return true;
+            // If the user just typed the group name, show the list of contents
+            ShowSubcommandHelp();
         }
+        else if (!GetSubcommands().Any(subcmd => subcmd.Run(args)))
+        {
+            // If arguments were provided but didn't match any child, show error
+            Console.instance.Print($"<color=#ff0000>Error: argument {args} is not recognized as a subcommand of {cmd}</color>");
+            ShowSubcommandHelp();
+        }
+    }
+    // 3. Handle COMMAND types (e.g., "bc info")
+    // These execute a specific action (Action<object> setValue).
+    else if (commandType == CommandType.Command)
+    {
+        // Execute the action immediately using the remaining args
+        setValue(args);
+    }
+    // 4. Handle VALUE types (e.g., "bc hl 0 n fq")
+    // These represent specific settings (floats, ints, enums).
+    else if (commandType == CommandType.Value)
+    {
+        try
+        {
+            if (hasArgs)
+            {
+                // SETTING A VALUE: The user provided an argument to change the setting
+                if (valueType.IsEnum)
+                {
+                    // Use your fix for case-insensitive Enum parsing
+                    setValue(Enum.Parse(valueType, args, ignoreCase: true));
+                }
+                else if (StringToTypeConverters.TryGetValue(valueType, out var parser))
+                {
+                    // Use standard primitive parsers
+                    setValue(parser(args));
+                }
+                else
+                {
+                    throw new InvalidOperationException($"No parser registered for type {valueType}");
+                }
+            }
+            else
+            {
+                // DISPLAYING A VALUE: The user just typed the name (e.g., "bc hl 0 n fq")
+                if (getValue == null)
+                {
+                    Console.instance.Print($"(value is write only, can't show the current value)");
+                }
+                else
+                {
+                    // We call ShowHelp() instead of ShowSubcommandHelp().
+                    // This prints the command name, type, current value, and description.
+                    ShowHelp();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Catch parsing errors (e.g., typing "abc" for a float) and print clearly
+            Console.instance.Print($"{cmd} failed: {ex.Message}");
+        }
+    }
+
+    return true;
+}
 
         public List<Command> GetSubcommands()
         {
@@ -292,6 +329,10 @@ public partial class DebugUtils
 
         public void ShowHelp()
         {
+            //I have to be hidding commands that are there for the GUI but
+            //I don't want them to be visible in the console command list since they aren't really commands
+            //and would just cause confusion if they show up there
+            if (string.IsNullOrEmpty(cmd)) return;  // Skip commands with null/empty names
             var helpString = $"<size=18><b><color=#00ffff>{GetFullCmdName()}</color></b></size>";
             if (range != null)
             {
@@ -304,16 +345,15 @@ public partial class DebugUtils
             }
             else if (valueType != null)
             {
-                helpString += " " + $"({valueType.Name})";
+                helpString += " " + $"({GetFriendlyTypeName(valueType)})";
             }
-
             if (getValue != null)
             {
                 helpString += $" -- {GetValueString()}";
             }
-
+            
             helpString += $" -- <size=15>{desc}</size>";
-
+            
             Console.instance.Print($"    " + helpString);
         }
 
@@ -333,7 +373,7 @@ public partial class DebugUtils
 
         public void ShowSubcommandHelp()
         {
-            ShowHelp();
+            Console.instance.Print($"<size=18><b><color=#00ffff>Available sub commands:</color></b></size>");//avoid self reference
             foreach (var subcmd in GetSubcommands())
             {
                 subcmd.ShowHelp();
@@ -560,23 +600,27 @@ public partial class DebugUtils
 
             private static void DrawSettingValue(Command cmd, CommandUIState state)
             {
-                if (cmd.customDrawer != null)
-                    cmd.customDrawer(cmd);
-                //else if (this.range.HasValue)
-                //    DrawRangeField();
+                if (cmd.customDrawer != null) { cmd.customDrawer(cmd); return; }
+
+                /**
+                 * Enum (and nullable enum) wins over validValues: AddValue auto-fills
+                 * validValues with Enum.GetNames() strings for any enum field, which
+                 * fails DrawListField's IsInstanceOfType check (string is not an
+                 * instance of the enum type). Nullable.GetUnderlyingType handles
+                 * NoiseType?  cmd.valueType.IsEnum returns false for Nullable<TEnum>.
+                 */
+                var underlying = Nullable.GetUnderlyingType(cmd.valueType) ?? cmd.valueType;
+                if (underlying.IsEnum)
+                {
+                    if (underlying.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
+                        DrawFlagsField(cmd, Enum.GetValues(underlying), RightColumnWidth);
+                    else
+                        DrawComboboxField(cmd, state, Enum.GetValues(underlying));
+                }
                 else if (cmd.validValues != null)
                     DrawListField(cmd, state);
-                else if (cmd.valueType.IsEnum)
-                {
-                    if (cmd.valueType.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
-                        DrawFlagsField(cmd, Enum.GetValues(cmd.valueType), RightColumnWidth);
-                    else
-                        DrawComboboxField(cmd, state, Enum.GetValues(cmd.valueType));
-                }
                 else
-                {
                     DrawFieldBasedOnValueType(cmd, state);
-                }
             }
 
             private static void DrawListField(Command cmd, CommandUIState state)

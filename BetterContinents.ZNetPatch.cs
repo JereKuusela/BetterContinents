@@ -54,6 +54,7 @@ public partial class BetterContinents
         {
             if (server)
             {
+                ImageMapBase.CurrentWorldName = world.m_name; //scopes sidecar cache to world
                 var settingsPath = GetBCFile(world.GetMetaPath());
                 Settings = BetterContinentsSettings.LoadFromSource(settingsPath, world.m_fileSource);
                 Settings.Dump();

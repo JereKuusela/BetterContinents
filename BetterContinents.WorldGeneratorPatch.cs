@@ -119,160 +119,132 @@ public partial class BetterContinents
         {
             Settings.ApplyPaintMap(wx, wy, Heightmap.Biome.AshLands, ref mask);
         }
-        private static float GetBaseHeightV1(float wx, float wy, float ___m_offset0, float ___m_offset1, float ___m_minMountainDistance)
+        // --- Class-level helpers ---
+
+        private static float SigmoidActivation(float x, float a, float b)
+            => 1f / (1f + Mathf.Exp(a + b * x));
+
+        private static float ApplyMountains(float x, float n)
+            => x * (1f - Mathf.Pow(1f - x, 1.2f + n * 0.8f)) + x * (1f - x);
+
+        private static float ApplyDetailNoise(float h, float wx, float wy)
+        {
+            h += Mathf.PerlinNoise(wx * 0.002f, wy * 0.002f) * Mathf.PerlinNoise(wx * 0.003f, wy * 0.003f) * h * 0.9f;
+            h += Mathf.PerlinNoise(wx * 0.005f, wy * 0.005f) * Mathf.PerlinNoise(wx * 0.01f, wy * 0.01f) * 0.5f * h;
+            return h;
+        }
+
+        private static (float distance, float mapX, float mapY, float bigFeatureHeight, float ridgeHeight, float noiseWx, float noiseWy)
+            ComputeNoiseBase(float wx, float wy, float offset0, float offset1)
         {
             float distance = Utils.Length(wx, wy);
-
-            // The base map x, y coordinates in 0..1 range
             float mapX = Normalize(wx);
             float mapY = Normalize(wy);
 
             wx *= Settings.GlobalScale;
             wy *= Settings.GlobalScale;
 
-            float WarpScale = 0.001f * Settings.RidgeScale;
+            float warpScale = 0.001f * Settings.RidgeScale;
+            float warpX = (Mathf.PerlinNoise(wx * warpScale, wy * warpScale) - 0.5f) * TotalRadius;
+            float warpY = (Mathf.PerlinNoise(wx * warpScale + 2f, wy * warpScale + 3f) - 0.5f) * TotalRadius;
 
-            float warpX = (Mathf.PerlinNoise(wx * WarpScale, wy * WarpScale) - 0.5f) * TotalRadius;
-            float warpY = (Mathf.PerlinNoise(wx * WarpScale + 2f, wy * WarpScale + 3f) - 0.5f) * TotalRadius;
-
-            wx += 100000f + ___m_offset0;
-            wy += 100000f + ___m_offset1;
+            wx += 100000f + offset0;
+            wy += 100000f + offset1;
 
             float bigFeatureNoiseHeight = Mathf.PerlinNoise(wx * 0.002f * 0.5f, wy * 0.002f * 0.5f) * Mathf.PerlinNoise(wx * 0.003f * 0.5f, wy * 0.003f * 0.5f) * 1f;
             float bigFeatureHeight = Settings.ApplyHeightmap(mapX, mapY, bigFeatureNoiseHeight);
             float ridgeHeight = Mathf.PerlinNoise(warpX * 0.002f * 0.5f, warpY * 0.002f * 0.5f) * Mathf.PerlinNoise(warpX * 0.003f * 0.5f, warpY * 0.003f * 0.5f) * Settings.MaxRidgeHeight;
 
-            // https://www.desmos.com/calculator/uq8wmu6dy7
-            float SigmoidActivation(float x, float a, float b) => 1 / (1 + Mathf.Exp(a + b * x));
+            return (distance, mapX, mapY, bigFeatureHeight, ridgeHeight, wx, wy);
+        }
+
+        private static float ApplyBoundaryAndMountains(float finalHeight, float distance, float minMountainDistance)
+        {
+            float coastalStart = WorldRadius - 350f;
+            if (distance > coastalStart && distance < WorldRadius)
+            {
+                float t = Utils.LerpStep(coastalStart, WorldRadius, distance);
+                float tAdjusted = Mathf.Pow(t, 2f / WorldSizeHelper.GetWorldStretch());
+                finalHeight = Mathf.Lerp(finalHeight, 0.02f, tAdjusted); //I want at the exact radius before the ring to end up in ocean.(y=4)
+            }
+            else if (distance >= WorldRadius && distance < TotalRadius)
+            {
+                float t = Utils.LerpStep(WorldRadius, TotalRadius, distance); 
+                finalHeight = Mathf.Lerp(0.02f, -0.15f, t);    //we lerp towards y=-30 before we plunge
+            }
+            else if (distance >= TotalRadius)
+            {
+                return -2f;
+            }
+
+            if (!Settings.MountainsAllowedAtCenter && distance < minMountainDistance && finalHeight > 0.28f)
+            {
+                float t3 = Mathf.Clamp01((finalHeight - 0.28f) / 0.099999994f);
+                finalHeight = Mathf.Lerp(
+                    Mathf.Lerp(0.28f, 0.38f, t3),
+                    finalHeight,
+                    Utils.LerpStep(minMountainDistance - 400f, minMountainDistance, distance));
+            }
+            return finalHeight;
+        }
+
+        // --- GetBaseHeight variants ---
+
+        private static float GetBaseHeightV1(float wx, float wy, float ___m_offset0, float ___m_offset1, float ___m_minMountainDistance)
+        {
+            var (distance, mapX, mapY, bigFeatureHeight, ridgeHeight, noiseWx, noiseWy) = ComputeNoiseBase(wx, wy, ___m_offset0, ___m_offset1);
+
             float lerp = Settings.ShouldHeightMapOverrideAll
-                ? 0
-                : Mathf.Clamp01(SigmoidActivation(Mathf.PerlinNoise(wx * 0.005f - 10000, wy * 0.005f - 5000) - Settings.RidgeBlendSigmoidXOffset, 0, Settings.RidgeBlendSigmoidB));
+                ? 0f
+                : Mathf.Clamp01(SigmoidActivation(Mathf.PerlinNoise(noiseWx * 0.005f - 10000f, noiseWy * 0.005f - 5000f) - Settings.RidgeBlendSigmoidXOffset, 0, Settings.RidgeBlendSigmoidB));
 
-            float finalHeight = 0f;
-
-            float bigFeature = Mathf.Clamp01(Mathf.Lerp(bigFeatureHeight, ridgeHeight, lerp));
             const float SeaLevel = 0.05f;
-            float ApplyMountains(float x, float n) => x * (1 - Mathf.Pow(1 - x, 1.2f + n * 0.8f)) + x * (1 - x);
-
-            finalHeight += ApplyMountains(bigFeature - SeaLevel, Settings.MountainsAmount) + SeaLevel;
-
-            finalHeight += Mathf.PerlinNoise(wx * 0.002f * 1f, wy * 0.002f * 1f) * Mathf.PerlinNoise(wx * 0.003f * 1f, wy * 0.003f * 1f) * finalHeight * 0.9f;
-
-            finalHeight += Mathf.PerlinNoise(wx * 0.005f * 1f, wy * 0.005f * 1f) * Mathf.PerlinNoise(wx * 0.01f * 1f, wy * 0.01f * 1f) * 0.5f * finalHeight;
+            float bigFeature = Mathf.Clamp01(Mathf.Lerp(bigFeatureHeight, ridgeHeight, lerp));
+            float finalHeight = ApplyDetailNoise(ApplyMountains(bigFeature - SeaLevel, Settings.MountainsAmount) + SeaLevel, noiseWx, noiseWy);
 
             finalHeight -= 0.07f;
-
             finalHeight += Settings.SeaLevelAdjustment;
 
             if (Settings.OceanChannelsEnabled && !Settings.ShouldHeightMapOverrideAll)
             {
                 float v = Mathf.Abs(
-                    Mathf.PerlinNoise(wx * 0.002f * 0.25f + 0.123f, wy * 0.002f * 0.25f + 0.15123f) -
-                    Mathf.PerlinNoise(wx * 0.002f * 0.25f + 0.321f, wy * 0.002f * 0.25f + 0.231f));
-                finalHeight *= 1f - (1f - Utils.LerpStep(0.02f, 0.12f, v)) *
-                    Utils.SmoothStep(744f, 1000f, distance);
+                    Mathf.PerlinNoise(noiseWx * 0.002f * 0.25f + 0.123f, noiseWy * 0.002f * 0.25f + 0.15123f) -
+                    Mathf.PerlinNoise(noiseWx * 0.002f * 0.25f + 0.321f, noiseWy * 0.002f * 0.25f + 0.231f));
+                finalHeight *= 1f - (1f - Utils.LerpStep(0.02f, 0.12f, v)) * Utils.SmoothStep(744f, 1000f, distance);
             }
 
-            // Edge of the world
-            if (distance > WorldRadius)
-            {
-                float t = Utils.LerpStep(WorldRadius, TotalRadius, distance);
-                finalHeight = Mathf.Lerp(finalHeight, -0.2f, t);
-                var edge = TotalRadius - 10;
-                if (distance > edge)
-                {
-                    float t2 = Utils.LerpStep(edge, TotalRadius, distance);
-                    finalHeight = Mathf.Lerp(finalHeight, -2f, t2);
-                }
-            }
-            if (distance < ___m_minMountainDistance && finalHeight > 0.28f && !Settings.ShouldHeightMapOverrideAll)
-            {
-                float t3 = Mathf.Clamp01((finalHeight - 0.28f) / 0.099999994f);
-                finalHeight = Mathf.Lerp(Mathf.Lerp(0.28f, 0.38f, t3), finalHeight, Utils.LerpStep(___m_minMountainDistance - 400f, ___m_minMountainDistance, distance));
-            }
-            return finalHeight;
+            return ApplyBoundaryAndMountains(finalHeight, distance, ___m_minMountainDistance);
         }
 
         private static float GetBaseHeightV2(float wx, float wy, float ___m_offset0, float ___m_offset1, float ___m_minMountainDistance)
         {
-            float distance = Utils.Length(wx, wy);
+            var (distance, mapX, mapY, bigFeatureHeight, ridgeHeight, noiseWx, noiseWy) = ComputeNoiseBase(wx, wy, ___m_offset0, ___m_offset1);
 
-            // The base map x, y coordinates in 0..1 range
-            float mapX = Normalize(wx);
-            float mapY = Normalize(wy);
-
-            wx *= Settings.GlobalScale;
-            wy *= Settings.GlobalScale;
-
-            float WarpScale = 0.001f * Settings.RidgeScale;
-
-            float warpX = (Mathf.PerlinNoise(wx * WarpScale, wy * WarpScale) - 0.5f) * TotalRadius;
-            float warpY = (Mathf.PerlinNoise(wx * WarpScale + 2f, wy * WarpScale + 3f) - 0.5f) * TotalRadius;
-
-            wx += 100000f + ___m_offset0;
-            wy += 100000f + ___m_offset1;
-
-            float bigFeatureNoiseHeight = Mathf.PerlinNoise(wx * 0.002f * 0.5f, wy * 0.002f * 0.5f) * Mathf.PerlinNoise(wx * 0.003f * 0.5f, wy * 0.003f * 0.5f) * 1f;
-            float bigFeatureHeight = Settings.ApplyHeightmap(mapX, mapY, bigFeatureNoiseHeight);
-            float ridgeHeight = (Mathf.PerlinNoise(warpX * 0.002f * 0.5f, warpY * 0.002f * 0.5f) * Mathf.PerlinNoise(warpX * 0.003f * 0.5f, warpY * 0.003f * 0.5f)) * Settings.MaxRidgeHeight;
-
-            // https://www.desmos.com/calculator/uq8wmu6dy7
-            float SigmoidActivation(float x, float a, float b) => 1 / (1 + Mathf.Exp(a + b * x));
-            float lerp = Mathf.Clamp01(SigmoidActivation(Mathf.PerlinNoise(wx * 0.005f - 10000, wy * 0.005f - 5000) - Settings.RidgeBlendSigmoidXOffset, 0, Settings.RidgeBlendSigmoidB));
-
-            float bigFeature = Mathf.Clamp01(bigFeatureHeight + ridgeHeight * lerp);
+            float lerp = Mathf.Clamp01(SigmoidActivation(Mathf.PerlinNoise(noiseWx * 0.005f - 10000f, noiseWy * 0.005f - 5000f) - Settings.RidgeBlendSigmoidXOffset, 0, Settings.RidgeBlendSigmoidB));
 
             const float SeaLevel = 0.05f;
-            float ApplyMountains(float x, float n) => x * (1 - Mathf.Pow(1 - x, 1.2f + n * 0.8f)) + x * (1 - x);
-
-            float detailedFinalHeight = ApplyMountains(bigFeature - SeaLevel, Settings.MountainsAmount) + SeaLevel;
-
-            // Finer height variation
-            detailedFinalHeight += Mathf.PerlinNoise(wx * 0.002f * 1f, wy * 0.002f * 1f) * Mathf.PerlinNoise(wx * 0.003f * 1f, wy * 0.003f * 1f) * detailedFinalHeight * 0.9f;
-            detailedFinalHeight += Mathf.PerlinNoise(wx * 0.005f * 1f, wy * 0.005f * 1f) * Mathf.PerlinNoise(wx * 0.01f * 1f, wy * 0.01f * 1f) * 0.5f * detailedFinalHeight;
+            float bigFeature = Mathf.Clamp01(bigFeatureHeight + ridgeHeight * lerp);
+            float detailedFinalHeight = ApplyDetailNoise(ApplyMountains(bigFeature - SeaLevel, Settings.MountainsAmount) + SeaLevel, noiseWx, noiseWy);
 
             float finalHeight = Settings.ApplyFlatmap(mapX, mapY, bigFeatureHeight, detailedFinalHeight);
 
             finalHeight -= 0.07f;
-
             finalHeight += Settings.SeaLevelAdjustment;
 
             if (Settings.OceanChannelsEnabled)
             {
                 float v = Mathf.Abs(
-                    Mathf.PerlinNoise(wx * 0.002f * 0.25f + 0.123f, wy * 0.002f * 0.25f + 0.15123f) -
-                    Mathf.PerlinNoise(wx * 0.002f * 0.25f + 0.321f, wy * 0.002f * 0.25f + 0.231f));
-                finalHeight *= 1f - (1f - Utils.LerpStep(0.02f, 0.12f, v)) *
-                    Utils.SmoothStep(744f, 1000f, distance);
+                    Mathf.PerlinNoise(noiseWx * 0.002f * 0.25f + 0.123f, noiseWy * 0.002f * 0.25f + 0.15123f) -
+                    Mathf.PerlinNoise(noiseWx * 0.002f * 0.25f + 0.321f, noiseWy * 0.002f * 0.25f + 0.231f));
+                finalHeight *= 1f - (1f - Utils.LerpStep(0.02f, 0.12f, v)) * Utils.SmoothStep(744f, 1000f, distance);
             }
 
-            // Edge of the world
-            if (!Settings.DisableMapEdgeDropoff && distance > WorldRadius)
-            {
-                float t = Utils.LerpStep(WorldRadius, TotalRadius, distance);
-                finalHeight = Mathf.Lerp(finalHeight, -0.2f, t);
-                var edge = TotalRadius - 10;
-                if (distance > edge)
-                {
-                    float t2 = Utils.LerpStep(edge, TotalRadius, distance);
-                    finalHeight = Mathf.Lerp(finalHeight, -2f, t2);
-                }
-            }
-
-            // Avoid mountains in the center
-            if (!Settings.MountainsAllowedAtCenter && distance < ___m_minMountainDistance && finalHeight > 0.28f)
-            {
-                float t3 = Mathf.Clamp01((finalHeight - 0.28f) / 0.099999994f);
-                finalHeight = Mathf.Lerp(Mathf.Lerp(0.28f, 0.38f, t3), finalHeight, Utils.LerpStep(___m_minMountainDistance - 400f, ___m_minMountainDistance, distance));
-            }
-            return finalHeight;
+            return ApplyBoundaryAndMountains(finalHeight, distance, ___m_minMountainDistance);
         }
 
         private static float GetBaseHeightV3(float wx, float wy, float ___m_minMountainDistance)
         {
             float distance = Utils.Length(wx, wy);
-
-            // The base map x, y coordinates in 0..1 range
             float mapX = Normalize(wx);
             float mapY = Normalize(wy);
 
@@ -281,26 +253,7 @@ public partial class BetterContinents
             finalHeight -= 0.15f; // Resulting in about 30% water coverage by default
             finalHeight += Settings.SeaLevelAdjustment;
 
-            // Edge of the world
-            if (!Settings.DisableMapEdgeDropoff && distance > WorldRadius)
-            {
-                float t = Utils.LerpStep(WorldRadius, TotalRadius, distance);
-                finalHeight = Mathf.Lerp(finalHeight, -0.2f, t);
-                var edge = TotalRadius - 10;
-                if (distance > edge)
-                {
-                    float t2 = Utils.LerpStep(edge, TotalRadius, distance);
-                    finalHeight = Mathf.Lerp(finalHeight, -2f, t2);
-                }
-            }
-
-            // Avoid mountains in the center
-            if (!Settings.MountainsAllowedAtCenter && distance < ___m_minMountainDistance && finalHeight > 0.28f)
-            {
-                float t3 = Mathf.Clamp01((finalHeight - 0.28f) / 0.099999994f);
-                finalHeight = Mathf.Lerp(Mathf.Lerp(0.28f, 0.38f, t3), finalHeight, Utils.LerpStep(___m_minMountainDistance - 400f, ___m_minMountainDistance, distance));
-            }
-            return finalHeight;
+            return ApplyBoundaryAndMountains(finalHeight, distance, ___m_minMountainDistance);
         }
 
         public static bool GetBiomePrefix(float wx, float wy, ref Heightmap.Biome __result)
