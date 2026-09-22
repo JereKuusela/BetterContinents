@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Splatform;
 using UnityEngine;
 
 namespace BetterContinents;
@@ -563,7 +564,17 @@ public partial class BetterContinents
       Serialize(zpackage, false);
 
       byte[] binaryData = zpackage.GetArray();
-      var fileWriter = new FileWriter(path, FileHelpers.FileHelperType.Binary, fileSource);
+      // 1.0.15: FileWriter gained a CloudStorageFileGrouping parameter, inserted before the existing
+      // FileHelperType/FileSource ones (assembly_utils.decompiled.cs:4705). Our .BetterContinents
+      // sidecar isn't one of the extensions SaveSystem.IsWorldSaveExtension recognises out of the box
+      // (SaveSystem.cs:149-162: .fwl/.db/.fwl2/.db2/.ok/.chunks/.chunk), so vanilla's own
+      // SaveFileHelper.CreateFileForWriting auto-detection (SaveFileHelper.cs:73) would bucket it
+      // under SameFileEnding instead of with its world. We pass SameFolder explicitly instead, which
+      // is what World.SaveWorldFWLData uses to write the world's own .fwl (World.cs:241) and what
+      // ZNet's world-save path uses for the .db2 (ZNet.cs:1846) - so this sidecar lands in the same
+      // Steam Cloud bucket as the world files it configures, instead of syncing independently and
+      // potentially desyncing from them.
+      var fileWriter = new FileWriter(path, CloudStorageFileGrouping.SameFolder, FileHelpers.FileHelperType.Binary, fileSource);
       fileWriter.m_binary.Write(binaryData.Length);
       fileWriter.m_binary.Write(binaryData);
       fileWriter.Finish();

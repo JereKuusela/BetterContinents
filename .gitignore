@@ -419,3 +419,6 @@ assets/BCAssets/Library/PackageCache/
 assets/BCAssets/Library/
 
 assets/BCAssets/Temp/
+
+# Build output from the CopyDLL target (was ../Libs before the 1.0 port)
+/dist/

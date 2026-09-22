@@ -345,9 +345,47 @@ public partial class BetterContinents
             return false;
         }
         // Usually lava requires heat so this is a fallback solution when people are using biome map but no heat map.
+        // Read the biome map directly rather than going back through WorldGenerator.GetBiome: vanilla GetBiome
+        // calls IsAshlands itself, so asking it would re-enter this prefix with the same arguments forever. That
+        // is a StackOverflowException, which .NET cannot catch - it takes the game down with no usable log.
         public static bool IsAshlandsFallbackPrefix(float x, float y, ref bool __result)
         {
-            __result = WorldGenerator.instance?.GetBiome(x, y) == Heightmap.Biome.AshLands;
+            var biome = Settings.GetBiomeOverride(Normalize(x), Normalize(y));
+            // None means "let the default generation decide" (same contract as GetBiomePrefix), and running the
+            // original is how we honour that without re-entering ourselves.
+            if (biome == Heightmap.Biome.None)
+                return true;
+            __result = biome == Heightmap.Biome.AshLands;
+            return false;
+        }
+
+        // Deep North became a real biome in Valheim 1.0, and vanilla decides where it is with a hardcoded
+        // geographic test. IsDeepnorth drives weather (EnvMan), snow cultivation (TerrainComp), stream
+        // placement and vanilla's own GetBiome fallback, so without this a biome map that moves Deep North
+        // gets its terrain but keeps the wrong weather and the wrong terrain-paint behaviour.
+        public static bool IsDeepnorthPrefix(float x, float y, ref bool __result)
+        {
+            var biome = Settings.GetBiomeOverride(Normalize(x), Normalize(y));
+            if (biome == Heightmap.Biome.None)
+                return true;
+            __result = biome == Heightmap.Biome.DeepNorth;
+            return false;
+        }
+
+        // DeepNorthWaveFade is new in 1.0 and flattens the sea inside the Deep North: WaterVolume and Fish
+        // both take waves as (1 - fade), so 0 is a normal sea and 1 is dead calm. Vanilla derives it from the
+        // same hardcoded circle as IsDeepnorth, ramping 0 -> 1 over the 200 m just past the boundary, so on a
+        // world whose Deep North has been moved or resized the calm water stays behind in the old place.
+        // A single biome-map sample keeps this cheap: GetWaterSurface runs per water sample per frame, and
+        // every fish calls it too, so sampling neighbours to rebuild the 200 m ramp would not pay for itself.
+        // The cost of that is a wave-height seam at the Deep North shore rather than a short fade - barely
+        // different from vanilla's own 200 m ramp across a 20 km world, and only when a biome map is in use.
+        public static bool DeepNorthWaveFadePrefix(float wx, float wy, ref double __result)
+        {
+            var biome = Settings.GetBiomeOverride(Normalize(wx), Normalize(wy));
+            if (biome == Heightmap.Biome.None)
+                return true;
+            __result = biome == Heightmap.Biome.DeepNorth ? 1.0 : 0.0;
             return false;
         }
     }

@@ -99,6 +99,28 @@ public partial class BetterContinents : BaseUnityPlugin
     public const string ConfigFileExtension = ".BetterContinents";
     public static string GetBCFile(string path) => Path.ChangeExtension(path, ConfigFileExtension);
     public static string GetLegacyBCFile(string path) => Path.ChangeExtension(path, ".fwl" + ConfigFileExtension);
+
+    // Valheim 1.0 stores every world as a directory - worlds_local/<name>/ holding _main.N.fwl2, .db2,
+    // .chunks, .ok plus the chunk files - and that directory is the unit the save system works on:
+    // SaveSystem.Delete, Copy and RenameDirectory all act on SaveFile.ChunkedDirectory. Writing our
+    // settings inside it means they travel with the world through every copy, move, rename, backup and
+    // delete with no save-system patching at all.
+    //
+    // The name is deliberately extension-less, matching the game's own cacheMinimapBiome / cacheMinimapHeight
+    // / cacheMinimapMask / cacheMinimapMeta sitting in the same folder. SaveCollection.Reload scans every
+    // file under worlds_local recursively, and SaveSystem.GetSaveInfo returns false as soon as a file has no
+    // extension, so an extension-less file is simply invisible to the scanner.
+    //
+    // Two tempting alternatives are actively destructive and must not be used:
+    //   - a name starting with "_main." joins the rolling-save group, and SaveCollection.KeepOnlyNewest
+    //     deletes any such group that is not exactly four files. A fifth file makes it delete the world.
+    //   - "<worldname>.BetterContinents" is seen as a second save sharing the world's name, and
+    //     SaveWithBackups.EnsureSortedAndPrimaryFileDetermined resolves that by moving the older of the two
+    //     aside - which renames the real world folder to <name>_backup_<timestamp> and makes the world
+    //     vanish from the world list.
+    public const string ConfigFileName = "BetterContinents";
+    public static string GetWorldBCFile(string worldName, FileHelpers.FileSource fileSource) =>
+      SaveSystem.GetWorldsSaveRootPath(fileSource) + "/" + worldName + "/" + ConfigFileName;
     private static readonly Vector2 Half = Vector2.one * 0.5f;
     private static float Normalize(float x) => Mathf.Clamp(x / TotalSize + 0.5f, 0f, 1f);
     private static Vector2 NormalizedToWorld(Vector2 p) => (p - Half) * TotalSize;
@@ -316,27 +338,20 @@ public partial class BetterContinents : BaseUnityPlugin
     [HarmonyPatch(typeof(Minimap))]
     private class MinimapPatch
     {
-        private static readonly Heightmap.Biome ForestableBiomes =
-             Heightmap.Biome.Meadows |
-             Heightmap.Biome.Mistlands |
-             Heightmap.Biome.Mountain |
-             Heightmap.Biome.Plains |
-             Heightmap.Biome.Swamp |
-             Heightmap.Biome.BlackForest
-         ;
-
-        [HarmonyPrefix, HarmonyPatch(nameof(Minimap.GetMaskColor))]
-        private static bool GetMaskColorPrefix(float wx, float wy, Heightmap.Biome biome, ref Color __result, Color ___noForest, Color ___forest)
-        {
-            if (Settings.EnabledForThisWorld && Settings.ForestFactorOverrideAllTrees && (biome & ForestableBiomes) != 0)
-            {
-                float forestFactor = WorldGenerator.GetForestFactor(new Vector3(wx, 0f, wy));
-                float limit = biome == Heightmap.Biome.Plains ? 0.8f : 1.15f;
-                __result = forestFactor < limit ? ___forest : ___noForest;
-                return false;
-            }
-            return true;
-        }
+        // Minimap.GetMaskColor is deliberately NOT patched any more.
+        //
+        // The mask texture is not a simple "is there forest here" flag: 1.0 packs a different
+        // meaning into each channel per biome. Red is the forest overlay (Meadows / Plains /
+        // BlackForest), green carries the Mistlands mist density, blue carries the Ashlands
+        // ocean gradient below the waterline and GetAshlandsHeight's mask.a above it, and
+        // Swamp / Mountain / Deep North deliberately get no mask at all. Vanilla also returns
+        // the ocean gradient for every pixel under 30 m before it ever looks at the biome.
+        //
+        // Better Continents already patches WorldGenerator.GetForestFactor, and vanilla's
+        // InForest is just GetForestFactor(pos) < 1.15f, so vanilla's own GetMaskColor reads
+        // Better Continents' forest values and paints the correct channel for free. The old
+        // prefix collapsed six biomes onto the red forest channel, which drew Swamp, Mountain
+        // and Mistlands as Black Forest and threw away the Ashlands and underwater gradients.
 
         // Some map mods may do stuff after generation which won't work with async.
         // So do one "fake" generate call to trigger those.
@@ -356,13 +371,15 @@ public partial class BetterContinents : BaseUnityPlugin
         private static IEnumerator GenerateWorldMapMT(Minimap map)
         {
             Log($"Generating minimap textures multi-threaded ...");
+            // The vanilla GenerateWorldMap is skipped, so the cache has to be invalidated here instead.
+            // Otherwise an interrupted generation leaves a cache that still passes the seed and version checks.
+            Minimap.DeleteMapTextureData(ZNet.World.m_name);
             int halfSize = map.m_textureSize / 2;
             float halfSizeF = map.m_pixelSize / 2f;
             var mapPixels = new Color32[map.m_textureSize * map.m_textureSize];
             var forestPixels = new Color32[map.m_textureSize * map.m_textureSize];
             var heightPixels = new Color[map.m_textureSize * map.m_textureSize];
-            var cachedTexture = new Color32[map.m_textureSize * map.m_textureSize];
-            var half = 127.5f;
+            var cachedHeights = new float[map.m_textureSize * map.m_textureSize];
             int progress = 0;
             var task = Task.Run(() =>
             {
@@ -376,12 +393,10 @@ public partial class BetterContinents : BaseUnityPlugin
                         float biomeHeight = WorldGenerator.instance.GetBiomeHeight(biome, wx, wy, out _);
                         mapPixels[i * map.m_textureSize + j] = map.GetPixelColor(biome);
                         forestPixels[i * map.m_textureSize + j] = map.GetMaskColor(wx, wy, biomeHeight, biome);
-                        heightPixels[i * map.m_textureSize + j] = new Color(biomeHeight, 0f, 0f);
-
-                        var num = Mathf.Clamp((int)(biomeHeight * half), 0, 65025);
-                        var r = (byte)(num >> 8);
-                        var g = (byte)(num & 255);
-                        cachedTexture[i * map.m_textureSize + j] = new(r, g, 0, byte.MaxValue);
+                        // Alpha 0, not the 1 the three-argument Color constructor gives: vanilla
+                        // fills this array by assigning .r onto a default Color, so its alpha is 0.
+                        heightPixels[i * map.m_textureSize + j] = new Color(biomeHeight, 0f, 0f, 0f);
+                        cachedHeights[i * map.m_textureSize + j] = biomeHeight;
                     }
                     // Updated every row, because every pixel is pointless for a percentage.
                     Interlocked.Increment(ref progress);
@@ -408,12 +423,13 @@ public partial class BetterContinents : BaseUnityPlugin
             map.m_mapTexture.Apply();
             map.m_heightTexture.SetPixels(heightPixels);
             map.m_heightTexture.Apply();
-            Texture2D cached = new(map.m_textureSize, map.m_textureSize);
-            cached.SetPixels32(cachedTexture);
-            cached.Apply();
 
             Log($"Finished generating minimap textures multi-threaded ...");
-            map.SaveMapTextureDataToDisk(map.m_forestMaskTexture, map.m_mapTexture, cached);
+            if (FileHelpers.LocalStorageSupport == LocalStorageSupport.Supported)
+            {
+                // This also writes the meta file with the world seed and the cache version.
+                map.SaveMapTextureDataToDisk(forestPixels, mapPixels, cachedHeights);
+            }
             // Some map mods may do stuff after generation which won't work with async.
             // So do one "fake" generate call to trigger those.
             DoFakeGenerate = true;
@@ -426,54 +442,70 @@ public partial class BetterContinents : BaseUnityPlugin
     [HarmonyPatch(typeof(Minimap), nameof(Minimap.TryLoadMinimapTextureData))]
     public class PatchTryLoadMinimapTextureData
     {
-        static bool Prefix(Minimap __instance, ref bool __result)
+        static bool Prefix(Minimap __instance, int worldSeed, ref bool __result)
         {
-            __result = TryLoadMinimapTextureData(__instance);
+            __result = TryLoadMinimapTextureData(__instance, worldSeed);
             return false;
         }
 
-        private static bool TryLoadMinimapTextureData(Minimap obj)
+        private static bool TryLoadMinimapTextureData(Minimap obj, int worldSeed)
         {
-            if (string.IsNullOrEmpty(obj.m_forestMaskTexturePath) || !File.Exists(obj.m_forestMaskTexturePath) || !File.Exists(obj.m_mapTexturePath) || !File.Exists(obj.m_heightTexturePath) || 33 != ZNet.World.m_worldVersion)
+            if (string.IsNullOrEmpty(obj.m_cachedMinimapMaskTexturePath)
+                || !File.Exists(obj.m_cachedMinimapMaskTexturePath)
+                || !File.Exists(obj.m_cachedMinimapBiomeTexturePath)
+                || !File.Exists(obj.m_cachedMinimapHeightTexturePath)
+                || !File.Exists(obj.m_cachedMinimapMetaPath)
+                || Version.World.DeepNorth != ZNet.World.m_worldVersion)
             {
+                return false;
+            }
+            try
+            {
+                var meta = File.ReadAllBytes(obj.m_cachedMinimapMetaPath);
+                if (BitConverter.ToInt32(meta, 0) != worldSeed)
+                {
+                    Log("Cached minimap is for another seed, regenerating it.");
+                    return false;
+                }
+                var cacheVersion = (Version.CachedMinimap)BitConverter.ToInt32(meta, 4);
+                if (cacheVersion != Version.CachedMinimap.Original)
+                {
+                    Log($"Cached minimap version changed from {cacheVersion} to {Version.CachedMinimap.Original}, regenerating it.");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogWarning($"Error loading the cached minimap meta data: {ex.Message}");
                 return false;
             }
             Stopwatch stopwatch = Stopwatch.StartNew();
-            Texture2D texture2D = new Texture2D(obj.m_forestMaskTexture.width, obj.m_forestMaskTexture.height, TextureFormat.ARGB32, false);
-            if (!texture2D.LoadImage(File.ReadAllBytes(obj.m_forestMaskTexturePath)))
-                return false;
-            if (obj.m_forestMaskTexture.width != texture2D.width || obj.m_forestMaskTexture.height != texture2D.height)
-                return false;
-            obj.m_forestMaskTexture.SetPixels(texture2D.GetPixels());
-            obj.m_forestMaskTexture.Apply();
-            if (!texture2D.LoadImage(File.ReadAllBytes(obj.m_mapTexturePath)))
-                return false;
-            if (obj.m_mapTexture.width != texture2D.width || obj.m_mapTexture.height != texture2D.height)
-                return false;
-            obj.m_mapTexture.SetPixels(texture2D.GetPixels());
-            obj.m_mapTexture.Apply();
-            if (!texture2D.LoadImage(File.ReadAllBytes(obj.m_heightTexturePath)))
-                return false;
-            if (obj.m_heightTexture.width != texture2D.width || obj.m_heightTexture.height != texture2D.height)
-                return false;
-            Color[] pixels = texture2D.GetPixels();
-            for (int i = 0; i < obj.m_textureSize; i++)
+            int pixels = obj.m_textureSize * obj.m_textureSize;
+            try
             {
-                for (int j = 0; j < obj.m_textureSize; j++)
+                var forestPixels = Utils.CompressedBufferToColors(File.ReadAllBytes(obj.m_cachedMinimapMaskTexturePath));
+                var mapPixels = Utils.CompressedBufferToColors(File.ReadAllBytes(obj.m_cachedMinimapBiomeTexturePath));
+                var heightPixels = Utils.CompressedHalfBufferToRedChannel(File.ReadAllBytes(obj.m_cachedMinimapHeightTexturePath));
+                // The meta data doesn't store the map size, so it has to be checked here.
+                if (forestPixels.Length != pixels || mapPixels.Length != pixels || heightPixels.Length != pixels)
                 {
-                    int num = i * obj.m_textureSize + j;
-                    int num2 = (int)(pixels[num].r * 255f);
-                    int num3 = (int)(pixels[num].g * 255f);
-                    int num4 = (num2 << 8) + num3;
-                    float num5 = 127.5f;
-                    pixels[num].r = (float)num4 / num5;
+                    Log("Cached minimap has a different size, regenerating it.");
+                    return false;
                 }
+                obj.m_forestMaskTexture.SetPixels32(forestPixels);
+                obj.m_forestMaskTexture.Apply();
+                obj.m_mapTexture.SetPixels32(mapPixels);
+                obj.m_mapTexture.Apply();
+                obj.m_heightTexture.SetPixels(heightPixels);
+                obj.m_heightTexture.Apply();
             }
-            obj.m_heightTexture.SetPixels(pixels);
-            obj.m_heightTexture.Apply();
+            catch (Exception ex)
+            {
+                LogWarning($"Error loading the cached minimap textures: {ex.Message}");
+                return false;
+            }
             ZLog.Log("Loading minimap textures done [" + stopwatch.ElapsedMilliseconds.ToString() + "ms]");
             return true;
         }
     }
 }
-

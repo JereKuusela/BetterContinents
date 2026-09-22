@@ -1,4 +1,5 @@
-using System.Security.Policy;
+﻿using System.Collections;
+using System.Reflection;
 using HarmonyLib;
 
 namespace BetterContinents;
@@ -21,10 +22,52 @@ public partial class BetterContinents
     PatchDeepNorthGap();
     PatchIsAshlands();
     PatchIsAshlandsFallback();
+    PatchIsDeepnorth();
+    PatchDeepNorthWaveFade();
     PatchGetAshlandsHeight();
     PatchColorTransition();
     PatchVegetationMap();
     PatchSpawnMap();
+    // WorldGenerator caches GetBiome/GetBiomeArea results per grid cell for the lifetime of the
+    // WorldGenerator instance (only cleared in its constructor). Any biome-affecting patch toggled
+    // above (PatchGetBiome, PatchIsAshlands, PatchIsAshlandsFallback) can leave already-queried cells
+    // returning their pre-patch answer for the rest of the session unless we clear the caches here.
+    ClearWorldGeneratorBiomeCaches();
+  }
+
+  // AccessTools lookups return null instead of throwing when a member can't be found; Harmony then
+  // throws when Patch()/Unpatch() is called with a null target, which would abort every remaining
+  // Patch* call in DynamicPatch() for that cycle. Guard each lookup so a missing target logs a named
+  // failure (and only disables that one feature) instead of silently killing everything after it.
+  private static bool EnsurePatchTargetFound(object member, string description)
+  {
+    if (member == null)
+    {
+      LogError($"Could not find {description} - this BetterContinents feature will not work.");
+      return false;
+    }
+    return true;
+  }
+
+  private static readonly FieldInfo CachedBiomeAreasField = AccessTools.Field(typeof(WorldGenerator), "s_cachedBiomeAreas");
+  private static readonly FieldInfo CachedBiomesField = AccessTools.Field(typeof(WorldGenerator), "s_cachedBiomes");
+  private static bool LoggedMissingBiomeCacheFields = false;
+
+  private static void ClearWorldGeneratorBiomeCaches()
+  {
+    if (WorldGenerator.instance == null)
+      return;
+    if (CachedBiomeAreasField == null || CachedBiomesField == null)
+    {
+      if (!LoggedMissingBiomeCacheFields)
+      {
+        LogError("Could not find WorldGenerator.s_cachedBiomeAreas/s_cachedBiomes - biome caches may go stale after repatching.");
+        LoggedMissingBiomeCacheFields = true;
+      }
+      return;
+    }
+    (CachedBiomeAreasField.GetValue(null) as IDictionary)?.Clear();
+    (CachedBiomesField.GetValue(null) as IDictionary)?.Clear();
   }
   private static int HeightmapGetBiomePatched = 0;
   private static void PatchHeightmap()
@@ -33,6 +76,7 @@ public partial class BetterContinents
     if (precision == HeightmapGetBiomePatched)
       return;
     Log($"Note: Biome precision feature doesn't work at the moment.");
+    HeightmapGetBiomePatched = precision;
     return;
     /*
     var method1 = AccessTools.Method(typeof(Heightmap), nameof(Heightmap.GetBiome));
@@ -70,9 +114,11 @@ public partial class BetterContinents
   private static void PatchBiomeColor()
   {
     var toPatch = Settings.EnabledForThisWorld && Settings.HasTerrainMap;
+    if (toPatch == BiomeColorPatched)
+      return;
     var method = AccessTools.Method(typeof(Heightmap), nameof(Heightmap.GetBiomeColor), [typeof(float), typeof(float)]);
     var patch = AccessTools.Method(typeof(BetterContinents), nameof(GetBiomeColorPatch));
-    if (toPatch == BiomeColorPatched)
+    if (!EnsurePatchTargetFound(method, "Heightmap.GetBiomeColor(float,float)"))
       return;
     if (BiomeColorPatched)
     {
@@ -120,6 +166,8 @@ public partial class BetterContinents
     var patch1 = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBaseHeightPrefixV1));
     var patch2 = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBaseHeightPrefixV2));
     var patch3 = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBaseHeightPrefixV3));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.GetBaseHeight"))
+      return;
     if (GetBaseHeightPatched == 1)
     {
       Log("Unpatching WorldGenerator.GetBaseHeight V1");
@@ -207,6 +255,9 @@ public partial class BetterContinents
     var patchHeight = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithHeight));
     var patchHeightPaint = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithHeightPaint));
     var patchPeint = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomeHeightWithPaint));
+
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.GetBiomeHeight"))
+      return;
 
     if (toRoughPatch != GetBiomeHeightWithRoughPatched)
     {
@@ -296,6 +347,8 @@ public partial class BetterContinents
       return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetAshlandsHeight));
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetAshlandsHeight));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.GetAshlandsHeight"))
+      return;
     if (GetAshlandsHeightPatched)
     {
       Log("Unpatching WorldGenerator.GetAshlandsHeight");
@@ -334,6 +387,8 @@ public partial class BetterContinents
       return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetBiome), [typeof(float), typeof(float), typeof(float), typeof(bool)]);
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetBiomePrefix));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.GetBiome(float,float,float,bool)"))
+      return;
     if (GetBiomePatched)
     {
       Log("Unpatching WorldGenerator.GetBiome");
@@ -355,6 +410,8 @@ public partial class BetterContinents
       return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.AddRivers));
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.AddRiversPrefix));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.AddRivers"))
+      return;
     if (AddRiversPAtched)
     {
       Log("Unpatching WorldGenerator.AddRivers");
@@ -376,6 +433,8 @@ public partial class BetterContinents
       return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetForestFactor));
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetForestFactorPrefix));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.GetForestFactor"))
+      return;
     if (ForestFactorPrefixPatched)
     {
       Log("Unpatching WorldGenerator.GetForestFactor prefix");
@@ -397,6 +456,8 @@ public partial class BetterContinents
       return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetForestFactor));
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetForestFactorPostfix));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.GetForestFactor"))
+      return;
     if (ForestFactorPostfixPatched)
     {
       Log("Unpatching WorldGenerator.GetForestFactor postfix");
@@ -419,6 +480,8 @@ public partial class BetterContinents
       return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.GetAshlandsOceanGradient), [typeof(float), typeof(float)]);
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.GetAshlandsOceanGradientPrefix));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.GetAshlandsOceanGradient(float,float)"))
+      return;
     if (HeatPrefixPatched)
     {
       Log("Unpatching WorldGenerator.GetAshlandsOceanGradient prefix");
@@ -441,6 +504,8 @@ public partial class BetterContinents
       return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.CreateAshlandsGap));
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.DisableGap));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.CreateAshlandsGap"))
+      return;
     if (AshlandsGapPatched)
     {
       Log("Unpatching WorldGenerator.CreateAshlandsGap");
@@ -463,6 +528,8 @@ public partial class BetterContinents
       return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.CreateDeepNorthGap));
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.DisableGap));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.CreateDeepNorthGap"))
+      return;
     if (DeepNorthGapPatched)
     {
       Log("Unpatching WorldGenerator.CreateDeepNorthGap");
@@ -485,6 +552,8 @@ public partial class BetterContinents
       return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.IsAshlands));
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.IsAshlandsPrefix));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.IsAshlands"))
+      return;
     if (IsAshlandsPatched)
     {
       Log("Unpatching WorldGenerator.IsAshlands");
@@ -506,6 +575,8 @@ public partial class BetterContinents
       return;
     var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.IsAshlands));
     var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.IsAshlandsFallbackPrefix));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.IsAshlands"))
+      return;
     if (IsAshlandsFallbackPatched)
     {
       Log("Unpatching WorldGenerator.IsAshlands (no heat map)");
@@ -519,17 +590,74 @@ public partial class BetterContinents
       IsAshlandsFallbackPatched = true;
     }
   }
+  private static bool IsDeepnorthPatched = false;
+  // Valheim 1.0 made Deep North a real biome with its own terrain, weather and snow behaviour, but vanilla
+  // still decides where it IS from a hardcoded geographic test (WorldGenerator.IsDeepnorth). That test feeds
+  // EnvMan's weather selection, TerrainComp's snow-vs-cultivate painting, stream placement and vanilla's own
+  // GetBiome fallback - none of which consult the biome map. Without this, a biome map that moves Deep North
+  // produces Deep North terrain that still has the wrong weather and paints the wrong ground when cultivated.
+  // This mirrors PatchIsAshlandsFallback; there is no heat-map condition because heat is Ashlands-only.
+  private static void PatchIsDeepnorth()
+  {
+    var toPatch = Settings.EnabledForThisWorld && Settings.HasBiomeMap;
+    if (toPatch == IsDeepnorthPatched)
+      return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.IsDeepnorth));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.IsDeepnorthPrefix));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.IsDeepnorth"))
+      return;
+    if (IsDeepnorthPatched)
+    {
+      Log("Unpatching WorldGenerator.IsDeepnorth");
+      HarmonyInstance.Unpatch(method, patch);
+      IsDeepnorthPatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching WorldGenerator.IsDeepnorth");
+      HarmonyInstance.Patch(method, prefix: new(patch, Priority.VeryHigh));
+      IsDeepnorthPatched = true;
+    }
+  }
+  private static bool DeepNorthWaveFadePatched = false;
+  // Follows PatchIsDeepnorth: the wave fade uses the same hardcoded Deep North circle, so a biome map that
+  // moves the biome has to move the calm water with it, or the sea stays flat over open ocean and choppy in
+  // the new Deep North.
+  private static void PatchDeepNorthWaveFade()
+  {
+    var toPatch = Settings.EnabledForThisWorld && Settings.HasBiomeMap;
+    if (toPatch == DeepNorthWaveFadePatched)
+      return;
+    var method = AccessTools.Method(typeof(WorldGenerator), nameof(WorldGenerator.DeepNorthWaveFade));
+    var patch = AccessTools.Method(typeof(WorldGeneratorPatch), nameof(WorldGeneratorPatch.DeepNorthWaveFadePrefix));
+    if (!EnsurePatchTargetFound(method, "WorldGenerator.DeepNorthWaveFade"))
+      return;
+    if (DeepNorthWaveFadePatched)
+    {
+      Log("Unpatching WorldGenerator.DeepNorthWaveFade");
+      HarmonyInstance.Unpatch(method, patch);
+      DeepNorthWaveFadePatched = false;
+    }
+    if (toPatch)
+    {
+      Log("Patching WorldGenerator.DeepNorthWaveFade");
+      HarmonyInstance.Patch(method, prefix: new(patch, Priority.VeryHigh));
+      DeepNorthWaveFadePatched = true;
+    }
+  }
   private static bool IsVegetationMapPatched = false;
   private static void PatchVegetationMap()
   {
     var toPatch = Settings.EnabledForThisWorld && Settings.HasVegetationMap;
+    if (toPatch == IsVegetationMapPatched)
+      return;
     var method = AccessTools.Method(typeof(ZoneSystem), nameof(ZoneSystem.PlaceVegetation));
     var prefixPatch = AccessTools.Method(typeof(ZoneSystemPatch), nameof(ZoneSystemPatch.PlaceVegetationEnable));
     var postfixPatch = AccessTools.Method(typeof(ZoneSystemPatch), nameof(ZoneSystemPatch.PlaceVegetationRestore));
     var transpilerPatch = AccessTools.Method(typeof(ZoneSystemPatch), nameof(ZoneSystemPatch.PlaceVegetationSaveCurrent));
     var clearAreaMethod = AccessTools.Method(typeof(ZoneSystem), nameof(ZoneSystem.InsideClearArea));
     var clearAreaPatch = AccessTools.Method(typeof(ZoneSystemPatch), nameof(ZoneSystemPatch.CheckVegetationMapClearArea));
-    if (toPatch == IsVegetationMapPatched)
+    if (!EnsurePatchTargetFound(method, "ZoneSystem.PlaceVegetation") || !EnsurePatchTargetFound(clearAreaMethod, "ZoneSystem.InsideClearArea"))
       return;
     if (IsVegetationMapPatched)
     {
@@ -580,10 +708,12 @@ public partial class BetterContinents
   private static void PatchSpawnMap()
   {
     var toPatch = Settings.EnabledForThisWorld && Settings.HasSpawnMap;
+    if (toPatch == IsSpawnMapPatched)
+      return;
     var method = AccessTools.Method(typeof(SpawnSystem), nameof(SpawnSystem.UpdateSpawnList));
     var prefixPatch = AccessTools.Method(typeof(SpawnSystemPatch), nameof(SpawnSystemPatch.UpdateSpawnListEnable));
     var postfixPatch = AccessTools.Method(typeof(SpawnSystemPatch), nameof(SpawnSystemPatch.UpdateSpawnListDisable));
-    if (toPatch == IsSpawnMapPatched)
+    if (!EnsurePatchTargetFound(method, "SpawnSystem.UpdateSpawnList"))
       return;
     if (IsSpawnMapPatched)
     {

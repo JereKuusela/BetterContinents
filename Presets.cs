@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -10,6 +11,28 @@ namespace BetterContinents;
 
 public class Presets
 {
+  // Valheim 1.0 (Unity 6) added ReadOnlySpan<byte> overloads to Texture2D.LoadImage. Calling LoadImage at
+  // all - even with a byte[] - makes the compiler resolve System.ReadOnlySpan<T> just to build the overload
+  // set, and net4.8's corlib has no such type. The netstandard 2.1 facade the Unity modules require (see the
+  // netstandard reference in the csproj, without which ImageConversionModule fails CS1705) forwards
+  // ReadOnlySpan to an assembly that is not part of a net4.8 compilation, so it fails CS0518 no matter which
+  // Span shim is referenced - System.Memory 4.5.5 and 4.6.3, a System.Runtime facade and the game's own
+  // System.Memory.dll were all tried. Moving the project to netstandard2.1 fixes the type but removes
+  // System.Reflection.Emit.ILGenerator, which Harmony's transpilers need, so that is not an option either.
+  // Binding the byte[] overload once through reflection sidesteps the overload set entirely.
+  private static readonly MethodInfo LoadImageMethod = typeof(ImageConversion).GetMethod(
+      nameof(ImageConversion.LoadImage), new[] { typeof(Texture2D), typeof(byte[]), typeof(bool) });
+
+  private static void LoadImageCompat(Texture2D tex, byte[] data)
+  {
+    if (LoadImageMethod == null)
+    {
+      BetterContinents.LogError("Could not bind ImageConversion.LoadImage(Texture2D, byte[], bool); preset preview icon will not be shown.");
+      return;
+    }
+    LoadImageMethod.Invoke(null, new object[] { tex, data, false });
+  }
+
   private static readonly string PresetsDir = Path.Combine(Utils.GetSaveDataPath(FileHelpers.FileSource.Local), "BetterContinents", "presets");
   private static AssetBundle? assetBundle;
 
@@ -91,7 +114,7 @@ public class Presets
         if (File.Exists(configIconPath))
         {
           var icon = new Texture2D(2, 2);
-          icon.LoadImage(File.ReadAllBytes(configIconPath));
+          LoadImageCompat(icon, File.ReadAllBytes(configIconPath));
           previewImage.texture = icon;
         }
         else

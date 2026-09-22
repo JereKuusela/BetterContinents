@@ -35,7 +35,10 @@ public partial class DebugUtils
 
     static DebugUtils()
     {
-        new Terminal.ConsoleCommand("bc", "Root Better Continents command", args => RunConsoleCommand(args.FullLine.Trim()), true, false, true);
+        // Named args: 1.0.15 inserted `bool hideBehindDevCommands` between `allowInDevBuild` and `optionsFetcher`
+        // (Terminal.cs:152), so positional bools past the action delegate are no longer safe to rely on here.
+        new Terminal.ConsoleCommand("bc", "Root Better Continents command", args => RunConsoleCommand(args.FullLine.Trim()),
+            isCheat: true, isNetwork: false, onlyServer: true);
         rootCommand = new Command("bc", "Better Continents", "Better Continents command").Subcommands(bc =>
         {
             bc.AddCommand("info", "Dump Info", "Prints current settings to console", _ =>

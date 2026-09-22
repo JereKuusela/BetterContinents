@@ -46,7 +46,27 @@ internal class ImageMapBiome() : ImageMapBase
             return null;
         return map;
     }
-    private static readonly Heightmap.Biome[] ByteToBiome = new int[32].Select((_, i) => i == 0 ? 0 : (Heightmap.Biome)(1 << (i - 1))).ToArray();
+    // Valheim 1.0 converts biomes to indices with a switch that throws for anything that is not
+    // one of the ten known values, so combined or unused values must never reach the game.
+    public static bool IsValidBiome(Heightmap.Biome biome) => biome switch
+    {
+        Heightmap.Biome.None or Heightmap.Biome.Meadows or Heightmap.Biome.Swamp or Heightmap.Biome.Mountain
+            or Heightmap.Biome.BlackForest or Heightmap.Biome.Plains or Heightmap.Biome.AshLands
+            or Heightmap.Biome.DeepNorth or Heightmap.Biome.Ocean or Heightmap.Biome.Mistlands => true,
+        _ => false
+    };
+    // Same as the game's ToIndex extension, but without throwing on unknown values.
+    public static int ToSafeIndex(Heightmap.Biome biome) => IsValidBiome(biome) ? biome.ToIndex() : 0;
+
+    // Biomes are stored as the bit index of the flag (0 = None, 1 = first bit, and so on).
+    // Bits without a biome (and any byte that is not a bit index at all) map to None.
+    private static Heightmap.Biome ByteToBiomeValue(int index)
+    {
+        if (index <= 0 || index > 32) return Heightmap.Biome.None;
+        var biome = (Heightmap.Biome)(1 << (index - 1));
+        return IsValidBiome(biome) ? biome : Heightmap.Biome.None;
+    }
+    private static readonly Heightmap.Biome[] ByteToBiome = [.. Enumerable.Range(0, 256).Select(ByteToBiomeValue)];
     public byte[] Serialize() =>
         [.. Map.Select(b =>
         {
@@ -82,7 +102,8 @@ internal class ImageMapBiome() : ImageMapBase
     private static Dictionary<Heightmap.Biome, Color32> ParseColors(string colors) => colors.Split('|')
         .Select(s => s.Trim().Split(':')).Where(s => s.Length == 2)
         .ToDictionary(
-            s => Enum.TryParse<Heightmap.Biome>(s[0].Trim(), true, out var biome) ? biome : throw new Exception($"Invalid biome name {s[0]}"),
+            // TryParse also accepts numbers and combined values like "All", which the game can't handle.
+            s => Enum.TryParse<Heightmap.Biome>(s[0].Trim(), true, out var biome) && IsValidBiome(biome) ? biome : throw new Exception($"Invalid biome name {s[0]}"),
             s => ParseColor32(s[1])
         );
 

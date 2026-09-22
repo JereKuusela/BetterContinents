@@ -1,5 +1,5 @@
 ﻿using HarmonyLib;
-using UnityEngine.UI;
+using TMPro;
 
 namespace BetterContinents;
 
@@ -8,8 +8,11 @@ public partial class BetterContinents
     [HarmonyPatch(typeof(FejdStartup))]
     private class FejdStartupPatch
     {
+        // 1.0.15: FejdStartup.m_connectionFailedError is TMPro.TMP_Text (was UnityEngine.UI.Text).
+        // Harmony's ___field injection requires the parameter type to match the actual field type,
+        // so keeping this as UnityEngine.UI.Text would make the patch fail at apply/JIT time.
         [HarmonyPostfix, HarmonyPatch("ShowConnectError")]
-        private static void ShowConnectErrorPrefix(Text ___m_connectionFailedError)
+        private static void ShowConnectErrorPrefix(TMP_Text ___m_connectionFailedError)
         {
             if (LastConnectionError != null)
             {

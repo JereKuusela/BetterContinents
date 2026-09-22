@@ -4,10 +4,16 @@
         <ItemGroup>
           <InputAssemblies Include="$(TargetPath)" />
           <InputAssemblies Include="$(TargetDir)SixLabors.ImageSharp.dll" />
-          <InputAssemblies Include="$(TargetDir)System.Buffers.dll" />
-          <InputAssemblies Include="$(TargetDir)System.Memory.dll" />
-          <InputAssemblies Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
-          <InputAssemblies Include="$(TargetDir)System.Numerics.Vectors.dll" />
+          <!-- Since the move to netstandard2.1 (Valheim 1.0 / Unity 6), Span and friends come from the
+               framework itself rather than from shim packages, so these may no longer be copied to the
+               output directory. ILRepack fails on a listed input that does not exist, so each is merged
+               only if it is actually there - that keeps the merge working whether or not ImageSharp drags
+               a given shim in transitively. -->
+          <InputAssemblies Include="$(TargetDir)System.Buffers.dll" Condition="Exists('$(TargetDir)System.Buffers.dll')" />
+          <InputAssemblies Include="$(TargetDir)System.Memory.dll" Condition="Exists('$(TargetDir)System.Memory.dll')" />
+          <InputAssemblies Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" Condition="Exists('$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll')" />
+          <InputAssemblies Include="$(TargetDir)System.Numerics.Vectors.dll" Condition="Exists('$(TargetDir)System.Numerics.Vectors.dll')" />
+          <InputAssemblies Include="$(TargetDir)System.Text.Encoding.CodePages.dll" Condition="Exists('$(TargetDir)System.Text.Encoding.CodePages.dll')" />
         </ItemGroup>
         <ILRepack Parallel="true" DebugInfo="false" Internalize="true" InputAssemblies="@(InputAssemblies)" OutputFile="$(TargetPath)" TargetKind="SameAsPrimaryAssembly" LibraryPath="$(OutputPath)" />
     </Target>

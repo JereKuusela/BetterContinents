@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace BetterContinents;
@@ -20,8 +21,8 @@ public partial class BetterContinents
   }
   private static Heightmap.Biome GetBiome(Heightmap obj, Vector3 point)
   {
-    if (obj.m_cornerBiomes[0] == obj.m_cornerBiomes[1] && obj.m_cornerBiomes[0] == obj.m_cornerBiomes[2] && obj.m_cornerBiomes[0] == obj.m_cornerBiomes[3])
-      return obj.m_cornerBiomes[0];
+    if (obj.m_cornerBiomes[0].Biome == obj.m_cornerBiomes[1].Biome && obj.m_cornerBiomes[0].Biome == obj.m_cornerBiomes[2].Biome && obj.m_cornerBiomes[0].Biome == obj.m_cornerBiomes[3].Biome)
+      return obj.m_cornerBiomes[0].Biome;
     obj.WorldToNormalizedHM(point, out var ix, out var iy);
     for (int i = 1; i < Heightmap.s_tempBiomeWeights.Length; i++)
     {
@@ -50,13 +51,13 @@ public partial class BetterContinents
     var corner3 = 4 + sx * size + ey;
     var corner4 = 4 + ex * size + ey;
     if (obj.m_cornerBiomes.Length <= corner4)
-      return obj.m_cornerBiomes[0];
+      return obj.m_cornerBiomes[0].Biome;
 
-    Heightmap.s_tempBiomeWeights[Heightmap.s_biomeToIndex[obj.m_cornerBiomes[corner1]]] += Heightmap.Distance(x, y, sx, sy);
-    Heightmap.s_tempBiomeWeights[Heightmap.s_biomeToIndex[obj.m_cornerBiomes[corner2]]] += Heightmap.Distance(x, y, ex, sy);
-    Heightmap.s_tempBiomeWeights[Heightmap.s_biomeToIndex[obj.m_cornerBiomes[corner3]]] += Heightmap.Distance(x, y, sx, ey);
-    Heightmap.s_tempBiomeWeights[Heightmap.s_biomeToIndex[obj.m_cornerBiomes[corner4]]] += Heightmap.Distance(x, y, ex, ey);
-    int num = Heightmap.s_biomeToIndex[Heightmap.Biome.None];
+    Heightmap.s_tempBiomeWeights[obj.m_cornerBiomes[corner1].Biome.ToIndex()] += Heightmap.Distance(x, y, sx, sy);
+    Heightmap.s_tempBiomeWeights[obj.m_cornerBiomes[corner2].Biome.ToIndex()] += Heightmap.Distance(x, y, ex, sy);
+    Heightmap.s_tempBiomeWeights[obj.m_cornerBiomes[corner3].Biome.ToIndex()] += Heightmap.Distance(x, y, sx, ey);
+    Heightmap.s_tempBiomeWeights[obj.m_cornerBiomes[corner4].Biome.ToIndex()] += Heightmap.Distance(x, y, ex, ey);
+    int num = Heightmap.Biome.None.ToIndex();
     float num2 = -99999f;
     for (int j = 1; j < Heightmap.s_tempBiomeWeights.Length; j++)
     {
@@ -66,7 +67,22 @@ public partial class BetterContinents
         num2 = Heightmap.s_tempBiomeWeights[j];
       }
     }
-    return Heightmap.s_indexToBiome[num];
+    return ((Heightmap.BiomeIndex)num).ToBiome();
+  }
+
+  // Valheim 1.0 stores biome sectors (biome plus alt biome data) in the corner array instead of
+  // plain biomes. Sectors for points where the world data doesn't match the Better Continents biome.
+  private static readonly BiomeSector[] PlainSectors =
+    [.. Enumerable.Range(0, (int)Heightmap.BiomeIndex.Count).Select(i => new BiomeSector(null, ((Heightmap.BiomeIndex)i).ToBiome()))];
+
+  // The world sector data has a resolution of 12 meters and is built from the patched GetBiome,
+  // so it's used when it agrees with the biome here, to keep any alt biomes of that sector.
+  private static BiomeSector GetSector(WorldGenerator worldGen, Heightmap.Biome biome, float wx, float wy)
+  {
+    var sector = worldGen.GetBiomeSector(wx, wy);
+    if (sector != null && sector.Biome == biome)
+      return sector;
+    return PlainSectors[ImageMapBiome.ToSafeIndex(biome)];
   }
 
   private static Color GetBiomeColor(Heightmap obj, float ix, float iy)
@@ -127,17 +143,18 @@ public partial class BetterContinents
     var biome4 = worldGen.GetBiome(vector.x + data.m_width * data.m_scale, vector.z + data.m_width * data.m_scale);
     if (biome == biome2 && biome == biome3 && biome == biome4)
     {
-      data.m_cornerBiomes = [biome, biome, biome, biome];
+      var sector = GetSector(worldGen, biome, vector.x, vector.z);
+      data.m_cornerBiomes = [sector, sector, sector, sector];
     }
     else
     {
       var size = Settings.BiomePrecision + 2;
       // Duplicate corners to simplify logic.
-      data.m_cornerBiomes = new Heightmap.Biome[4 + size * size];
-      data.m_cornerBiomes[0] = biome;
-      data.m_cornerBiomes[1] = biome2;
-      data.m_cornerBiomes[2] = biome3;
-      data.m_cornerBiomes[3] = biome4;
+      data.m_cornerBiomes = new BiomeSector[4 + size * size];
+      data.m_cornerBiomes[0] = GetSector(worldGen, biome, vector.x, vector.z);
+      data.m_cornerBiomes[1] = GetSector(worldGen, biome2, vector.x + data.m_width * data.m_scale, vector.z);
+      data.m_cornerBiomes[2] = GetSector(worldGen, biome3, vector.x, vector.z + data.m_width * data.m_scale);
+      data.m_cornerBiomes[3] = GetSector(worldGen, biome4, vector.x + data.m_width * data.m_scale, vector.z + data.m_width * data.m_scale);
       // Precision 1 = 3x3, 2 = 5x5, 3 = 7x7, etc.
       var last = Settings.BiomePrecision + 1;
       var multiplier = 1f / last;
@@ -147,7 +164,9 @@ public partial class BetterContinents
         for (int y = 0; y <= last; y++)
         {
           index += 1;
-          data.m_cornerBiomes[index] = worldGen.GetBiome(vector.x + data.m_width * data.m_scale * x * multiplier, vector.z + data.m_width * data.m_scale * y * multiplier);
+          var wx = vector.x + data.m_width * data.m_scale * x * multiplier;
+          var wy = vector.z + data.m_width * data.m_scale * y * multiplier;
+          data.m_cornerBiomes[index] = GetSector(worldGen, worldGen.GetBiome(wx, wy), wx, wy);
         }
       }
     }
@@ -156,7 +175,8 @@ public partial class BetterContinents
     {
       data.m_baseHeights.Add(0f);
     }
-    int num3 = data.m_width * data.m_width;
+    // Valheim 1.0 paints the whole width + 1 grid, matching the paint mask texture size.
+    int num3 = num * num;
     data.m_baseMask = new Color[num3];
     for (int j = 0; j < num3; j++)
     {
@@ -196,10 +216,7 @@ public partial class BetterContinents
           color = Color.Lerp(a2, b2, t);
         }
         data.m_baseHeights[k * num + l] = value;
-        if (l < data.m_width && k < data.m_width)
-        {
-          data.m_baseMask[k * data.m_width + l] = color;
-        }
+        data.m_baseMask[k * num + l] = color;
       }
     }
     if (data.m_distantLod)

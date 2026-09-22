@@ -106,9 +106,13 @@ public partial class BetterContinents
       .InstructionEnumeration();
 
 
-    public static bool CheckVegetationMapClearArea(bool result, Vector3 point)
+    // Must be named __result (Harmony's reserved name for the original return value), not "result" -
+    // ZoneSystem.InsideClearArea's own parameters are (areas, point), so a plain "result" parameter
+    // does not bind to anything and Harmony throws "Parameter \"result\" not found" when this postfix
+    // is applied (confirmed against 0Harmony.dll's HarmonyManipulator, which matches only "__result").
+    public static bool CheckVegetationMapClearArea(bool __result, Vector3 point)
     {
-      if (result || CurrentVegetation == null) return result;
+      if (__result || CurrentVegetation == null) return __result;
       return Settings.CheckVegetationMap(point, CurrentVegetation);
     }
   }

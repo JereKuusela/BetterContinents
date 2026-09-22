@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using Object = UnityEngine.Object;
 
 namespace BetterContinents;
@@ -18,7 +19,8 @@ public static class GameUtils
         foreach (var hm in Heightmap.s_heightmaps)
         {
             hm.m_buildData = null;
-            hm.Poke(true);
+            // Poke takes the amount of frames to delay by, 1 matches the old "delayed" flag.
+            hm.Poke(1);
         }
         FastMinimapRegen();
     }
@@ -42,23 +44,22 @@ public static class GameUtils
             var size = MinimapOrigTextureSize / MinimapDownscaling;
             map.m_textureSize = size;
             map.m_pixelSize = MinimapOrigPixelSize * MinimapDownscaling;
-            map.m_mapTexture = new(size, size, TextureFormat.RGBA32, false)
+            // Formats must match Minimap.Start, otherwise the map shaders get the wrong data.
+            map.m_mapTexture = new(size, size, TextureFormat.RGB24, false)
             {
                 wrapMode = TextureWrapMode.Clamp
             };
-            map.m_forestMaskTexture = new(size, size, TextureFormat.RGBA32, false)
+            // Mask and fog use a runtime selected graphics format, so let the game pick it.
+            map.m_forestMaskTexture = map.CreateMapTexture([GraphicsFormat.B4G4R4A4_UNormPack16, GraphicsFormat.R4G4B4A4_UNormPack16], TextureFormat.RGBA32);
+            map.m_forestMaskTexture.wrapMode = TextureWrapMode.Clamp;
+            map.m_heightTexture = new(size, size, TextureFormat.RHalf, false, true)
             {
                 wrapMode = TextureWrapMode.Clamp
             };
-            map.m_heightTexture = new(size, size, TextureFormat.RFloat, false)
-            {
-                wrapMode = TextureWrapMode.Clamp
-            };
-            map.m_fogTexture = new(size, size, TextureFormat.RGBA32, false)
-            {
-                wrapMode = TextureWrapMode.Clamp
-            };
-            map.m_explored = new bool[size * size];
+            map.m_fogTexture = map.CreateMapTexture([GraphicsFormat.R8G8_UNorm], TextureFormat.RGBA32);
+            map.m_fogTexture.wrapMode = TextureWrapMode.Clamp;
+            map.m_explored = new BitArray(size * size, false);
+            map.m_exploredOthers = new BitArray(size * size, false);
             map.m_mapImageLarge.material.SetTexture("_MainTex", map.m_mapTexture);
             map.m_mapImageLarge.material.SetTexture("_MaskTex", map.m_forestMaskTexture);
             map.m_mapImageLarge.material.SetTexture("_HeightTex", map.m_heightTexture);
