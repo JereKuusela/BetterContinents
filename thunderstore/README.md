@@ -1,4 +1,8 @@
-# Better Continents
+# Deprecated
+
+Deprecated. Use <https://valheim.hexium.gg/mods/Wubarrk/BetterContinents> instead.
+
+## Better Continents
 
 Mod originally created by billw2012.
 
